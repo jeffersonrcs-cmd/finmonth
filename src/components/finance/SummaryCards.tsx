@@ -54,7 +54,7 @@ export function SummaryCards({
         </div>
       </section>
 
-      <section className="mb-5 grid grid-cols-1 gap-2.5">
+      <section className="mb-5 grid grid-cols-2 gap-2.5">
         <div className="glass rounded-2xl p-3.5">
           <div className="mb-3 flex items-center justify-between">
             <div>

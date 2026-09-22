@@ -33,7 +33,7 @@ function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="glass max-w-[340px] rounded-3xl">
+      <DialogContent className="glass max-w-[340px] rounded-3xl bg-popover">
         <DialogHeader>
           <DialogTitle className="font-display text-base">{title}</DialogTitle>
         </DialogHeader>

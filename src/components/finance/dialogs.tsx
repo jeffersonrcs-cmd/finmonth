@@ -84,13 +84,13 @@ export function IncomeDialog({
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
-  const [date, setDate] = useState(initial?.date ?? `${monthKey}-01`);
+  const [day, setDay] = useState(() => initial?.date?.split("-")[2] ?? "1");
 
   useEffect(() => {
     if (!open) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
-    setDate(initial?.date ?? `${monthKey}-01`);
+    setDay(initial?.date?.split("-")[2] ?? "1");
   }, [open, initial, monthKey]);
 
   return (
@@ -100,8 +100,15 @@ export function IncomeDialog({
       open={open}
       setOpen={setOpen}
       onSubmit={() => {
+        const [year, month] = monthKey.split("-").map(Number);
+        const maxDay = daysInMonth(year, month);
+        const selectedDay = Math.min(Math.max(Number(day) || 1, 1), maxDay);
         if (!description.trim() || parseAmount(amount) <= 0) return false;
-        onSave({ description: description.trim(), amount: parseAmount(amount), date });
+        onSave({
+          description: description.trim(),
+          amount: parseAmount(amount),
+          date: `${monthKey}-${String(selectedDay).padStart(2, "0")}`,
+        });
         return true;
       }}
     >
@@ -125,13 +132,18 @@ export function IncomeDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>Data</Label>
+        <Label className={labelClass}>Dia da receita</Label>
         <Input
           className={fieldClass}
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          type="number"
+          min={1}
+          max={daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1]))}
+          inputMode="numeric"
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          placeholder="1"
         />
+        <p className="text-[10px] text-mut">Mês e ano: {monthKey.split("-").reverse().join("/")}</p>
       </div>
     </FormDialog>
   );

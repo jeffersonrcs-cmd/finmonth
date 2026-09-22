@@ -1,4 +1,4 @@
-import { Check, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { financeActions, billStatus, formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
 import { BillDialog, IncomeDialog, SavingDialog } from "./dialogs";
 

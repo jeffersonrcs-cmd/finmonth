@@ -37,15 +37,10 @@ export function SummaryCards({ totals }: { totals: MonthTotals }) {
         </div>
       </section>
 
-      <section className="mb-4 grid grid-cols-3 gap-2.5">
+      <section className="mb-5 grid grid-cols-2 gap-2.5">
         <Stat label="💰 Receitas" value={formatCurrency(totals.totalIncomes, true)} tone="pos" />
         <Stat label="📄 Contas" value={formatCurrency(totals.totalBills, true)} tone="neg" />
         <Stat label="🏦 Guardado" value={formatCurrency(totals.totalSaved, true)} tone="econ" />
-      </section>
-
-      <section className="mb-5 grid grid-cols-3 gap-2.5">
-        <Stat label="✅ Pagas" value={String(totals.paidCount)} tone="pos" />
-        <Stat label="⏳ Pendentes" value={String(totals.pendingCount)} tone="warn" />
         <Stat
           label="📈 Saldo do mês"
           value={formatCurrency(totals.monthBalance, true)}

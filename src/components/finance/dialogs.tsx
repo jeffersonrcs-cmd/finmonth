@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import type { Bill, Income, Saving } from "@/lib/finance";
+import { formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
 import { daysInMonth } from "@/lib/finance";
 
 function parseAmount(value: string) {
@@ -309,27 +309,33 @@ export function SavingDialog({
   trigger,
   initial,
   onSave,
+  open,
+  onOpenChange,
 }: {
   trigger: ReactNode;
   initial?: Saving;
   onSave: (data: Omit<Saving, "id">) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = open ?? internalOpen;
+  const setDialogOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
 
   useEffect(() => {
-    if (!open) return;
+    if (!dialogOpen) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
-  }, [open, initial]);
+  }, [dialogOpen, initial]);
 
   return (
     <FormDialog
       trigger={trigger}
       title={initial ? "Editar valor guardado" : "Novo valor guardado"}
-      open={open}
-      setOpen={setOpen}
+      open={dialogOpen}
+      setOpen={setDialogOpen}
       onSubmit={() => {
         if (!description.trim() || parseAmount(amount) <= 0) return false;
         onSave({ description: description.trim(), amount: parseAmount(amount) });

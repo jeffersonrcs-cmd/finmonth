@@ -1,8 +1,7 @@
 import { Pencil, Plus } from "lucide-react";
+import { useState } from "react";
 import { financeActions, formatCurrency, type Income, type MonthTotals, type Saving } from "@/lib/finance";
 import { IncomeDialog, ManageEntriesDialog, SavingDialog } from "./dialogs";
-
-const rowClass = "glass-soft flex items-center gap-2 rounded-xl px-2.5 py-2";
 
 export function SummaryCards({
   monthKey,
@@ -16,7 +15,8 @@ export function SummaryCards({
   savings: Saving[];
 }) {
   const positive = totals.availableBalance >= 0;
-  const sortedIncomes = [...incomes].sort((a, b) => a.date.localeCompare(b.date));
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [editingSaving, setEditingSaving] = useState<Saving | null>(null);
 
   return (
     <>
@@ -55,51 +55,6 @@ export function SummaryCards({
       </section>
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[240px]">
-        <div className="glass flex h-full min-h-0 flex-col rounded-2xl p-3.5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>
-              <p className="num mt-1 font-display text-base font-semibold text-econ">
-                {formatCurrency(totals.totalSaved, true)}
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <SavingDialog
-                onSave={(data) => financeActions.addSaving(monthKey, data)}
-                trigger={
-                  <button
-                    aria-label="Adicionar valor guardado"
-                    className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
-                  >
-                    <Plus className="size-4" />
-                  </button>
-                }
-              />
-              <ManageEntriesDialog
-                title="Editar valores guardados"
-                items={savings}
-                onEdit={(id) => {
-                  const saving = savings.find((item) => item.id === id);
-                  if (saving) {
-                    document.dispatchEvent(new CustomEvent("finmonth:edit-saving", { detail: saving }));
-                  }
-                }}
-                onDelete={(id) => financeActions.removeSaving(monthKey, id)}
-                trigger={
-                  <button
-                    aria-label="Editar valores guardados"
-                    className="grid size-8 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/20"
-                  >
-                    <Pencil className="size-4" />
-                  </button>
-                }
-              />
-            </div>
-          </div>
-
-          <div className="flex-1" />
-        </div>
-
         <div className="glass rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
@@ -126,9 +81,7 @@ export function SummaryCards({
                 items={incomes}
                 onEdit={(id) => {
                   const income = incomes.find((item) => item.id === id);
-                  if (income) {
-                    document.dispatchEvent(new CustomEvent("finmonth:edit-income", { detail: income }));
-                  }
+                  if (income) setEditingIncome(income);
                 }}
                 onDelete={(id) => financeActions.removeIncome(monthKey, id)}
                 trigger={
@@ -140,11 +93,75 @@ export function SummaryCards({
                   </button>
                 }
               />
-            </div>
+              <IncomeDialog
+                monthKey={monthKey}
+                initial={editingIncome ?? undefined}
+                open={editingIncome !== null}
+                onOpenChange={(open) => { if (!open) setEditingIncome(null); }}
+                onSave={(data) => {
+                  if (editingIncome) financeActions.updateIncome(monthKey, editingIncome.id, data);
+                }}
+                trigger={<span className="hidden" />}
+              />            </div>
           </div>
 
           <div className="flex-1" />
         </div>
+
+
+
+        <div className="glass flex h-full min-h-0 flex-col rounded-2xl p-3.5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>
+              <p className="num mt-1 font-display text-base font-semibold text-econ">
+                {formatCurrency(totals.totalSaved, true)}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <SavingDialog
+                onSave={(data) => financeActions.addSaving(monthKey, data)}
+                trigger={
+                  <button
+                    aria-label="Adicionar valor guardado"
+                    className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                }
+              />
+              <ManageEntriesDialog
+                title="Editar valores guardados"
+                items={savings}
+                onEdit={(id) => {
+                  const saving = savings.find((item) => item.id === id);
+                  if (saving) setEditingSaving(saving);
+                }}
+                onDelete={(id) => financeActions.removeSaving(monthKey, id)}
+                trigger={
+                  <button
+                    aria-label="Editar valores guardados"
+                    className="grid size-8 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/20"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                }
+              />
+              <SavingDialog
+                initial={editingSaving ?? undefined}
+                open={editingSaving !== null}
+                onOpenChange={(open) => { if (!open) setEditingSaving(null); }}
+                onSave={(data) => {
+                  if (editingSaving) financeActions.updateSaving(monthKey, editingSaving.id, data);
+                }}
+                trigger={<span className="hidden" />}
+              />            </div>
+          </div>
+
+          <div className="flex-1" />
+        </div>
+
+
 
         <div className="glass rounded-2xl p-3.5">
           <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
@@ -152,6 +169,8 @@ export function SummaryCards({
             {formatCurrency(totals.totalBills, true)}
           </p>
         </div>
+
+
 
 
         <div className="glass rounded-2xl p-3">

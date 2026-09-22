@@ -1,6 +1,6 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { financeActions, formatCurrency, type Income, type MonthTotals, type Saving } from "@/lib/finance";
-import { IncomeDialog, SavingDialog } from "./dialogs";
+import { IncomeDialog, ManageEntriesDialog, SavingDialog } from "./dialogs";
 
 const rowClass = "glass-soft flex items-center gap-2 rounded-xl px-2.5 py-2";
 
@@ -56,128 +56,94 @@ export function SummaryCards({
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[240px]">
         <div className="glass flex h-full min-h-0 flex-col rounded-2xl p-3.5">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">💰 Receitas</p>
-              <p className="num mt-1 font-display text-base font-semibold text-pos">
-                {formatCurrency(totals.totalIncomes, true)}
-              </p>
-            </div>
-            <IncomeDialog
-              monthKey={monthKey}
-              onSave={(data) => financeActions.addIncome(monthKey, data)}
-              trigger={
-                <button
-                  aria-label="Adicionar receita"
-                  className="grid size-8 place-items-center rounded-full bg-pos/10 text-pos transition-colors hover:bg-pos/20"
-                >
-                  <Plus className="size-4" />
-                </button>
-              }
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            {sortedIncomes.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border/70 px-3 py-3 text-center text-[11px] text-mut">
-                Nenhuma receita neste mês.
-              </p>
-            ) : (
-              sortedIncomes.map((income) => (
-                <div key={income.id} className={rowClass}>
-                  <span className="size-1.5 shrink-0 rounded-full bg-pos" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium">{income.description}</p>
-                    <p className="num text-[10px] text-mut">
-                      {income.date.split("-").reverse().join("/")}
-                    </p>
-                  </div>
-                  <span className="num shrink-0 font-display text-xs font-semibold text-pos">
-                    {formatCurrency(income.amount)}
-                  </span>
-                  <IncomeDialog
-                    monthKey={monthKey}
-                    initial={income}
-                    onSave={(data) => financeActions.updateIncome(monthKey, income.id, data)}
-                    trigger={
-                      <button
-                        aria-label="Editar receita"
-                        className="grid size-6 shrink-0 place-items-center rounded-full text-mut transition-colors hover:text-brand"
-                      >
-                        <Pencil className="size-3" />
-                      </button>
-                    }
-                  />
-                  <button
-                    aria-label="Excluir receita"
-                    onClick={() => financeActions.removeIncome(monthKey, income.id)}
-                    className="grid size-6 shrink-0 place-items-center rounded-full text-mut transition-colors hover:text-neg"
-                  >
-                    <Trash2 className="size-3" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="glass rounded-2xl p-3.5">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>
               <p className="num mt-1 font-display text-base font-semibold text-econ">
                 {formatCurrency(totals.totalSaved, true)}
               </p>
             </div>
-            <SavingDialog
-              onSave={(data) => financeActions.addSaving(monthKey, data)}
-              trigger={
-                <button
-                  aria-label="Adicionar valor guardado"
-                  className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
-                >
-                  <Plus className="size-4" />
-                </button>
-              }
-            />
+            <div className="flex items-center gap-1.5">
+              <SavingDialog
+                onSave={(data) => financeActions.addSaving(monthKey, data)}
+                trigger={
+                  <button
+                    aria-label="Adicionar valor guardado"
+                    className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                }
+              />
+              <ManageEntriesDialog
+                title="Editar valores guardados"
+                items={savings}
+                onEdit={(id) => {
+                  const saving = savings.find((item) => item.id === id);
+                  if (saving) {
+                    document.dispatchEvent(new CustomEvent("finmonth:edit-saving", { detail: saving }));
+                  }
+                }}
+                onDelete={(id) => financeActions.removeSaving(monthKey, id)}
+                trigger={
+                  <button
+                    aria-label="Editar valores guardados"
+                    className="grid size-8 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/20"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                }
+              />
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            {savings.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border/70 px-3 py-3 text-center text-[11px] text-mut">
-                Nenhum valor guardado neste mês.
+          <div className="flex-1" />
+        </div>
+
+        <div className="glass rounded-2xl p-3.5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">💰 Receitas</p>
+              <p className="num mt-1 font-display text-base font-semibold text-pos">
+                {formatCurrency(totals.totalIncomes, true)}
               </p>
-            ) : (
-              savings.map((saving) => (
-                <div key={saving.id} className={rowClass}>
-                  <span className="size-1.5 shrink-0 rounded-full bg-econ" />
-                  <p className="min-w-0 flex-1 truncate text-xs font-medium">{saving.description}</p>
-                  <span className="num shrink-0 font-display text-xs font-semibold text-econ">
-                    {formatCurrency(saving.amount)}
-                  </span>
-                  <SavingDialog
-                    initial={saving}
-                    onSave={(data) => financeActions.updateSaving(monthKey, saving.id, data)}
-                    trigger={
-                      <button
-                        aria-label="Editar valor guardado"
-                        className="grid size-6 shrink-0 place-items-center rounded-full text-mut transition-colors hover:text-brand"
-                      >
-                        <Pencil className="size-3" />
-                      </button>
-                    }
-                  />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <IncomeDialog
+                monthKey={monthKey}
+                onSave={(data) => financeActions.addIncome(monthKey, data)}
+                trigger={
                   <button
-                    aria-label="Excluir valor guardado"
-                    onClick={() => financeActions.removeSaving(monthKey, saving.id)}
-                    className="grid size-6 shrink-0 place-items-center rounded-full text-mut transition-colors hover:text-neg"
+                    aria-label="Adicionar receita"
+                    className="grid size-8 place-items-center rounded-full bg-pos/10 text-pos transition-colors hover:bg-pos/20"
                   >
-                    <Trash2 className="size-3" />
+                    <Plus className="size-4" />
                   </button>
-                </div>
-              ))
-            )}
+                }
+              />
+              <ManageEntriesDialog
+                title="Editar receitas"
+                items={incomes}
+                onEdit={(id) => {
+                  const income = incomes.find((item) => item.id === id);
+                  if (income) {
+                    document.dispatchEvent(new CustomEvent("finmonth:edit-income", { detail: income }));
+                  }
+                }}
+                onDelete={(id) => financeActions.removeIncome(monthKey, id)}
+                trigger={
+                  <button
+                    aria-label="Editar receitas"
+                    className="grid size-8 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/20"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                }
+              />
+            </div>
           </div>
+
+          <div className="flex-1" />
         </div>
 
         <div className="glass rounded-2xl p-3.5">

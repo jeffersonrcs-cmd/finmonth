@@ -122,13 +122,6 @@ export function SummaryCards({
         </div>
 
         <div className="glass rounded-2xl p-3.5">
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
-          <p className="num mt-1 font-display text-base font-semibold text-neg">
-            {formatCurrency(totals.totalBills, true)}
-          </p>
-        </div>
-
-        <div className="glass rounded-2xl p-3.5">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>
@@ -186,6 +179,14 @@ export function SummaryCards({
             )}
           </div>
         </div>
+
+        <div className="glass rounded-2xl p-3.5">
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
+          <p className="num mt-1 font-display text-base font-semibold text-neg">
+            {formatCurrency(totals.totalBills, true)}
+          </p>
+        </div>
+
 
         <div className="glass rounded-2xl p-3">
           <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-mut">📈 Saldo do mês</p>

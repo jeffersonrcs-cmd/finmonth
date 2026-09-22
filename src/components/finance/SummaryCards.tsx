@@ -55,7 +55,7 @@ export function SummaryCards({
       </section>
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">
-        <div className="glass rounded-2xl p-3.5">
+        <div id="receitas" className="glass scroll-mt-4 rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">💰 Receitas</p>
@@ -110,7 +110,7 @@ export function SummaryCards({
 
 
 
-        <div className="glass flex h-full min-h-0 flex-col rounded-2xl p-3.5">
+        <div id="guardado" className="glass flex h-full min-h-0 scroll-mt-4 flex-col rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>

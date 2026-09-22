@@ -76,6 +76,8 @@ export function IncomeDialog({
   monthKey,
   initial,
   onSave,
+  open,
+  onOpenChange,
 }: {
   trigger: ReactNode;
   monthKey: string;

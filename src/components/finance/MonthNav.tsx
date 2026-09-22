@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Pencil, Sun } from "lucide-react";
 import { financeActions, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 
 export function MonthNav({
@@ -9,14 +9,16 @@ export function MonthNav({
   monthKey: string;
   onChange: (key: string) => void;
 }) {
-  const { theme } = useFinanceState();
+  const { theme, userName } = useFinanceState();
+
+  const displayName = userName.trim() || "Seu nome";
 
   return (
     <header className="mb-5 flex items-center justify-between gap-3">
       <div>
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">Finanças</p>
         <Link to="/" className="font-display text-2xl font-bold leading-none">
-          FinMês
+          {displayName}
         </Link>
       </div>
       <div className="flex items-center gap-2">

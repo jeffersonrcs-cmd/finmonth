@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards } from "lucide-react";
+import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { SummaryCards } from "@/components/finance/SummaryCards";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
 
 type Screen = "inicio" | "contas" | "receitas" | "guardado" | "graficos";
 
-const navigation: { id: Screen; label: string; Icon: typeof Home }[] = [
+const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
   { id: "inicio", label: "Início", Icon: Home },
   { id: "contas", label: "Contas", Icon: ReceiptText },
   { id: "receitas", label: "Receitas", Icon: WalletCards },

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -238,6 +239,65 @@ export function BillDialog({
         <Switch checked={recurrent} onCheckedChange={setRecurrent} />
       </div>
     </FormDialog>
+  );
+}
+
+export function ManageEntriesDialog({
+  trigger,
+  title,
+  items,
+  onEdit,
+  onDelete,
+}: {
+  trigger: ReactNode;
+  title: string;
+  items: { id: string; description: string; amount: number }[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="glass max-w-[340px] rounded-3xl bg-popover">
+        <DialogHeader>
+          <DialogTitle className="font-display text-base">{title}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+          {items.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border/70 px-3 py-5 text-center text-xs text-mut">
+              Nenhum item cadastrado neste mês.
+            </p>
+          ) : (
+            items.map((item) => (
+              <div key={item.id} className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-medium">{item.description}</p>
+                  <p className="num text-xs font-semibold text-foreground">{formatCurrency(item.amount)}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Editar item"
+                  onClick={() => { setOpen(false); onEdit(item.id); }}
+                  className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-brand"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Excluir item"
+                  onClick={() => onDelete(item.id)}
+                  className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-neg"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

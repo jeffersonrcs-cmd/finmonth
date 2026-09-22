@@ -100,7 +100,7 @@ export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
 
 export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
   return (
-    <ChartShell title="Evolução do saldo" rows={rows} subtitle={`${rows.length} meses`}>
+    <ChartShell title="Evolução do saldo" rows={rows} subtitle={`${rows.length} ${rows.length === 1 ? "mês" : "meses"}`}>
       <LineChart data={rows}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis {...axisProps} />

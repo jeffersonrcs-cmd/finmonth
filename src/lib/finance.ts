@@ -87,6 +87,11 @@ function updateMonth(monthKey: string, fn: (m: MonthData) => MonthData) {
   });
 }
 
+function parseMonthKey(key: string) {
+  const parts = key.split("-");
+  return { year: Number(parts[0] ?? 0), month: Number(parts[1] ?? 1) };
+}
+
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
 export const financeActions = {
@@ -156,7 +161,7 @@ export const financeActions = {
     const existing = new Set(
       (state.months[monthKey]?.incomes ?? []).map((i) => i.description.trim().toLowerCase()),
     );
-    const [year, month] = monthKey.split("-").map(Number);
+    const { year, month } = parseMonthKey(monthKey);
     const copied = prev.incomes
       .filter((i) => !existing.has(i.description.trim().toLowerCase()))
       .map((i) => {
@@ -218,7 +223,7 @@ export function currentMonthKey() {
 }
 
 export function shiftMonthKey(key: string, delta: number) {
-  const [year, month] = key.split("-").map(Number);
+  const { year, month } = parseMonthKey(key);
   const d = new Date(year, month - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -226,7 +231,7 @@ export function shiftMonthKey(key: string, delta: number) {
 export const previousMonthKey = (key: string) => shiftMonthKey(key, -1);
 
 export function monthLabel(key: string, short = false) {
-  const [year, month] = key.split("-").map(Number);
+  const { year, month } = parseMonthKey(key);
   const name = MONTH_NAMES[month - 1] ?? "";
   return short ? `${name.slice(0, 3)} ${year}` : `${name} ${year}`;
 }
@@ -246,7 +251,7 @@ export type BillStatus = "paid" | "pending" | "overdue";
 
 export function billStatus(bill: Bill, monthKey: string): BillStatus {
   if (bill.paid) return "paid";
-  const [year, month] = monthKey.split("-").map(Number);
+  const { year, month } = parseMonthKey(monthKey);
   const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month)));
   const today = new Date();
   today.setHours(0, 0, 0, 0);

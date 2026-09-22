@@ -3,7 +3,6 @@ import { useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
-import { IncomesSection, SavingsSection } from "@/components/finance/ListsSection";
 import {
   BalanceEvolutionChart,
   IncomeVsExpenseChart,
@@ -55,10 +54,13 @@ function Dashboard() {
           )}
         </p>
 
-        <SummaryCards totals={totals} />
+        <SummaryCards
+          monthKey={monthKey}
+          totals={totals}
+          incomes={data.incomes}
+          savings={data.savings}
+        />
         <BillsSection monthKey={monthKey} bills={data.bills} />
-        <IncomesSection monthKey={monthKey} incomes={data.incomes} />
-        <SavingsSection monthKey={monthKey} savings={data.savings} />
 
         <IncomeVsExpenseChart rows={rows} />
         <BalanceEvolutionChart rows={rows} />

@@ -31,13 +31,14 @@ export type MonthData = {
 export type FinanceState = {
   months: Record<string, MonthData>;
   theme: "dark" | "light";
+  userName: string;
 };
 
 const STORAGE_KEY = "finmonth.v1";
 
 const emptyMonth = (): MonthData => ({ incomes: [], bills: [], savings: [] });
 
-const initialState: FinanceState = { months: {}, theme: "dark" };
+const initialState: FinanceState = { months: {}, theme: "dark", userName: "" };
 
 let state: FinanceState = initialState;
 let hydrated = false;
@@ -65,6 +66,7 @@ export function hydrateStore() {
       state = {
         months: parsed.months ?? {},
         theme: parsed.theme === "light" ? "light" : "dark",
+        userName: typeof parsed.userName === "string" ? parsed.userName : "",
       };
     }
   } catch {
@@ -97,6 +99,9 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 export const financeActions = {
   setTheme(theme: "dark" | "light") {
     setState({ ...state, theme });
+  },
+  setUserName(userName: string) {
+    setState({ ...state, userName });
   },
   addIncome(monthKey: string, data: Omit<Income, "id">) {
     updateMonth(monthKey, (m) => ({ ...m, incomes: [...m.incomes, { ...data, id: uid() }] }));

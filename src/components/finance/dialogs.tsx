@@ -81,8 +81,12 @@ export function IncomeDialog({
   monthKey: string;
   initial?: Income;
   onSave: (data: Omit<Income, "id">) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = open ?? internalOpen;
+  const setDialogOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
   const [day, setDay] = useState(() => initial?.date?.split("-")[2] ?? "1");
@@ -98,8 +102,8 @@ export function IncomeDialog({
     <FormDialog
       trigger={trigger}
       title={initial ? "Editar receita" : "Nova receita"}
-      open={open}
-      setOpen={setOpen}
+      open={dialogOpen}
+      setOpen={setDialogOpen}
       onSubmit={() => {
         const [year, month] = monthKey.split("-").map(Number);
         const maxDay = daysInMonth(year, month);
@@ -161,7 +165,9 @@ export function BillDialog({
   initial?: Bill;
   onSave: (data: Omit<Bill, "id">) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = open ?? internalOpen;
+  const setDialogOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
   const [dueDay, setDueDay] = useState(String(initial?.dueDay ?? 5));
@@ -184,8 +190,8 @@ export function BillDialog({
     <FormDialog
       trigger={trigger}
       title={initial ? "Editar conta" : "Nova conta"}
-      open={open}
-      setOpen={setOpen}
+      open={dialogOpen}
+      setOpen={setDialogOpen}
       onSubmit={() => {
         const day = Math.min(Math.max(Number(dueDay) || 1, 1), maxDay);
         if (!description.trim() || parseAmount(amount) <= 0) return false;
@@ -309,6 +315,8 @@ export function SavingDialog({
   trigger: ReactNode;
   initial?: Saving;
   onSave: (data: Omit<Saving, "id">) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState(initial?.description ?? "");

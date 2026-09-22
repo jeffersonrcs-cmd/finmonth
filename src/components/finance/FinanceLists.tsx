@@ -47,12 +47,24 @@ export function IncomeList({ monthKey, incomes }: { monthKey: string; incomes: I
   const sorted = [...incomes].sort((a, b) => a.date.localeCompare(b.date));
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-lg font-semibold">Receitas</h1>
           <p className="mt-1 text-xs text-mut">Somente as receitas adicionadas neste mês.</p>
         </div>
-        <IncomeDialog monthKey={monthKey} onSave={(data) => financeActions.addIncome(monthKey, data)} trigger={<button aria-label="Adicionar receita" className="grid size-9 place-items-center rounded-full bg-pos/10 text-pos"><Plus className="size-4" /></button>} />
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => financeActions.copyIncomesFromPrevious(monthKey)}
+            aria-label="Copiar receitas do mês anterior"
+            title="Copiar receitas do mês anterior"
+            className="flex h-9 items-center gap-1.5 rounded-full bg-brand/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-brand transition-colors hover:bg-brand/15"
+          >
+            <Copy className="size-3.5" />
+            <span>Copiar mês anterior</span>
+          </button>
+          <IncomeDialog monthKey={monthKey} onSave={(data) => financeActions.addIncome(monthKey, data)} trigger={<button aria-label="Adicionar receita" className="grid size-9 place-items-center rounded-full bg-pos/10 text-pos"><Plus className="size-4" /></button>} />
+        </div>
       </div>
       <div className="space-y-2.5">
         {sorted.length === 0 && <p className="glass-soft rounded-2xl p-5 text-center text-xs text-mut">Nenhuma receita adicionada neste mês.</p>}

@@ -43,7 +43,7 @@ function Dashboard() {
       <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
 
-      <div className="relative mx-auto max-w-[440px] px-4 pb-12 pt-5">
+      <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-5">
         <MonthNav monthKey={monthKey} onChange={setMonthKey} />
 
         <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-mut">

@@ -52,6 +52,13 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
                 <p className="text-[11px] text-mut">{status === "paid" ? `Paga · dia ${bill.dueDay}` : status === "overdue" ? `Vencida dia ${bill.dueDay}` : `Vence dia ${bill.dueDay}`}{bill.recurrent ? " · Recorrente" : ""}</p>
               </div>
               <span className={`num font-display text-sm font-semibold ${status === "overdue" ? "text-neg" : status === "paid" ? "text-pos" : ""}`}>{formatCurrency(bill.amount)}</span>
+              <BillDialog
+                monthKey={monthKey}
+                initial={bill}
+                onSave={(data) => financeActions.updateBill(monthKey, bill.id, data)}
+                trigger={<button type="button" aria-label="Editar conta" className="grid size-7 shrink-0 place-items-center rounded-full text-mut hover:text-brand"><Pencil className="size-3.5" /></button>}
+              />
+              <button type="button" aria-label="Excluir conta" onClick={() => financeActions.removeBill(monthKey, bill.id)} className="grid size-7 shrink-0 place-items-center rounded-full text-mut hover:text-neg"><Trash2 className="size-3.5" /></button>
             </div>
           );
         })}

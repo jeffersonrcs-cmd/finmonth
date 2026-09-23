@@ -7,11 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
-import { hydrateStore, useFinanceState } from "@/lib/finance";
+import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
+import { supabase } from "@/lib/supabase";
+import { AuthScreen } from "@/components/auth/AuthScreen";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -124,9 +126,49 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { theme } = useFinanceState();
+  const [authReady, setAuthReady] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
     hydrateStore();
+    let active = true;
+
+    const applySession = async (session: { user: { id: string } } | null) => {
+      if (!active) return;
+      if (!session) {
+        setAuthenticated(false);
+        setAuthReady(true);
+        return;
+      }
+
+      setAuthReady(false);
+      try {
+        await connectCloud(session.user.id);
+        if (active) setAuthenticated(true);
+      } catch (error) {
+        console.error("Não foi possível carregar os dados do usuário.", error);
+        if (active) setAuthenticated(false);
+      } finally {
+        if (active) setAuthReady(true);
+      }
+    };
+
+    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        disconnectCloud();
+        setAuthenticated(false);
+        setAuthReady(true);
+        return;
+      }
+      void applySession(session);
+    });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -137,9 +179,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster position="top-center" />
+      {!authReady ? (
+        <div className="flex min-h-screen items-center justify-center bg-background text-xs text-mut">
+          Carregando seus dados...
+        </div>
+      ) : authenticated ? (
+        <>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Toaster position="top-center" />
+        </>
+      ) : (
+        <AuthScreen />
+      )}
     </QueryClientProvider>
   );
 }

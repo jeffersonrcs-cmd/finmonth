@@ -87,7 +87,7 @@ function Dashboard() {
                 </span>
               )}
             </p>
-            <SummaryCards monthKey={monthKey} totals={totals} incomes={data.incomes} savings={data.savings} />
+            <SummaryCards monthKey={monthKey} totals={totals} incomes={data.incomes} bills={data.bills} savings={data.savings} />
             <BillsSection monthKey={monthKey} bills={data.bills} />
           </>
         )}

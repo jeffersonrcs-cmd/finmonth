@@ -42,7 +42,7 @@ export function MonthNav({
         </button>
 
         {menuOpen && (
-          <div className="glass absolute left-0 top-full z-50 mt-3 w-56 rounded-2xl p-1.5 shadow-xl">
+          <div className="absolute left-0 top-full z-50 mt-3 w-56 rounded-2xl border border-border bg-popover p-1.5 shadow-xl">
             <button
               type="button"
               onClick={() => {

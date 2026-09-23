@@ -1,9 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Check, Eye, EyeOff, LogOut } from "lucide-react";
+import { ArrowLeft, Check, Eye, EyeOff, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { financeActions, useFinanceState } from "@/lib/finance";
+import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
 export function AccountSettings({ onBack }: { onBack: () => void }) {
@@ -15,13 +15,37 @@ export function AccountSettings({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
     });
-    return () => { active = false; };
+    async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Excluir sua conta apagará permanentemente seu cadastro e todos os seus dados financeiros. Esta ação não pode ser desfeita. Deseja continuar?",
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error: deleteError } = await supabase.rpc("delete_current_user");
+      if (deleteError) throw deleteError;
+
+      disconnectCloud();
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível excluir sua conta.");
+      setDeleting(false);
+    }
+  }
+
+  return () => { active = false; };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -129,13 +153,25 @@ export function AccountSettings({ onBack }: { onBack: () => void }) {
         </Button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => void supabase.auth.signOut()}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-neg/20 px-4 py-3 text-xs font-semibold text-neg transition-colors hover:bg-neg/10"
-      >
-        <LogOut className="size-4" /> Sair da conta
-      </button>
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => void supabase.auth.signOut()}
+          disabled={deleting}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-neg/20 px-4 py-3 text-xs font-semibold text-neg transition-colors hover:bg-neg/10 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="size-4" /> Sair da conta
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void handleDeleteAccount()}
+          disabled={deleting}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-neg/20 bg-neg/5 px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-neg transition-colors hover:bg-neg/10 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Trash2 className="size-4" /> {deleting ? "Excluindo conta..." : "Excluir conta"}
+        </button>
+      </div>
     </section>
   );
 }

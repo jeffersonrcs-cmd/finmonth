@@ -26,7 +26,7 @@ export function useHistoryRows(limit = 7, year?: number): Row[] {
     : Object.keys(state.months).sort().slice(-limit);
 
   return keys.map((key) => {
-      const t = computeTotals(state.months[key]!, key);
+      const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);
       return {
         label: year ? (MONTH_NAMES[Number(key.slice(5, 7)) - 1]?.slice(0, 3) ?? "") : monthLabel(key, true),
         receitas: t.totalIncomes,

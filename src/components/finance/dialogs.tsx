@@ -161,13 +161,19 @@ export function BillDialog({
   monthKey,
   initial,
   onSave,
+  open,
+  onOpenChange,
 }: {
   trigger: ReactNode;
   monthKey: string;
   initial?: Bill;
   onSave: (data: Omit<Bill, "id">) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = open ?? internalOpen;
+  const setDialogOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
   const [dueDay, setDueDay] = useState(String(initial?.dueDay ?? 5));
@@ -175,13 +181,13 @@ export function BillDialog({
   const [recurrent, setRecurrent] = useState(initial?.recurrent ?? true);
 
   useEffect(() => {
-    if (!open) return;
+    if (!dialogOpen) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
     setDueDay(String(initial?.dueDay ?? 5));
     setPaid(initial?.paid ?? false);
     setRecurrent(initial?.recurrent ?? true);
-  }, [open, initial]);
+  }, [dialogOpen, initial]);
 
   const parts = monthKey.split("-");
   const maxDay = daysInMonth(Number(parts[0] ?? 0), Number(parts[1] ?? 1));
@@ -190,8 +196,8 @@ export function BillDialog({
     <FormDialog
       trigger={trigger}
       title={initial ? "Editar conta" : "Nova conta"}
-      open={open}
-      setOpen={setOpen}
+      open={dialogOpen}
+      setOpen={setDialogOpen}
       onSubmit={() => {
         const day = Math.min(Math.max(Number(dueDay) || 1, 1), maxDay);
         if (!description.trim() || parseAmount(amount) <= 0) return false;

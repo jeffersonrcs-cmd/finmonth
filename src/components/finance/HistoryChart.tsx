@@ -1,6 +1,7 @@
 import {
   Bar,
   BarChart,
+  Legend,
   CartesianGrid,
   Line,
   LineChart,
@@ -83,6 +84,95 @@ const axisProps = {
   axisLine: false,
   tickLine: false,
 };
+
+function changePercent(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / Math.abs(previous)) * 100;
+}
+
+function formatChange(value: number | null) {
+  if (value === null) return "novo";
+  return `${value >= 0 ? "+" : ""}${Math.round(value)}%`;
+}
+
+export function MonthlyOverview({ rows, totals }: { rows: Row[]; totals: { totalIncomes: number; totalBills: number; totalSaved: number; availableBalance: number } }) {
+  const previous = rows.length > 1 ? rows[rows.length - 2] : undefined;
+  const current = rows[rows.length - 1];
+  const incomeChange = previous && current ? changePercent(current.receitas, previous.receitas) : null;
+  const expenseChange = previous && current ? changePercent(current.despesas, previous.despesas) : null;
+  const savedChange = previous && current ? changePercent(current.guardado, previous.guardado) : null;
+  const balancePositive = totals.availableBalance >= 0;
+
+  return (
+    <section className="space-y-4">
+      <div className="glass rounded-3xl p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-sm font-semibold">Visão geral</h2>
+            <p className="mt-0.5 text-[11px] text-mut">Resumo do mês selecionado</p>
+          </div>
+          <span className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}>
+            Saldo {balancePositive ? "positivo" : "negativo"}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-pos/10 p-3">
+            <p className="text-[10px] text-mut">Receitas</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-pos">{formatCurrency(totals.totalIncomes, true)}</p>
+          </div>
+          <div className="rounded-2xl bg-neg/10 p-3">
+            <p className="text-[10px] text-mut">Contas</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-neg">{formatCurrency(totals.totalBills, true)}</p>
+          </div>
+          <div className="rounded-2xl bg-econ/10 p-3">
+            <p className="text-[10px] text-mut">Guardado</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-econ">{formatCurrency(totals.totalSaved, true)}</p>
+          </div>
+          <div className="rounded-2xl bg-brand/10 p-3">
+            <p className="text-[10px] text-mut">Saldo</p>
+            <p className={`num mt-1 font-display text-sm font-semibold ${balancePositive ? "text-brand" : "text-neg"}`}>{formatCurrency(totals.availableBalance, true)}</p>
+          </div>
+        </div>
+      </div>
+
+      <ChartShell title="Comparativo mensal" subtitle="Últimos meses" rows={rows}>
+        <BarChart data={rows}>
+          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <XAxis {...axisProps} />
+          <Tooltip {...tooltipStyle} />
+          <Legend wrapperStyle={{ fontSize: 10, paddingTop: 6 }} />
+          <Bar dataKey="receitas" name="Receitas" fill="var(--pos)" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="despesas" name="Contas" fill="var(--neg)" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="guardado" name="Guardado" fill="var(--econ)" radius={[5, 5, 0, 0]} />
+        </BarChart>
+      </ChartShell>
+
+      <section className="glass rounded-3xl p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-brand">✦</span>
+          <div>
+            <h2 className="font-display text-sm font-semibold">Insights do período</h2>
+            <p className="text-[10px] text-mut">Comparação com o mês anterior</p>
+          </div>
+        </div>
+        <div className="space-y-2.5 text-xs">
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
+            <span className="text-mut">Receitas</span>
+            <span className="font-medium text-pos">{formatChange(incomeChange)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
+            <span className="text-mut">Contas</span>
+            <span className={`font-medium ${expenseChange !== null && expenseChange > 0 ? "text-neg" : "text-pos"}`}>{formatChange(expenseChange)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
+            <span className="text-mut">Guardado</span>
+            <span className="font-medium text-econ">{formatChange(savedChange)}</span>
+          </div>
+        </div>
+      </section>
+    </section>
+  );
+}
 
 export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
   return (

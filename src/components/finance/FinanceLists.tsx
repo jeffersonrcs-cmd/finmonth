@@ -1,8 +1,10 @@
 import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { financeActions, billStatus, formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
 import { BillDialog, IncomeDialog, SavingDialog } from "./dialogs";
 
 export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
+  const [copied, setCopied] = useState(false);
   const sorted = [...bills].sort((a, b) => {
     const ap = billStatus(a, monthKey) !== "paid";
     const bp = billStatus(b, monthKey) !== "paid";
@@ -12,12 +14,29 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-lg font-semibold">Contas</h1>
           <p className="mt-1 text-xs text-mut">Somente as contas adicionadas neste mês.</p>
         </div>
-        <BillDialog monthKey={monthKey} onSave={(data) => financeActions.addBill(monthKey, data)} trigger={<button aria-label="Adicionar conta" className="grid size-9 place-items-center rounded-full bg-brand/10 text-brand"><Plus className="size-4" /></button>} />
+        <div className="flex shrink-0 items-center gap-1.5">
+          {!copied && (
+            <button
+              type="button"
+              onClick={() => {
+                const n = financeActions.copyBillsFromPrevious(monthKey);
+                if (n > 0) setCopied(true);
+              }}
+              aria-label="Copiar contas do mês anterior"
+              title="Copiar contas do mês anterior"
+              className="flex h-9 items-center gap-1.5 rounded-full bg-brand/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-brand transition-colors hover:bg-brand/15"
+            >
+              <Copy className="size-3.5" />
+              <span>Copiar mês anterior</span>
+            </button>
+          )}
+          <BillDialog monthKey={monthKey} onSave={(data) => financeActions.addBill(monthKey, data)} trigger={<button aria-label="Adicionar conta" className="grid size-9 place-items-center rounded-full bg-neg/10 text-neg"><Plus className="size-4" /></button>} />
+        </div>
       </div>
       <div className="space-y-2.5">
         {sorted.length === 0 && <p className="glass-soft rounded-2xl p-5 text-center text-xs text-mut">Nenhuma conta adicionada neste mês.</p>}
@@ -33,8 +52,6 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
                 <p className="text-[11px] text-mut">{status === "paid" ? `Paga · dia ${bill.dueDay}` : status === "overdue" ? `Vencida dia ${bill.dueDay}` : `Vence dia ${bill.dueDay}`}{bill.recurrent ? " · Recorrente" : ""}</p>
               </div>
               <span className={`num font-display text-sm font-semibold ${status === "overdue" ? "text-neg" : status === "paid" ? "text-pos" : ""}`}>{formatCurrency(bill.amount)}</span>
-              <BillDialog monthKey={monthKey} initial={bill} onSave={(data) => financeActions.updateBill(monthKey, bill.id, data)} trigger={<button aria-label="Editar conta" className="grid size-7 place-items-center rounded-full text-mut hover:text-brand"><Pencil className="size-3.5" /></button>} />
-              <button type="button" aria-label="Excluir conta" onClick={() => financeActions.removeBill(monthKey, bill.id)} className="grid size-7 place-items-center rounded-full text-mut hover:text-neg"><Trash2 className="size-3.5" /></button>
             </div>
           );
         })}
@@ -44,6 +61,7 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
 }
 
 export function IncomeList({ monthKey, incomes }: { monthKey: string; incomes: Income[] }) {
+  const [copied, setCopied] = useState(false);
   const sorted = [...incomes].sort((a, b) => a.date.localeCompare(b.date));
   return (
     <section className="space-y-3">
@@ -53,16 +71,19 @@ export function IncomeList({ monthKey, incomes }: { monthKey: string; incomes: I
           <p className="mt-1 text-xs text-mut">Somente as receitas adicionadas neste mês.</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <button
+          {!copied && <button
             type="button"
-            onClick={() => financeActions.copyIncomesFromPrevious(monthKey)}
+            onClick={() => {
+              const n = financeActions.copyIncomesFromPrevious(monthKey);
+              if (n > 0) setCopied(true);
+            }}
             aria-label="Copiar receitas do mês anterior"
             title="Copiar receitas do mês anterior"
             className="flex h-9 items-center gap-1.5 rounded-full bg-brand/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-brand transition-colors hover:bg-brand/15"
           >
             <Copy className="size-3.5" />
             <span>Copiar mês anterior</span>
-          </button>
+          </button>}
           <IncomeDialog monthKey={monthKey} onSave={(data) => financeActions.addIncome(monthKey, data)} trigger={<button aria-label="Adicionar receita" className="grid size-9 place-items-center rounded-full bg-pos/10 text-pos"><Plus className="size-4" /></button>} />
         </div>
       </div>

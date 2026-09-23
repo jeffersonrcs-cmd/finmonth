@@ -7,8 +7,7 @@ import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
 import {
-  BalanceEvolutionChart,
-  IncomeVsExpenseChart,
+  MonthlyOverview,
   useHistoryRows,
 } from "@/components/finance/HistoryChart";
 import { computeTotals, currentMonthKey, monthLabel, useMonthData } from "@/lib/finance";
@@ -104,8 +103,7 @@ function Dashboard() {
               <h1 className="font-display text-lg font-semibold">Gráficos</h1>
               <p className="mt-1 text-xs text-mut">Somente os gráficos da sua evolução financeira.</p>
             </div>
-            <IncomeVsExpenseChart rows={rows} />
-            <BalanceEvolutionChart rows={rows} />
+            <MonthlyOverview rows={rows} totals={totals} />
           </section>
         )}
 

@@ -125,7 +125,7 @@ function Dashboard() {
         aria-label="Navegação principal"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       >
-        <div className="mx-auto grid max-w-[440px] grid-cols-5 gap-1">
+        <div className="mx-auto flex max-w-[440px] gap-1 overflow-x-auto overscroll-x-contain rounded-2xl bg-muted/30 p-1 scrollbar-none snap-x snap-mandatory">
           {navigation.map(({ id, label, Icon }) => {
             const active = activeScreen === id;
             return (
@@ -134,7 +134,7 @@ function Dashboard() {
                 type="button"
                 onClick={() => goTo(id)}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-medium transition-colors ${active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"}`}
+                className={`flex min-w-[78px] shrink-0 snap-center flex-col items-center gap-1 rounded-xl px-3 py-2 text-[9px] font-medium transition-colors ${active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"}`}
               >
                 <Icon className="size-4" strokeWidth={active ? 2.2 : 1.8} />
                 <span className="truncate">{label}</span>
@@ -142,7 +142,6 @@ function Dashboard() {
             );
           })}
         </div>
-      </nav>
-    </div>
+      </nav>    </div>
   );
 }

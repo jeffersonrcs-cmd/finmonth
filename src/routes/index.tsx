@@ -8,6 +8,7 @@ import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
 import {
   MonthlyOverview,
+  useAnnualTotals,
   useHistoryRows,
 } from "@/components/finance/HistoryChart";
 import { computeTotals, currentMonthKey, monthLabel, useMonthData } from "@/lib/finance";
@@ -46,9 +47,20 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState<"monthly" | "annual">("monthly");
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
-  const rows = useHistoryRows();
+  const selectedYear = Number(monthKey.slice(0, 4));
+  const rows = useHistoryRows(7, chartPeriod === "annual" ? selectedYear : undefined);
+  const annualTotals = useAnnualTotals(selectedYear);
+  const previousAnnualTotals = useAnnualTotals(selectedYear - 1);
+  const chartTotals =
+    chartPeriod === "annual"
+      ? {
+          ...annualTotals,
+          availableBalance: annualTotals.totalIncomes - annualTotals.totalBills - annualTotals.totalSaved,
+        }
+      : totals;
 
   const goTo = (screen: Screen) => {
     setActiveScreen(screen);
@@ -101,9 +113,36 @@ function Dashboard() {
           <section className="space-y-4">
             <div>
               <h1 className="font-display text-lg font-semibold">Gráficos</h1>
-              <p className="mt-1 text-xs text-mut">Somente os gráficos da sua evolução financeira.</p>
+              <p className="mt-1 text-xs text-mut">
+                {chartPeriod === "annual" ? `Visão anual de ${selectedYear}, mês a mês.` : "Somente os gráficos da sua evolução financeira."}
+              </p>
             </div>
-            <MonthlyOverview rows={rows} totals={totals} />
+
+            <div className="glass grid grid-cols-2 rounded-2xl p-1">
+              {([
+                ["monthly", "Mensal"],
+                ["annual", "Anual"],
+              ] as const).map(([period, label]) => (
+                <button
+                  key={period}
+                  type="button"
+                  onClick={() => setChartPeriod(period)}
+                  className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
+                    chartPeriod === period ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"
+                  }`}
+                  aria-pressed={chartPeriod === period}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <MonthlyOverview
+              rows={rows}
+              totals={chartTotals}
+              period={chartPeriod}
+              comparison={chartPeriod === "annual" ? previousAnnualTotals : undefined}
+            />
           </section>
         )}
 

@@ -22,7 +22,33 @@ export function AccountSettings({ onBack }: { onBack: () => void }) {
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
     });
+    return () => {
+      active = false;
+    };
+  }, []);
 
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Excluir sua conta apagará permanentemente seu cadastro e todos os seus dados financeiros. Esta ação não pode ser desfeita. Deseja continuar?",
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error: deleteError } = await supabase.rpc("delete_current_user");
+      if (deleteError) throw deleteError;
+
+      disconnectCloud();
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível excluir sua conta.");
+      setDeleting(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

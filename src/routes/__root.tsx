@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
+const BUILD_ID = __FINMONTH_BUILD_ID__;
+
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
@@ -88,6 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "finmonth-build", content: BUILD_ID },
     ],
     links: [
       {
@@ -183,13 +186,72 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    const checkForUpdate = async () => {
+      try {
+        const response = await fetch(window.location.href, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (!response.ok) return;
+        const html = await response.text();
+        const match = html.match(/<meta[^>]+name=["']finmonth-build["'][^>]+content=["']([^"']+)["']/i);
+        if (active && match?.[1] && match[1] !== BUILD_ID) {
+          window.dispatchEvent(new CustomEvent("finmonth:update-available"));
+        }
+      } catch {
+        // A failed version check must never interrupt normal app usage.
+      }
+    };
+
+    void checkForUpdate();
+    const interval = window.setInterval(checkForUpdate, 60_000);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void checkForUpdate();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("light", theme === "light");
     root.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = () => setUpdateAvailable(true);
+    window.addEventListener("finmonth:update-available", handleUpdate);
+    return () => window.removeEventListener("finmonth:update-available", handleUpdate);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
+      {updateAvailable && (
+        <div className="fixed inset-x-3 top-3 z-[100] mx-auto max-w-[420px] rounded-2xl border border-brand/25 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-foreground">Nova versão disponível</p>
+              <p className="mt-0.5 text-[11px] text-mut">Atualize para usar a versão mais recente do FinMês.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => window.location.replace(window.location.href.split("?")[0] + "?update=" + Date.now())}
+              className="shrink-0 rounded-xl bg-brand px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-background"
+            >
+              Atualizar
+            </button>
+          </div>
+        </div>
+      )}
       {!authReady ? (
         <div className="flex min-h-screen items-center justify-center bg-background text-xs text-mut">
           Carregando seus dados...

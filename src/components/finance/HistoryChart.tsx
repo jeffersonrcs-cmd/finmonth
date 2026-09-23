@@ -9,7 +9,7 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
-import { computeTotals, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
+import { computeTotals, formatCurrency, monthLabel, MONTH_NAMES, useFinanceState } from "@/lib/finance";
 
 type Row = {
   label: string;
@@ -19,15 +19,16 @@ type Row = {
   guardado: number;
 };
 
-export function useHistoryRows(limit = 7): Row[] {
+export function useHistoryRows(limit = 7, year?: number): Row[] {
   const state = useFinanceState();
-  return Object.keys(state.months)
-    .sort()
-    .slice(-limit)
-    .map((key) => {
+  const keys = year
+    ? Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
+    : Object.keys(state.months).sort().slice(-limit);
+
+  return keys.map((key) => {
       const t = computeTotals(state.months[key]!, key);
       return {
-        label: monthLabel(key, true),
+        label: year ? (MONTH_NAMES[Number(key.slice(5, 7)) - 1]?.slice(0, 3) ?? "") : monthLabel(key, true),
         receitas: t.totalIncomes,
         despesas: t.totalBills,
         saldo: t.monthBalance,
@@ -85,6 +86,23 @@ const axisProps = {
   tickLine: false,
 };
 
+export function useAnnualTotals(year: number) {
+  const state = useFinanceState();
+  return Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`).reduce(
+    (totals, key) => {
+      const month = state.months[key];
+      if (!month) return totals;
+      const current = computeTotals(month, key);
+      return {
+        totalIncomes: totals.totalIncomes + current.totalIncomes,
+        totalBills: totals.totalBills + current.totalBills,
+        totalSaved: totals.totalSaved + current.totalSaved,
+      };
+    },
+    { totalIncomes: 0, totalBills: 0, totalSaved: 0 },
+  );
+}
+
 function changePercent(current: number, previous: number) {
   if (previous === 0) return current === 0 ? 0 : null;
   return ((current - previous) / Math.abs(previous)) * 100;
@@ -95,12 +113,34 @@ function formatChange(value: number | null) {
   return `${value >= 0 ? "+" : ""}${Math.round(value)}%`;
 }
 
-export function MonthlyOverview({ rows, totals }: { rows: Row[]; totals: { totalIncomes: number; totalBills: number; totalSaved: number; availableBalance: number } }) {
+export function MonthlyOverview({
+  rows,
+  totals,
+  period = "monthly",
+  comparison,
+}: {
+  rows: Row[];
+  totals: { totalIncomes: number; totalBills: number; totalSaved: number; availableBalance: number };
+  period?: "monthly" | "annual";
+  comparison?: { totalIncomes: number; totalBills: number; totalSaved: number };
+}) {
   const previous = rows.length > 1 ? rows[rows.length - 2] : undefined;
   const current = rows[rows.length - 1];
-  const incomeChange = previous && current ? changePercent(current.receitas, previous.receitas) : null;
-  const expenseChange = previous && current ? changePercent(current.despesas, previous.despesas) : null;
-  const savedChange = previous && current ? changePercent(current.guardado, previous.guardado) : null;
+  const incomeChange = comparison
+    ? changePercent(totals.totalIncomes, comparison.totalIncomes)
+    : previous && current
+      ? changePercent(current.receitas, previous.receitas)
+      : null;
+  const expenseChange = comparison
+    ? changePercent(totals.totalBills, comparison.totalBills)
+    : previous && current
+      ? changePercent(current.despesas, previous.despesas)
+      : null;
+  const savedChange = comparison
+    ? changePercent(totals.totalSaved, comparison.totalSaved)
+    : previous && current
+      ? changePercent(current.guardado, previous.guardado)
+      : null;
   const balancePositive = totals.availableBalance >= 0;
 
   return (
@@ -109,7 +149,7 @@ export function MonthlyOverview({ rows, totals }: { rows: Row[]; totals: { total
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="font-display text-sm font-semibold">Visão geral</h2>
-            <p className="mt-0.5 text-[11px] text-mut">Resumo do mês selecionado</p>
+            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? "Resumo do ano selecionado" : "Resumo do mês selecionado"}</p>
           </div>
           <span className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}>
             Saldo {balancePositive ? "positivo" : "negativo"}
@@ -135,7 +175,7 @@ export function MonthlyOverview({ rows, totals }: { rows: Row[]; totals: { total
         </div>
       </div>
 
-      <ChartShell title="Comparativo mensal" subtitle="Últimos meses" rows={rows}>
+      <ChartShell title={period === "annual" ? "Comparativo anual" : "Comparativo mensal"} subtitle={period === "annual" ? "Janeiro a dezembro" : "Últimos meses"} rows={rows}>
         <BarChart data={rows}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis {...axisProps} />
@@ -152,7 +192,7 @@ export function MonthlyOverview({ rows, totals }: { rows: Row[]; totals: { total
           <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-brand">✦</span>
           <div>
             <h2 className="font-display text-sm font-semibold">Insights do período</h2>
-            <p className="text-[10px] text-mut">Comparação com o mês anterior</p>
+            <p className="text-[10px] text-mut">{comparison ? "Comparação com o ano anterior" : "Comparação com o mês anterior"}</p>
           </div>
         </div>
         <div className="space-y-2.5 text-xs">

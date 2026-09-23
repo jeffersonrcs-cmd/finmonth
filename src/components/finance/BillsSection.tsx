@@ -1,4 +1,5 @@
-import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   billStatus,
@@ -11,6 +12,7 @@ import {
 import { BillDialog } from "./dialogs";
 
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
+  const [copied, setCopied] = useState(false);
   const sorted = [...bills].sort((a, b) => {
     const aPending = billStatus(a, monthKey) !== "paid";
     const bPending = billStatus(b, monthKey) !== "paid";
@@ -86,43 +88,11 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
               >
                 {formatCurrency(bill.amount)}
               </span>
-              <div className="flex shrink-0 items-center gap-1">
-                <BillDialog
-                  monthKey={monthKey}
-                  initial={bill}
-                  onSave={(data) => financeActions.updateBill(monthKey, bill.id, data)}
-                  trigger={
-                    <button
-                      aria-label="Editar conta"
-                      className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-brand"
-                    >
-                      <Pencil className="size-3.5" />
-                    </button>
-                  }
-                />
-                <button
-                  aria-label="Excluir conta"
-                  onClick={() => financeActions.removeBill(monthKey, bill.id)}
-                  className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-neg"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
             </div>
           );
         })}
       </div>
 
-      <BillDialog
-        monthKey={monthKey}
-        onSave={(data) => financeActions.addBill(monthKey, data)}
-        trigger={
-          <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3.5 text-mut transition-all hover:border-foreground/25 hover:text-foreground active:scale-[0.98]">
-            <Plus className="size-4" />
-            <span className="text-xs font-medium uppercase tracking-widest">Nova conta</span>
-          </button>
-        }
-      />
     </section>
   );
 }

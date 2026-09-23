@@ -113,7 +113,7 @@ export async function connectCloud(userId: string) {
   if (profileError) throw profileError;
 
   const hasCloudData = (rows?.length ?? 0) > 0;
-  if (!hasCloudData && hasFinanceData(state)) {
+  if (!hasCloudData && (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")) {
     if (profile) {
       state = {
         ...state,

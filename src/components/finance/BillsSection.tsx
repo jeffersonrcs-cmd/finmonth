@@ -9,7 +9,6 @@ import {
   previousMonthKey,
   type Bill,
 } from "@/lib/finance";
-import { BillDialog } from "./dialogs";
 
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const [copied, setCopied] = useState(false);
@@ -27,19 +26,22 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
         <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
           Contas do mês
         </h2>
-        <button
-          onClick={() => {
-            const n = financeActions.copyBillsFromPrevious(monthKey);
-            toast[n ? "success" : "info"](
-              n
-                ? `${n} conta(s) recorrente(s) copiada(s) de ${monthLabel(previousMonthKey(monthKey))}`
-                : `Nada novo para copiar de ${monthLabel(previousMonthKey(monthKey))}`,
-            );
-          }}
-          className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-brand/70 transition-colors hover:text-brand"
-        >
-          <Copy className="size-3" /> Copiar contas
-        </button>
+        {!copied && (
+          <button
+            onClick={() => {
+              const n = financeActions.copyBillsFromPrevious(monthKey);
+              toast[n ? "success" : "info"](
+                n
+                  ? `${n} conta(s) recorrente(s) copiada(s) de ${monthLabel(previousMonthKey(monthKey))}`
+                  : `Nada novo para copiar de ${monthLabel(previousMonthKey(monthKey))}`,
+              );
+              if (n > 0) setCopied(true);
+            }}
+            className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-brand/70 transition-colors hover:text-brand"
+          >
+            <Copy className="size-3" /> Copiar contas
+          </button>
+        )}
       </div>
 
       <div className="mb-5 space-y-2.5">

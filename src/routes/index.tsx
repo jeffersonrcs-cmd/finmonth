@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
+import { AccountSettings } from "@/components/finance/AccountSettings";
 import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
@@ -45,6 +46,7 @@ const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
 function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
   const rows = useHistoryRows();
@@ -54,6 +56,18 @@ function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  if (accountSettingsOpen) {
+    return (
+      <div className="relative min-h-screen w-full overflow-x-hidden">
+        <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
+        <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
+        <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">
+          <AccountSettings onBack={() => setAccountSettingsOpen(false)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden">
       <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
@@ -61,7 +75,7 @@ function Dashboard() {
       <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-5">
-        <MonthNav monthKey={monthKey} onChange={setMonthKey} />
+        <MonthNav monthKey={monthKey} onChange={setMonthKey} onOpenSettings={() => setAccountSettingsOpen(true)} />
 
         {activeScreen === "inicio" && (
           <>
@@ -73,25 +87,16 @@ function Dashboard() {
                 </span>
               )}
             </p>
-            <SummaryCards
-              monthKey={monthKey}
-              totals={totals}
-              incomes={data.incomes}
-              savings={data.savings}
-            />
+            <SummaryCards monthKey={monthKey} totals={totals} incomes={data.incomes} savings={data.savings} />
             <BillsSection monthKey={monthKey} bills={data.bills} />
           </>
         )}
 
         {activeScreen === "contas" && <AccountsList monthKey={monthKey} bills={data.bills} />}
 
-        {activeScreen === "receitas" && (
-          <IncomeList monthKey={monthKey} incomes={data.incomes} />
-        )}
+        {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
 
-        {activeScreen === "guardado" && (
-          <SavingsList monthKey={monthKey} savings={data.savings} />
-        )}
+        {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
 
         {activeScreen === "graficos" && (
           <section className="space-y-4">
@@ -129,9 +134,7 @@ function Dashboard() {
                 type="button"
                 onClick={() => goTo(id)}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-medium transition-colors ${
-                  active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"
-                }`}
+                className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-medium transition-colors ${active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"}`}
               >
                 <Icon className="size-4" strokeWidth={active ? 2.2 : 1.8} />
                 <span className="truncate">{label}</span>

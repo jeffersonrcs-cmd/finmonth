@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { supabase } from "@/lib/supabase";
 
 export type Income = {
   id: string;
@@ -42,6 +43,9 @@ const initialState: FinanceState = { months: {}, theme: "dark", userName: "" };
 
 let state: FinanceState = initialState;
 let hydrated = false;
+let cloudUserId: string | null = null;
+let cloudReady = false;
+let cloudSyncTimer: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -54,6 +58,100 @@ function persist() {
   } catch {
     /* ignore */
   }
+}
+
+function hasFinanceData(value: FinanceState) {
+  return Object.values(value.months).some(
+    (month) => month.incomes.length > 0 || month.bills.length > 0 || month.savings.length > 0,
+  );
+}
+
+async function syncCloudNow() {
+  if (!cloudUserId || !cloudReady || typeof window === "undefined") return;
+
+  const userId = cloudUserId;
+  const months = Object.entries(state.months).map(([monthKey, data]) => ({
+    user_id: userId,
+    month_key: monthKey,
+    data,
+  }));
+
+  const [{ error: profileError }, { error: monthsError }] = await Promise.all([
+    supabase.from("profiles").upsert({
+      id: userId,
+      full_name: state.userName,
+      theme: state.theme,
+    }),
+    months.length > 0
+      ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
+      : Promise.resolve({ error: null }),
+  ]);
+
+  if (profileError || monthsError) {
+    console.error("Falha ao salvar dados financeiros no Supabase.", profileError ?? monthsError);
+  }
+}
+
+function scheduleCloudSync() {
+  if (!cloudUserId || !cloudReady || typeof window === "undefined") return;
+  if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => {
+    void syncCloudNow();
+  }, 250);
+}
+
+export async function connectCloud(userId: string) {
+  cloudUserId = userId;
+  cloudReady = false;
+
+  const [{ data: rows, error: monthsError }, { data: profile, error: profileError }] = await Promise.all([
+    supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
+    supabase.from("profiles").select("full_name,theme").eq("id", userId).maybeSingle(),
+  ]);
+
+  if (monthsError) throw monthsError;
+  if (profileError) throw profileError;
+
+  const hasCloudData = (rows?.length ?? 0) > 0;
+  if (!hasCloudData && hasFinanceData(state)) {
+    if (profile) {
+      state = {
+        ...state,
+        userName: profile.full_name ?? state.userName,
+        theme: profile.theme === "light" ? "light" : state.theme,
+      };
+    }
+    persist();
+    emit();
+    cloudReady = true;
+    await syncCloudNow();
+    return;
+  }
+
+  state = {
+    months: Object.fromEntries(
+      (rows ?? []).map((row) => [row.month_key, row.data as MonthData]),
+    ),
+    theme: profile?.theme === "light" ? "light" : "dark",
+    userName: profile?.full_name ?? "",
+  };
+  persist();
+  emit();
+  cloudReady = true;
+}
+
+export function disconnectCloud() {
+  cloudReady = false;
+  cloudUserId = null;
+  if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = undefined;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+  state = initialState;
+  emit();
 }
 
 export function hydrateStore() {
@@ -79,6 +177,7 @@ function setState(next: FinanceState) {
   state = next;
   persist();
   emit();
+  scheduleCloudSync();
 }
 
 function updateMonth(monthKey: string, fn: (m: MonthData) => MonthData) {

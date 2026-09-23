@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Moon, Pencil, Sun } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Moon, Pencil, Sun } from "lucide-react";
 import { financeActions, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
+import { supabase } from "@/lib/supabase";
 
 export function MonthNav({
   monthKey,
@@ -87,6 +88,13 @@ export function MonthNav({
           className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"
         >
           {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </button>
+        <button
+          onClick={() => { void supabase.auth.signOut(); }}
+          aria-label="Sair da conta"
+          className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-neg"
+        >
+          <LogOut className="size-4" />
         </button>
       </div>
     </header>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
 import { SummaryCards } from "@/components/finance/SummaryCards";
@@ -47,6 +47,7 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
   const rows = useHistoryRows();
@@ -56,9 +57,29 @@ function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+
+    const endX = event.changedTouches[0]?.clientX;
+    const deltaX = endX === undefined ? 0 : endX - touchStartX.current;
+    touchStartX.current = null;
+
+    if (Math.abs(deltaX) < 50) return;
+
+    const currentIndex = navigation.findIndex(({ id }) => id === activeScreen);
+    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
+    const nextScreen = navigation[nextIndex]?.id;
+
+    if (nextScreen) goTo(nextScreen);
+  };
+
   if (accountSettingsOpen) {
     return (
-      <div className="relative min-h-screen w-full overflow-x-hidden">
+      <div\n      className="relative min-h-screen w-full overflow-x-hidden"\n      onTouchStart={handleTouchStart}\n      onTouchEnd={handleTouchEnd}\n    >
         <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
         <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
         <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">

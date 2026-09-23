@@ -1,21 +1,24 @@
 import { Pencil, Plus } from "lucide-react";
 import { useState } from "react";
-import { financeActions, formatCurrency, type Income, type MonthTotals, type Saving } from "@/lib/finance";
-import { IncomeDialog, ManageEntriesDialog, SavingDialog } from "./dialogs";
+import { financeActions, formatCurrency, type Bill, type Income, type MonthTotals, type Saving } from "@/lib/finance";
+import { BillDialog, IncomeDialog, ManageEntriesDialog, SavingDialog } from "./dialogs";
 
 export function SummaryCards({
   monthKey,
   totals,
   incomes,
+  bills,
   savings,
 }: {
   monthKey: string;
   totals: MonthTotals;
   incomes: Income[];
+  bills: Bill[];
   savings: Saving[];
 }) {
   const positive = totals.availableBalance >= 0;
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [editingSaving, setEditingSaving] = useState<Saving | null>(null);
 
   return (
@@ -164,10 +167,55 @@ export function SummaryCards({
 
 
         <div className="glass rounded-2xl p-3.5">
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
-          <p className="num mt-1 font-display text-base font-semibold text-neg">
-            {formatCurrency(totals.totalBills, true)}
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
+              <p className="num mt-1 font-display text-base font-semibold text-neg">
+                {formatCurrency(totals.totalBills, true)}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <BillDialog
+                monthKey={monthKey}
+                onSave={(data) => financeActions.addBill(monthKey, data)}
+                trigger={
+                  <button
+                    aria-label="Adicionar conta"
+                    className="grid size-8 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/20"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                }
+              />
+              <ManageEntriesDialog
+                title="Editar contas"
+                items={bills}
+                onEdit={(id) => {
+                  const bill = bills.find((item) => item.id === id);
+                  if (bill) setEditingBill(bill);
+                }}
+                onDelete={(id) => financeActions.removeBill(monthKey, id)}
+                trigger={
+                  <button
+                    aria-label="Editar contas"
+                    className="grid size-8 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/20"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                }
+              />
+              <BillDialog
+                monthKey={monthKey}
+                initial={editingBill ?? undefined}
+                open={editingBill !== null}
+                onOpenChange={(open) => { if (!open) setEditingBill(null); }}
+                onSave={(data) => {
+                  if (editingBill) financeActions.updateBill(monthKey, editingBill.id, data);
+                }}
+                trigger={<span className="hidden" />}
+              />
+            </div>
+          </div>
         </div>
 
 

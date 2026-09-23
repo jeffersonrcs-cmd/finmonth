@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -132,11 +132,19 @@ function RootComponent() {
   useEffect(() => {
     hydrateStore();
     let active = true;
+    let connectedUserId: string | null = null;
 
     const applySession = async (session: { user: { id: string } } | null) => {
       if (!active) return;
       if (!session) {
+        connectedUserId = null;
         setAuthenticated(false);
+        setAuthReady(true);
+        return;
+      }
+
+      if (connectedUserId === session.user.id) {
+        setAuthenticated(true);
         setAuthReady(true);
         return;
       }
@@ -144,6 +152,7 @@ function RootComponent() {
       setAuthReady(false);
       try {
         await connectCloud(session.user.id);
+        connectedUserId = session.user.id;
         if (active) setAuthenticated(true);
       } catch (error) {
         console.error("Não foi possível carregar os dados do usuário.", error);
@@ -162,7 +171,9 @@ function RootComponent() {
         setAuthReady(true);
         return;
       }
-      void applySession(session);
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        setTimeout(() => void applySession(session), 0);
+      }
     });
 
     return () => {

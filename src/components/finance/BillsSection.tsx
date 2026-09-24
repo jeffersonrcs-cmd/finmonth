@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
 import {
   billStatus,
@@ -19,10 +20,16 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
 
   return (
     <section className="mb-8">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
-          {t("bills")} {t("month")}
+          {t("billsMonth")}
         </h2>
+        <Link
+          to="/historico"
+          className="shrink-0 border-b border-transparent pb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-mut transition-colors hover:border-brand/40 hover:text-brand"
+        >
+          {t("fullHistory")}
+        </Link>
       </div>
 
       <div className="mb-5 space-y-2.5">

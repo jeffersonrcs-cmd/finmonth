@@ -60,6 +60,14 @@ Marco reconstruído, consolidando:
 
 Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
 
+## v1.7.0 — idiomas
+
+- opção **Linguagem** dentro de Configurações;
+- seleção entre Português, English e Español;
+- preferência de idioma salva somente no dispositivo, sem consumo de armazenamento do Supabase;
+- detecção inicial do idioma do navegador/dispositivo quando não existe preferência salva;
+- atualização do idioma da interface principal e do atributo \`lang\` do documento.
+
 ## v1.5.0 — atualização do aplicativo
 
 - botão **Atualizar aplicativo** dentro de Configurações > Versão;

@@ -48,7 +48,7 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const [accountSettingsSection, setAccountSettingsSection] = useState<"profile" | "notifications" | "version">("profile");
+  const [accountSettingsSection, setAccountSettingsSection] = useState<"menu" | "profile" | "notifications" | "version">("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
@@ -80,7 +80,12 @@ function Dashboard() {
         <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
         <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
         <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">
-          <AccountSettings section={accountSettingsSection} onBack={() => setAccountSettingsOpen(false)} />
+          <AccountSettings
+            section={accountSettingsSection}
+            onBack={() => setAccountSettingsOpen(false)}
+            onOpenSection={(section) => setAccountSettingsSection(section)}
+            onSignOut={() => void import("@/lib/supabase").then(({ supabase }) => supabase.auth.signOut())}
+          />
         </div>
       </div>
     );
@@ -99,7 +104,7 @@ function Dashboard() {
           monthKey={monthKey}
           onChange={setMonthKey}
           onOpenSettings={() => {
-            setAccountSettingsSection("profile");
+            setAccountSettingsSection("menu");
             setAccountSettingsOpen(true);
           }}
           onOpenVersion={() => {

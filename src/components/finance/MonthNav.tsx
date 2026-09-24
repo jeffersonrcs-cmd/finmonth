@@ -71,6 +71,15 @@ export function MonthNav({
             </button>
             <button
               type="button"
+              onClick={() => financeActions.setTheme(theme === "dark" ? "light" : "dark")}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition-colors hover:bg-foreground/5"
+              aria-label="Alternar tema"
+            >
+              {theme === "dark" ? <Sun className="size-4 text-mut" /> : <Moon className="size-4 text-mut" />}
+              {theme === "dark" ? "Tema claro" : "Tema escuro"}
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setMenuOpen(false);
                 void supabase.auth.signOut();
@@ -92,9 +101,6 @@ export function MonthNav({
         <div className="glass-soft num rounded-full px-3 py-1.5 text-xs font-medium">{monthLabel(monthKey, true)}</div>
         <button onClick={() => onChange(shiftMonthKey(monthKey, 1))} aria-label="Próximo mês" className="glass-soft grid size-9 place-items-center rounded-full text-brand transition-colors hover:bg-foreground/10">
           <ChevronRight className="size-4" />
-        </button>
-        <button onClick={() => financeActions.setTheme(theme === "dark" ? "light" : "dark")} aria-label="Alternar tema" className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand">
-          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </button>
       </div>
     </header>

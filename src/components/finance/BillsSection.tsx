@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 import {
   billStatus,
   financeActions,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/finance";
 
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
+  const { t } = useLanguage();
   const sorted = [...bills].sort((a, b) => {
     const aPending = billStatus(a, monthKey) !== "paid";
     const bPending = billStatus(b, monthKey) !== "paid";
@@ -19,14 +21,14 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
     <section className="mb-8">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
-          Contas do mês
+          {t("bills")} {t("month")}
         </h2>
       </div>
 
       <div className="mb-5 space-y-2.5">
         {sorted.length === 0 && (
           <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
-            Nenhuma conta neste mês.
+            {t("noBills")}
           </p>
         )}
         {sorted.map((bill) => {
@@ -40,7 +42,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
             >
               <button
                 onClick={() => financeActions.toggleBillPaid(monthKey, bill.id)}
-                aria-label={bill.paid ? "Marcar como pendente" : "Marcar como paga"}
+                aria-label={bill.paid ? t("markPending") : t("markPaid")}
                 className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors ${
                   status === "paid"
                     ? "border-pos/40 bg-pos/20 text-pos"
@@ -55,11 +57,11 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                 <p className="truncate text-sm font-medium">{bill.description}</p>
                 <p className={`text-[11px] ${status === "overdue" ? "text-neg" : "text-mut"}`}>
                   {status === "paid"
-                    ? `Paga · dia ${bill.dueDay}`
+                    ? `${t("paid")} · ${t("day")} ${bill.dueDay}`
                     : status === "overdue"
-                      ? `Vencida dia ${bill.dueDay}`
-                      : `Vence dia ${bill.dueDay}`}
-                  {bill.recurrent ? " · Recorrente" : ""}
+                      ? `${t("overdue")} ${t("day")} ${bill.dueDay}`
+                      : `${t("due")} ${t("day")} ${bill.dueDay}`}
+                  {bill.recurrent ? ` · ${t("recurring")}` : ""}
                 </p>
               </div>
               <span

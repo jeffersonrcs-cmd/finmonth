@@ -1,3 +1,8 @@
+## v1.12.3 — correção da central de notificações
+
+- o botão de sino do cabeçalho agora abre diretamente a **Central de notificações**;
+- a tela de configuração de notificações continua acessível pelas configurações da conta.
+
 ## v1.12.2 — tradução dos filtros do histórico mensal
 
 - filtros de período do **Histórico mensal** agora usam as traduções do idioma selecionado;

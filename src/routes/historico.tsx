@@ -123,6 +123,7 @@ function Historico() {
                   <div className="min-w-0">
                     <h2 className="font-display text-sm font-semibold">{t("monthlyComparison")}</h2>
                     <p className="mt-0.5 text-[10px] text-mut">{monthLabel(latestKey!)} · {t("vsPrevious")} · {monthLabel(previousKey!)}</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[

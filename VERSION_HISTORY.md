@@ -60,6 +60,17 @@ Marco reconstruído, consolidando:
 
 Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
 
+## v1.8.16 — tradução completa revisada
+
+- corrigidos formulários de contas, receitas e valores guardados em English;
+- labels de descrição, valor, moeda, vencimento e dia agora respeitam o idioma selecionado;
+- botões de salvar/cancelar e telas secundárias de Configurações revisados;
+- histórico completo e cards históricos traduzidos;
+- autenticação e recuperação de senha revisadas;
+- FinAI revisada para interface e mensagens de erro no idioma selecionado;
+- Edge Function da FinAI atualizada para localizar respostas e mensagens de erro;
+- preferência de idioma continua somente no dispositivo, sem armazenamento adicional no Supabase.
+
 ## v1.8.7 — tradução completa
 
 - interface completa traduzida para Português, English e Español;

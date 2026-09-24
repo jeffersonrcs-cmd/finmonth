@@ -9,6 +9,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   vite: {
     define: {
+      __FINMONTH_VERSION__: JSON.stringify("1.0.0"),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
     },
   },

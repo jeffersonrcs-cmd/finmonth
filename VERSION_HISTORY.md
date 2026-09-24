@@ -60,6 +60,15 @@ Marco reconstruído, consolidando:
 
 Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
 
+## v1.4.0 — Fin IA
+
+Nova central de inteligência financeira do FinMonth:
+
+- substituição da aba Gráficos pela aba Fin IA;
+- perguntas e sugestões sobre receitas, contas, saldo e valores guardados;
+- geração de gráficos mensal, comparativo e anual dentro da conversa;
+- análises baseadas nos dados financeiros já registrados no aplicativo.
+
 ## Regra a partir da v1.3.1
 
 - correção/ajuste: **patch**;

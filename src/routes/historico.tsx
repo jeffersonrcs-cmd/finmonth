@@ -123,25 +123,6 @@ function Historico() {
                   <div className="min-w-0">
                     <h2 className="font-display text-sm font-semibold">{t("monthlyComparison")}</h2>
                     <p className="mt-0.5 text-[10px] text-mut">{monthLabel(latestKey!)} · {t("vsPrevious")} · {monthLabel(previousKey!)}</p>
-                  </div>
-                  <div className="flex shrink-0 gap-1 rounded-xl bg-muted/25 p-1" role="group" aria-label={t("historyRange")}>
-                    {[3, 6, 12].map((months) => {
-                      const selected = comparisonRange === months;
-                      return (
-                        <button
-                          key={months}
-                          type="button"
-                          onClick={() => setChartRange(months as ChartRange)}
-                          className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-all duration-200 ${selected
-                            ? "bg-brand text-background shadow-sm"
-                            : "text-foreground/75 hover:bg-muted/60 hover:text-foreground active:scale-[0.98]"}`}
-                          aria-pressed={selected}
-                        >
-                          {months} {t("months")}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[

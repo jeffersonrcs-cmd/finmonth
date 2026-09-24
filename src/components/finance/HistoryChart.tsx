@@ -150,7 +150,6 @@ function FinanceTooltip({
   fields: Array<{ key: keyof Row; label: string }>;
 }) {
   if (!active || !payload?.length) return null;
-  const row = payload[0]?.dataKey ? payload[0] : undefined;
   const data = payload[0] as TooltipItem & { payload?: Row };
   const source = data.payload;
   if (!source) return null;

@@ -123,11 +123,11 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
           </h1>
           <p className="mt-1 text-xs text-mut">
             {section === "menu"
-              ? "Gerencie sua conta e as preferências do aplicativo."
+              ? t("settingsDescription")
               : section === "notifications"
-                ? "Configure os avisos das suas contas."
+                ? t("notificationsDescription")
                 : section === "version"
-                  ? "Informações técnicas desta versão do aplicativo."
+                  ? t("versionInfo")
                   : t("profile")}
           </p>
         </div>
@@ -195,7 +195,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
             <div>
               <h2 className="font-display text-sm font-semibold">FinMonth</h2>
               <p className="mt-1 text-xs leading-relaxed text-mut">
-                Informações da versão instalada no dispositivo.
+                {t("versionInfo")}
               </p>
             </div>
           </div>
@@ -224,7 +224,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
             className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 text-[11px] font-semibold uppercase tracking-widest text-background transition-colors hover:bg-brand/90"
           >
             <RefreshCw className="size-4" />
-            Atualizar aplicativo
+            {t("updateApp")}
           </button>
           <p className="text-center text-[10px] leading-relaxed text-mut">
             {t("autoUpdateInfo")}

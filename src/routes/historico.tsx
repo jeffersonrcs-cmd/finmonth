@@ -5,6 +5,7 @@ import {
   BalanceEvolutionChart,
   IncomeVsExpenseChart,
   SavingsChart,
+  type ChartRange,
   useHistoryRows,
 } from "@/components/finance/HistoryChart";
 import {
@@ -45,6 +46,7 @@ function Historico() {
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [filter, setFilter] = useState<"all" | "income" | "expense" | "balance">("all");
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const [chartRange, setChartRange] = useState<ChartRange>(6);
 
   const keys = useMemo(
     () => selectedYear === "all" ? allKeys : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear),
@@ -135,9 +137,9 @@ function Historico() {
           </>
         )}
 
-        <IncomeVsExpenseChart rows={rows} />
-        <BalanceEvolutionChart rows={rows} />
-        <SavingsChart rows={rows} />
+        <IncomeVsExpenseChart rows={rows} range={chartRange} onRangeChange={setChartRange} />
+        <BalanceEvolutionChart rows={rows} range={chartRange} onRangeChange={setChartRange} />
+        <SavingsChart rows={rows} range={chartRange} onRangeChange={setChartRange} />
 
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between gap-3">

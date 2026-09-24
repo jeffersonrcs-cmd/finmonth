@@ -1,3 +1,12 @@
+## v1.11.2 — refinamento visual dos gráficos
+
+- filtros de período de 3, 6 e 12 meses agora são idênticos e sincronizados nos três gráficos;
+- adicionada escala de valores no eixo Y e leitura monetária mais clara;
+- tooltips passaram a apresentar os principais valores do mês, incluindo o saldo;
+- mês atual recebe destaque visual nos gráficos;
+- evolução do saldo recebeu linha mais destacada, área suave e ponto ativo mais evidente;
+- barras, espaçamentos, contraste e hierarquia visual foram refinados sem alterar a estrutura ou adicionar novos gráficos e funcionalidades.
+
 ## v1.11.0 — evolução completa do histórico\n\n- reorganizada a hierarquia da tela de histórico com título, subtítulo e navegação mais claros;\n- adicionada visão de resumo com saldo atual, total recebido e total gasto;\n- adicionada comparação com o período anterior;\n- histórico mensal recebeu filtros por categoria e seleção de ano;\n- cards mensais agora são expansíveis para visualizar receitas, contas e valores guardados do período;\n- mantida a seleção de 3, 6 ou 12 meses no gráfico de evolução do saldo, com limite máximo de 12 meses;\n- melhorias aplicadas sem remover os gráficos e dados existentes.\n\n## v1.10.0 — período do gráfico de evolução\n\n- adicionada seleção de **3, 6 ou 12 meses** no gráfico de evolução do saldo;\n- o gráfico limita a visualização a no máximo **12 meses**;\n- seleção inicial em 6 meses para manter a leitura mais compacta;\n- controles responsivos e acessíveis, mantendo os demais gráficos e dados históricos intactos.\n\n## v1.9.3 — ajuste do cabeçalho de contas
 
 - alterado o título da seção inicial para **Contas do mês**;

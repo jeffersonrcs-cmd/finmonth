@@ -168,7 +168,7 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
     return { title: "Últimos 6 meses", text: "Aqui está a evolução das suas receitas, contas e valores guardados nos últimos seis meses com dados disponíveis.", chart: "history" };
   }
 
-  if (query.includes("ano") || query.includes("anual"))
+  if (query.includes("ano") || query.includes("anual")) {
     return { title: "Gráfico anual", text: `Aqui está a evolução de receitas, contas e valores guardados em ${year}, mês a mês.`, chart: "year" };
   }
 

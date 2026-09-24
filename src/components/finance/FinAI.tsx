@@ -277,7 +277,7 @@ function FinAiChart({
   const annualRows = useHistoryRows(12, year);
   const historyRows = useHistoryRows(6);
   const annualTotals = useAnnualTotals(year);
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const data = useMemo(() => {
     if (mode === "month") return [

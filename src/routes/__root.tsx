@@ -79,6 +79,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  headers: () => ({
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    Pragma: "no-cache",
+  }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -190,9 +194,11 @@ function RootComponent() {
 
     const checkForUpdate = async () => {
       try {
-        const response = await fetch(window.location.href, {
+        const checkUrl = new URL(window.location.href);
+        checkUrl.searchParams.set("finmonth-check", Date.now().toString());
+        const response = await fetch(checkUrl.toString(), {
           cache: "no-store",
-          headers: { "Cache-Control": "no-cache" },
+          headers: { "Cache-Control": "no-cache, no-store, max-age=0" },
         });
         if (!response.ok) return;
         const html = await response.text();
@@ -244,7 +250,11 @@ function RootComponent() {
             </div>
             <button
               type="button"
-              onClick={() => window.location.replace(window.location.href.split("?")[0] + "?update=" + Date.now())}
+              onClick={() => {
+                const updateUrl = new URL(window.location.href);
+                updateUrl.searchParams.set("finmonth-update", Date.now().toString());
+                window.location.replace(updateUrl.toString());
+              }}
               className="shrink-0 rounded-xl bg-brand px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-background"
             >
               Atualizar

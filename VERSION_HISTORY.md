@@ -1,3 +1,9 @@
+## v1.11.5 — filtro de período na comparação
+
+- adicionado o filtro visual de 3, 6 e 12 meses ao card **Comparação de período**;
+- utilizado o mesmo padrão visual e comportamento dos filtros dos gráficos;
+- seleção sincronizada com os demais gráficos da tela, mantendo uma única referência de período.
+
 ## v1.11.3 — refinamento visual dos gráficos
 
 - filtros de período de 3, 6 e 12 meses agora são idênticos e sincronizados nos três gráficos;

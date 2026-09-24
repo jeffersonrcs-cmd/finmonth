@@ -36,8 +36,11 @@ export function MonthNav({
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">Finanças</p>
         <button
           type="button"
-          onClick={() => setMenuOpen((value) => !value)}
-          className="flex items-center gap-2 font-display text-left text-2xl font-bold leading-none transition-colors hover:text-brand"
+          onClick={(event) => {
+            setMenuOpen((value) => !value);
+            event.currentTarget.blur();
+          }}
+          className="flex items-center gap-2 font-display text-left text-2xl font-bold leading-none outline-none transition-colors hover:text-brand focus:outline-none [-webkit-tap-highlight-color:transparent]"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
@@ -53,7 +56,7 @@ export function MonthNav({
                 setMenuOpen(false);
                 onOpenSettings();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition-colors hover:bg-foreground/5"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none transition-colors hover:bg-foreground/5 focus:outline-none [-webkit-tap-highlight-color:transparent]"
             >
               <Settings className="size-4 text-mut" />
               Editar dados do usuário
@@ -84,7 +87,7 @@ export function MonthNav({
                 setMenuOpen(false);
                 void supabase.auth.signOut();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg transition-colors hover:bg-neg/10"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg outline-none transition-colors hover:bg-neg/10 focus:outline-none [-webkit-tap-highlight-color:transparent]"
             >
               <LogOut className="size-4" />
               Sair da conta
@@ -94,8 +97,8 @@ export function MonthNav({
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"} className="relative glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"><Bell className="size-4" />{notificationCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-neg px-1 text-[8px] font-bold leading-4 text-background">{notificationCount > 9 ? "9+" : notificationCount}</span>}</button>
-        <button onClick={() => onChange(shiftMonthKey(monthKey, -1))} aria-label="Mês anterior" className="glass-soft grid size-9 place-items-center rounded-full text-brand transition-colors hover:bg-foreground/10">
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"} className="relative glass-soft grid size-9 place-items-center rounded-full text-mut outline-none transition-colors hover:text-brand focus:outline-none [-webkit-tap-highlight-color:transparent]"><Bell className="size-4" />{notificationCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-neg px-1 text-[8px] font-bold leading-4 text-background">{notificationCount > 9 ? "9+" : notificationCount}</span>}</button>
+        <button onClick={() => onChange(shiftMonthKey(monthKey, -1))} aria-label="Mês anterior" className="glass-soft grid size-9 place-items-center rounded-full text-brand outline-none transition-colors hover:bg-foreground/10 focus:outline-none [-webkit-tap-highlight-color:transparent]">
           <ChevronLeft className="size-4" />
         </button>
         <div className="glass-soft num rounded-full px-3 py-1.5 text-xs font-medium">{monthLabel(monthKey, true)}</div>

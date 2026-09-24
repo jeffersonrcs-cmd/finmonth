@@ -47,14 +47,15 @@ function Historico() {
   const allKeys = monthKeysWithData(state).filter((key) => key <= analysisMonthKey).reverse();
   const years = Array.from(new Set(allKeys.map((key) => Number(key.slice(0, 4))))).sort((a, b) => b - a);
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
-  const [filter, setFilter] = useState<"all" | "income" | "expense" | "balance">("all");
+  const [historyRange, setHistoryRange] = useState<"3" | "6" | "12" | "older">("12");
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [chartRange, setChartRange] = useState<ChartRange>(6);
 
-  const keys = useMemo(
-    () => selectedYear === "all" ? allKeys : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear),
-    [allKeys, selectedYear],
-  );
+  const keys = useMemo(() => {
+    const yearKeys = selectedYear === "all" ? allKeys : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear);
+    if (historyRange === "older") return yearKeys.filter((_, index) => index >= 12);
+    return yearKeys.slice(0, Number(historyRange));
+  }, [allKeys, selectedYear, historyRange]);
 
   const latestKey = analysisMonthKey;
   const previousKey = previousMonthKey(analysisMonthKey);
@@ -155,23 +156,8 @@ function Historico() {
           </div>
 
           <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
-            {[
-              ["all", t("all")],
-              ["income", t("incomes")],
-              ["expense", t("bills")],
-              ["balance", t("monthBalance")],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value as typeof filter)}
-                className={`min-h-8 shrink-0 rounded-lg px-3 text-[10px] font-semibold transition-colors ${
-                  filter === value ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"
-                }`}
-                aria-pressed={filter === value}
-              >
-                {label}
-              </button>
+            {[["3", "Últimos 3 meses"], ["6", "Últimos 6 meses"], ["12", "Últimos 12 meses"], ["older", "Mais que 12 meses"]].map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setHistoryRange(value as typeof historyRange)} className={`min-h-8 shrink-0 rounded-lg px-3 text-[10px] font-semibold transition-colors ${historyRange === value ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"}`} aria-pressed={historyRange === value}>{label}</button>
             ))}
           </div>
 
@@ -205,9 +191,9 @@ function Historico() {
               const month = state.months[key]!;
               const totals = computeTotals(month, key);
               const expanded = expandedMonth === key;
-              const showBalance = filter === "all" || filter === "balance";
-              const showIncome = filter === "all" || filter === "income";
-              const showExpense = filter === "all" || filter === "expense";
+              const showBalance = true;
+              const showIncome = true;
+              const showExpense = true;
               return (
                 <div key={key} className="glass overflow-hidden rounded-2xl">
                   <button

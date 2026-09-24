@@ -332,7 +332,7 @@ function RootComponent() {
               }}
               className="shrink-0 rounded-xl bg-brand px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-background"
             >
-              {t("update")}
+              Atualizar
             </button>
           </div>
         </div>

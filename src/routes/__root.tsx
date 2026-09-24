@@ -14,6 +14,7 @@ const BUILD_ID = __FINMONTH_BUILD_ID__;
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -133,6 +134,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { theme } = useFinanceState();
+  const { language } = useLanguage();
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
@@ -288,6 +290,10 @@ function RootComponent() {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   useEffect(() => {
     const root = document.documentElement;

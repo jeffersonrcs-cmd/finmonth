@@ -1,3 +1,11 @@
+## v1.12.7 — confirmação de e-mail e melhorias de autenticação
+
+- telas de login e cadastro mantêm o idioma selecionado em Português, Inglês e Espanhol;
+- cadastro agora direciona o usuário para a tela de confirmação de e-mail;
+- criada a tela pública de confirmação de e-mail;
+- adicionada opção para reenviar o e-mail de confirmação;
+- configurado o redirecionamento de confirmação para `https://finmonth.lovable.app/confirmar-email`.
+
 ## v1.12.5 — ajustes nas notificações de contas vencidas
 
 - notificações de contas vencidas agora informam há quantos dias a conta está vencida;

@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
-import { LANGUAGES, setLanguage, useLanguage, type LanguageCode } from "@/lib/i18n";
+import { CURRENCIES, LANGUAGES, setLanguage, setCurrency, useLanguage, type CurrencyCode, type LanguageCode } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 
 export function AccountSettings({ onBack, section = "menu", onOpenSection, onSignOut }: { onBack: () => void; section?: "menu" | "profile" | "notifications" | "language" | "version"; onOpenSection?: (section: "profile" | "notifications" | "language" | "version") => void; onSignOut?: () => void }) {
   const { userName, notificationPreferences, theme } = useFinanceState();
-  const { language, t } = useLanguage();
+  const { language, currency, currencyLoading, t } = useLanguage();
   const [name, setName] = useState(userName);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -183,6 +183,25 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
             })}
           </div>
           <p className="text-center text-[10px] text-mut">{t("selectedLanguage")}: {LANGUAGES.find((item) => item.code === language)?.nativeLabel}</p>
+          <div className="border-t border-border/50 pt-4">
+            <div className="mb-2">
+              <h3 className="text-xs font-semibold">{t("currency")}</h3>
+              <p className="mt-1 text-[10px] leading-relaxed text-mut">{t("currencyDescription")}</p>
+            </div>
+            <div className="space-y-2">
+              {CURRENCIES.map((item) => {
+                const selected = currency === item.code;
+                const label = item.code === "BRL" ? t("currencyBRL") : item.code === "USD" ? t("currencyUSD") : t("currencyEUR");
+                return (
+                  <button key={item.code} type="button" disabled={currencyLoading} onClick={() => void setCurrency(item.code as CurrencyCode)} className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${selected ? "border-brand/40 bg-brand/10" : "border-border/60 bg-muted/20 hover:border-brand/25"} disabled:cursor-wait disabled:opacity-60`}>
+                    <span><span className="block text-sm font-medium">{item.symbol} {item.code}</span><span className="mt-0.5 block text-[10px] text-mut">{label}</span></span>
+                    {selected && <Check className="size-4 text-brand" />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-center text-[10px] text-mut">{t("currencyRate")}</p>
+          </div>
         </section>
       )}
 

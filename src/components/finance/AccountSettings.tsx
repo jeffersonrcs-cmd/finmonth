@@ -21,8 +21,13 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
     let active = true;
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
+    });    void supabase.auth.getUser().then(({ data }) => {
+      if (active) setEmail(data.user?.email ?? "");
     });
-    return (
+    return () => {
+      active = false;
+    };
+  }, []);
     <section className="space-y-5">
       <div className="flex items-center gap-3">
         <button

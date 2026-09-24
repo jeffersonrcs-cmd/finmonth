@@ -1,3 +1,11 @@
+## v1.11.6 — correção do período de análise
+
+- gráficos e indicadores principais agora usam o mês atual do sistema como limite máximo;
+- meses futuros permanecem disponíveis para planejamento, mas não entram como referência principal das análises;
+- **Comparação Mensal** passa a comparar sempre o mês atual com o mês imediatamente anterior;
+- removido o filtro de 3, 6 e 12 meses da Comparação Mensal;
+- filtros de 3, 6 e 12 meses permanecem somente nos três gráficos históricos e ignoram meses futuros.
+
 ## v1.11.5 — filtro de período na comparação
 
 - adicionado o filtro visual de 3, 6 e 12 meses ao card **Comparação de período**;

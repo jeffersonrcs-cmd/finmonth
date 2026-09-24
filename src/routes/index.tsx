@@ -99,8 +99,7 @@ function Dashboard() {
             setAccountSettingsOpen(true);
           }}
           onOpenNotifications={() => {
-            setAccountSettingsSection("notifications");
-            setAccountSettingsOpen(true);
+            setNotificationsOpen(true);
           }}
         />
 

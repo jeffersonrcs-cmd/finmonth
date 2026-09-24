@@ -1,3 +1,9 @@
+## v1.12.5 — ajustes nas notificações de contas vencidas
+
+- notificações de contas vencidas agora informam há quantos dias a conta está vencida;
+- a mensagem respeita Português, Inglês e Espanhol;
+- o detalhe da conta agora mostra a data completa de vencimento, com dia, mês e ano conforme o idioma selecionado.
+
 ## v1.12.4 — central de notificações com detalhes da conta
 
 - clicar em uma notificação agora abre uma janela suspensa com os detalhes da conta;

@@ -171,6 +171,37 @@ function RootComponent() {
 
     void supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
+    let lastSessionRecovery = 0;
+    let recoveryInFlight = false;
+
+    const recoverSession = async () => {
+      if (!active || recoveryInFlight || document.visibilityState !== "visible") return;
+
+      const now = Date.now();
+      if (now - lastSessionRecovery < 30_000) return;
+
+      lastSessionRecovery = now;
+      recoveryInFlight = true;
+
+      try {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (!error && data.session) {
+          await applySession(data.session);
+          return;
+        }
+
+        // A temporary network/Safari wake-up failure must not log the user out.
+        // Keep the current authenticated state and let Supabase retry on the next
+        // visibility/foreground event.
+        if (error) {
+          const { data: current } = await supabase.auth.getSession();
+          if (current.session) await applySession(current.session);
+        }
+      } finally {
+        recoveryInFlight = false;
+      }
+    };
+
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         disconnectCloud();
@@ -178,14 +209,36 @@ function RootComponent() {
         setAuthReady(true);
         return;
       }
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED"
+      ) {
         setTimeout(() => void applySession(session), 0);
       }
     });
 
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void recoverSession();
+    };
+    const handlePageShow = () => {
+      void recoverSession();
+    };
+    const handleOnline = () => {
+      void recoverSession();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("online", handleOnline);
+
     return () => {
       active = false;
       data.subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("online", handleOnline);
     };
   }, []);
 

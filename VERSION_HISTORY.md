@@ -1,3 +1,10 @@
+## v1.11.7 — filtros do histórico mensal
+
+- substituídos os filtros **Todos, Receitas, Contas e Saldo do mês** por períodos de histórico;
+- adicionados **Últimos 3 meses, Últimos 6 meses, Últimos 12 meses e Mais que 12 meses**;
+- o histórico mensal passa a mostrar sempre os três indicadores financeiros em cada mês;
+- meses com mais de 12 meses ficam disponíveis separadamente na opção **Mais que 12 meses**.
+
 ## v1.11.6 — correção do período de análise
 
 - gráficos e indicadores principais agora usam o mês atual do sistema como limite máximo;

@@ -1,14 +1,16 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, LogOut, Moon, RefreshCw, Settings, Sun, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, Languages, LogOut, Moon, RefreshCw, Settings, Sun, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
+import { LANGUAGES, setLanguage, useLanguage, type LanguageCode } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 
-export function AccountSettings({ onBack, section = "menu", onOpenSection, onSignOut }: { onBack: () => void; section?: "menu" | "profile" | "notifications" | "version"; onOpenSection?: (section: "profile" | "notifications" | "version") => void; onSignOut?: () => void }) {
+export function AccountSettings({ onBack, section = "menu", onOpenSection, onSignOut }: { onBack: () => void; section?: "menu" | "profile" | "notifications" | "language" | "version"; onOpenSection?: (section: "profile" | "notifications" | "language" | "version") => void; onSignOut?: () => void }) {
   const { userName, notificationPreferences, theme } = useFinanceState();
+  const { language, t } = useLanguage();
   const [name, setName] = useState(userName);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -110,14 +112,14 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
         <button
           type="button"
           onClick={onBack}
-          aria-label="Voltar"
+          aria-label={t("back")}
           className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"
         >
           <ArrowLeft className="size-4" />
         </button>
         <div>
           <h1 className="font-display text-xl font-semibold">
-            {section === "menu" ? "Configurações" : section === "notifications" ? "Notificações" : section === "version" ? "Versão" : "Editar dados do usuário"}
+            {section === "menu" ? t("settings") : section === "notifications" ? t("notifications") : section === "language" ? t("language") : section === "version" ? t("version") : t("profile")}
           </h1>
           <p className="mt-1 text-xs text-mut">
             {section === "menu"
@@ -135,24 +137,52 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
         <section className="glass space-y-2 rounded-3xl p-3">
           <button type="button" onClick={() => onOpenSection?.("profile")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
             <Settings className="size-4 text-mut" />
-            Editar dados do usuário
+            {t("profile")}
           </button>
           <button type="button" onClick={() => onOpenSection?.("notifications")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
             <Bell className="size-4 text-mut" />
-            Notificações
+            {t("notifications")}
+          </button>
+          <button type="button" onClick={() => onOpenSection?.("language")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
+            <Languages className="size-4 text-mut" />
+            {t("language")}
           </button>
           <button type="button" onClick={() => financeActions.setTheme(theme === "dark" ? "light" : "dark")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
             {theme === "dark" ? <Sun className="size-4 text-mut" /> : <Moon className="size-4 text-mut" />}
-            {theme === "dark" ? "Tema claro" : "Tema escuro"}
+            {theme === "dark" ? t("themeLight") : t("themeDark")}
           </button>
           <button type="button" onClick={() => onOpenSection?.("version")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
             <Info className="size-4 text-mut" />
-            Versão
+            {t("version")}
           </button>
           <button type="button" onClick={onSignOut} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium text-neg">
             <LogOut className="size-4" />
-            Sair da conta
+            {t("signOut")}
           </button>
+        </section>
+      )}
+
+      {section === "language" && (
+        <section className="glass space-y-4 rounded-3xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/10 text-brand"><Languages className="size-4" /></div>
+            <div>
+              <h2 className="font-display text-sm font-semibold">{t("chooseLanguage")}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-mut">{t("chooseLanguageDescription")}</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {LANGUAGES.map((item) => {
+              const selected = language === item.code;
+              return (
+                <button key={item.code} type="button" onClick={() => setLanguage(item.code as LanguageCode)} className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${selected ? "border-brand/40 bg-brand/10" : "border-border/60 bg-muted/20 hover:border-brand/25"}`}>
+                  <span><span className="block text-sm font-medium">{item.nativeLabel}</span><span className="mt-0.5 block text-[10px] text-mut">{item.label}</span></span>
+                  {selected && <Check className="size-4 text-brand" />}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-center text-[10px] text-mut">{t("selectedLanguage")}: {LANGUAGES.find((item) => item.code === language)?.nativeLabel}</p>
         </section>
       )}
 

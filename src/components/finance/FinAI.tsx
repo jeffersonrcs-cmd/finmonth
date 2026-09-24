@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, BarChart3, Send, Sparkles } from "lucide-react";
 import {
   computeTotals,
@@ -9,6 +9,7 @@ import {
   useMonthData,
 } from "@/lib/finance";
 import { useHistoryRows, useAnnualTotals } from "@/components/finance/HistoryChart";
+import { supabase } from "@/lib/supabase";
 import {
   Bar,
   BarChart,
@@ -26,6 +27,8 @@ type AiReply = {
   text: string;
   chart: ChartMode;
 };
+
+const DAILY_LIMIT = 20;
 
 const suggestions = [
   "Gerar gráfico do mês",
@@ -238,18 +241,58 @@ export function FinAi({ monthKey }: { monthKey: string }) {
   const state = useFinanceState();
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState<AiReply | null>(null);
+  const [quota, setQuota] = useState({ count: 0, remaining: DAILY_LIMIT, allowed: true });
+  const [quotaLoading, setQuotaLoading] = useState(true);
+  const [quotaError, setQuotaError] = useState(false);
   const year = Number(monthKey.slice(0, 4));
 
-  function ask(question: string) {
+  async function loadQuota() {
+    setQuotaLoading(true);
+    const { data, error } = await supabase.rpc("get_fin_ai_quota");
+    if (error) {
+      setQuotaError(true);
+      setQuotaLoading(false);
+      return;
+    }
+    const next = data as { count?: number; remaining?: number; allowed?: boolean };
+    setQuota({
+      count: Number(next.count ?? 0),
+      remaining: Number(next.remaining ?? DAILY_LIMIT),
+      allowed: next.allowed !== false,
+    });
+    setQuotaError(false);
+    setQuotaLoading(false);
+  }
+
+  useEffect(() => {
+    void loadQuota();
+  }, []);
+
+  async function ask(question: string) {
     const value = question.trim();
-    if (!value) return;
+    if (!value || quotaLoading || !quota.allowed) return;
+    const { data, error } = await supabase.rpc("consume_fin_ai_quota");
+    if (error) {
+      setQuotaError(true);
+      return;
+    }
+    const next = data as { count?: number; remaining?: number; allowed?: boolean };
+    if (next.allowed === false) {
+      setQuota({ count: Number(next.count ?? DAILY_LIMIT), remaining: 0, allowed: false });
+      return;
+    }
+    setQuota({
+      count: Number(next.count ?? quota.count + 1),
+      remaining: Number(next.remaining ?? Math.max(DAILY_LIMIT - quota.count - 1, 0)),
+      allowed: true,
+    });
     setReply(buildReply(value, monthKey, year, state));
     setPrompt("");
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    ask(prompt);
+    void ask(prompt);
   }
 
   return (
@@ -271,13 +314,19 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         <p className="mt-1 text-xs leading-relaxed text-mut">
           Pergunte sobre seu mês, compare períodos ou peça um gráfico.
         </p>
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-[10px] text-mut">
+          <span>Consultas hoje</span>
+          <span className="font-semibold text-foreground">{quotaLoading ? "…" : `${quota.count}/${DAILY_LIMIT}`}</span>
+        </div>
+        {quotaError && <p className="mt-2 text-[10px] text-warn">Não foi possível consultar a cota agora. Tente novamente.</p>}
+        {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">Cota diária atingida. Você poderá usar a Fin IA novamente amanhã.</p>}
 
         <div className="mt-4 flex flex-wrap gap-2">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
-              onClick={() => ask(suggestion)}
+              onClick={() => void ask(suggestion)}
               className="rounded-full border border-border/70 bg-muted/30 px-3 py-2 text-[10px] font-medium text-mut transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
             >
               {suggestion}
@@ -316,7 +365,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
           type="submit"
           aria-label="Enviar pergunta"
           className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
-          disabled={!prompt.trim()}
+          disabled={!prompt.trim() || quotaLoading || !quota.allowed}
         >
           <Send className="size-4" />
         </button>

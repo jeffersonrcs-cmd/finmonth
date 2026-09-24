@@ -222,6 +222,10 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
           </label>
         </section>
       )}
+
+      <p className="pt-1 text-center text-[10px] font-medium uppercase tracking-[0.2em] text-mut/70">
+        FinMonth v{__FINMONTH_VERSION__}
+      </p>
     </section>
   );
 }

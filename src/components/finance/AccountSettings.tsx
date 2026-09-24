@@ -97,11 +97,6 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
     }
   }
 
-  return () => {
-      active = false;
-    };
-  }, []);
-
   return (
     <section className="space-y-5">
       <div className="flex items-center gap-3">

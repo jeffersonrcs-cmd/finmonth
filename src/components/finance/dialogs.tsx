@@ -107,7 +107,7 @@ export function IncomeDialog({
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
-        const [year, month] = monthKey.split("-").map(Number);
+        const [year = 0, month = 1] = monthKey.split("-").map(Number);
         const maxDay = daysInMonth(year, month);
         const selectedDay = Math.min(Math.max(Number(day) || 1, 1), maxDay);
         if (!description.trim() || parseAmount(amount) <= 0) return false;

@@ -31,7 +31,8 @@ export function AuthScreen() {
           email: email.trim(),
           password,
           options: {
-            data: { full_name: name.trim() },\n            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",
+            data: { full_name: name.trim() },
+            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",
           },
         });
 

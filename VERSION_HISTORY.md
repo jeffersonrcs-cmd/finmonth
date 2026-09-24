@@ -1,3 +1,9 @@
+## v1.12.10 — correção de inicialização e sincronização
+
+- reestruturada a identificação das rotas públicas de autenticação no componente raiz;
+- removida a expressão compacta da inicialização das rotas públicas para evitar problemas de parsing no ambiente de preview;
+- mantido o acesso público às telas de confirmação de e-mail e redefinição de senha.
+
 ## v1.12.8 — correção do carregamento do aplicativo
 
 - corrigido erro de sintaxe no componente raiz que impedia a inicialização do aplicativo;

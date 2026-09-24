@@ -253,7 +253,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("passwordRecovery")}
+                  placeholder={t("keepPassword")}
                   autoComplete="new-password"
                   minLength={6}
                 />

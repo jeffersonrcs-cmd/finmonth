@@ -127,24 +127,25 @@ export function AuthScreen() {
 
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-mut">Senha</Label>
-            <Input
-              className="glass-soft h-11 rounded-xl border-0 text-base"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Mínimo de 6 caracteres"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              minLength={6}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
+            <div className="relative">
+              <Input
+                className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Mínimo de 6 caracteres"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
           </div>
 

@@ -92,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confirmar-email': {
+      id: '/confirmar-email'
+      path: '/confirmar-email'
+      fullPath: '/confirmar-email'
+      preLoaderRoute: typeof ConfirmarEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 

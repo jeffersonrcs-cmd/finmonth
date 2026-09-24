@@ -1,3 +1,8 @@
+## v1.12.8 — correção do carregamento do aplicativo
+
+- corrigido erro de sintaxe no componente raiz que impedia a inicialização do aplicativo;
+- restaurado o render das rotas públicas de confirmação de e-mail e redefinição de senha para usuários não autenticados.
+
 ## v1.12.7 — confirmação de e-mail e melhorias de autenticação
 
 - telas de login e cadastro mantêm o idioma selecionado em Português, Inglês e Espanhol;

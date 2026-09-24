@@ -374,7 +374,7 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
         result.push({
           id: `overdue:${monthKey}:${bill.id}`, kind: "overdue", billId: bill.id, monthKey,
           title: `${bill.description} ${translate(lang, "overdue").toLowerCase()}`,
-          message: days === 1 ? translate(lang, "yesterday") + "." : `${translate(lang, "due")} ${translate(lang, "days")} ${days}.`,
+          message: `${translate(lang, "overdueBy")} ${days} ${translate(lang, days === 1 ? "day" : "days")}.`,
         });
       } else if (diffDays === 0 && preferences.dueToday) {
         result.push({ id: `today:${monthKey}:${bill.id}`, kind: "today", billId: bill.id, monthKey, title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${translate(lang, "today")}`, message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.` });
@@ -387,7 +387,7 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
   return result.sort((a, b) => rank[a.kind] - rank[b.kind] || a.title.localeCompare(b.title));
 }
 
-export function monthLabel(key: string, short = false) {
+export function billDueDateLabel(monthKey: string, dueDay: number) {\n  const { year, month } = parseMonthKey(monthKey);\n  const locale = getCurrentLanguage();\n  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))));\n}\n\nexport function monthLabel(key: string, short = false) {
   const { year, month } = parseMonthKey(key);
   const locale = getCurrentLanguage();
   const name = new Intl.DateTimeFormat(locale, { month: short ? "short" : "long" }).format(new Date(year, month - 1, 1));

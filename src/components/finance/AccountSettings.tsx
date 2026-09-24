@@ -22,7 +22,77 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
     });
-    return () => {
+    async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      "Excluir sua conta apagará permanentemente seu cadastro e todos os seus dados financeiros. Esta ação não pode ser desfeita. Deseja continuar?",
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error: deleteError } = await supabase.rpc("delete_current_user");
+      if (deleteError) throw deleteError;
+
+      disconnectCloud();
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível excluir sua conta.");
+      setDeleting(false);
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const trimmedName = name.trim();
+      if (!trimmedName) throw new Error("Informe seu nome.");
+
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sua sessão expirou. Entre novamente.");
+
+      const normalizedEmail = email.trim();
+      const currentEmail = userData.user?.email ?? "";
+
+      if (normalizedEmail !== currentEmail) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: normalizedEmail });
+        if (emailError) throw emailError;
+      }
+
+      if (password) {
+        const { error: passwordError } = await supabase.auth.updateUser({ password });
+        if (passwordError) throw passwordError;
+        setPassword("");
+      }
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ full_name: trimmedName })
+        .eq("id", userId);
+      if (profileError) throw profileError;
+
+      financeActions.setUserName(trimmedName);
+      setMessage(
+        normalizedEmail !== currentEmail
+          ? "Dados salvos. Verifique seu e-mail para confirmar a alteração do endereço."
+          : "Dados da conta atualizados.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível atualizar sua conta.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return () => {
       active = false;
     };
   }, []);

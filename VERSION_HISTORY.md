@@ -1,3 +1,8 @@
+## v1.12.2 — tradução dos filtros do histórico mensal
+
+- filtros de período do **Histórico mensal** agora usam as traduções do idioma selecionado;
+- adicionadas traduções para português, inglês e espanhol.
+
 ## v1.12.0 — evolução visual do gráfico de saldo
 
 - **Evolução do Saldo** continua em linha, agora com cor dinâmica conforme o saldo;

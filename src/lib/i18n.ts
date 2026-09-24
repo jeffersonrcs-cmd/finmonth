@@ -64,7 +64,7 @@ const DEFAULT_LANGUAGE: LanguageCode = "pt-BR";
 
 const translations = {
   "pt-BR": {
-    settings:"Configurações", settingsDescription:"Gerencie sua conta e as preferências do aplicativo.", profile:"Editar dados do usuário", notifications:"Notificações", language:"Linguagem", languageDescription:"Escolha o idioma usado pelo aplicativo.", currency:"Moeda", currencyDescription:"Escolha a moeda usada para exibir seus valores.", currencyBRL:"Real brasileiro (BRL)", currencyUSD:"Dólar americano (USD)", currencyEUR:"Euro (EUR)", currencyRate:"Cotação atualizada automaticamente. themeLight:"Tema claro", themeDark:"Tema escuro", version:"Versão", signOut:"Sair da conta", back:"Voltar", chooseLanguage:"Escolha seu idioma", chooseLanguageDescription:"A preferência fica salva neste dispositivo.", selectedLanguage:"Idioma selecionado",
+    settings:"Configurações", settingsDescription:"Gerencie sua conta e as preferências do aplicativo.", profile:"Editar dados do usuário", notifications:"Notificações", language:"Linguagem", languageDescription:"Escolha o idioma usado pelo aplicativo.", currency:"Moeda", currencyDescription:"Escolha a moeda usada para exibir seus valores.", currencyBRL:"Real brasileiro (BRL)", currencyUSD:"Dólar americano (USD)", currencyEUR:"Euro (EUR)", currencyRate:"Cotação atualizada automaticamente.", themeLight:"Tema claro", themeDark:"Tema escuro", version:"Versão", signOut:"Sair da conta", back:"Voltar", chooseLanguage:"Escolha seu idioma", chooseLanguageDescription:"A preferência fica salva neste dispositivo.", selectedLanguage:"Idioma selecionado",
     home:"Início", bills:"Contas", incomes:"Receitas", savings:"Guardado", finai:"FinAI", finance:"Finanças", myAccount:"Minha conta", openSettings:"Abrir configurações", openNotifications:"Abrir notificações", previousMonth:"Mês anterior", nextMonth:"Próximo mês",
     availableBalance:"Saldo Disponível", positive:"POSITIVO", negative:"NEGATIVO", monthBalance:"Saldo do mês", copyPrevious:"Copiar mês anterior", addBill:"Adicionar conta", addIncome:"Adicionar receita", addSaving:"Adicionar valor guardado", noBills:"Nenhuma conta adicionada neste mês.", noIncomes:"Nenhuma receita adicionada neste mês.", noSavings:"Nenhum valor guardado neste mês.", onlyBills:"Somente as contas adicionadas neste mês.", onlyIncomes:"Somente as receitas adicionadas neste mês.", onlySavings:"Somente os valores guardados neste mês.", savedInMonth:"Guardado no mês",
     edit:"Editar", delete:"Excluir", item:"item", noItems:"Nenhum item cadastrado neste mês.", markPending:"Marcar como pendente", markPaid:"Marcar como paga", paid:"Paga", pending:"Pendente", overdue:"Vencida", due:"Vence", recurring:"Recorrente", day:"dia", days:"dias", today:"hoje", yesterday:"ontem",
@@ -136,7 +136,38 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
-export function getCurrentCurrency() {\n  return currency;\n}\n\nexport function getCurrencyRate() {\n  return currencyRates[currency];\n}\n\nexport async function setCurrency(next: CurrencyCode) {\n  if (next !== "BRL" && !currencyRates[next]) {\n    currencyLoading = true;\n    emit();\n    try {\n      await loadCurrencyRate(next);\n    } catch {\n      currencyLoading = false;\n      emit();\n      return false;\n    }\n    currencyLoading = false;\n  }\n  currency = next;\n  try { localStorage.setItem(CURRENCY_STORAGE_KEY, next); } catch { /* ignore */ }\n  emit();\n  return true;\n}\n\nexport function isCurrencyLoading() {\n  return currencyLoading;\n}\n\nexport function getCurrentLanguage() {
+export function getCurrentCurrency() {
+  return currency;
+}
+
+export function getCurrencyRate() {
+  return currencyRates[currency];
+}
+
+export async function setCurrency(next: CurrencyCode) {
+  if (next !== "BRL" && !currencyRates[next]) {
+    currencyLoading = true;
+    emit();
+    try {
+      await loadCurrencyRate(next);
+    } catch {
+      currencyLoading = false;
+      emit();
+      return false;
+    }
+    currencyLoading = false;
+  }
+  currency = next;
+  try { localStorage.setItem(CURRENCY_STORAGE_KEY, next); } catch { /* ignore */ }
+  emit();
+  return true;
+}
+
+export function isCurrencyLoading() {
+  return currencyLoading;
+}
+
+export function getCurrentLanguage() {
   return language;
 }
 
@@ -160,14 +191,20 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-const getSnapshot = () => language;
-const getServerSnapshot = () => DEFAULT_LANGUAGE;
+const getSnapshot = () => `${language}|${currency}|${currencyLoading ? "1" : "0"}`;
+const getServerSnapshot = () => `${DEFAULT_LANGUAGE}|BRL|0`;
 
 export function useLanguage() {
-  const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [current, currentCurrency, loadingFlag] = snapshot.split("|");
+  const currentLanguage = current as LanguageCode;
+  const currentCurrencyCode = currentCurrency as CurrencyCode;
   return {
-    language: current,
+    language: currentLanguage,
     setLanguage,
-    t: (key: TranslationKey) => translations[current][key],
+    currency: currentCurrencyCode,
+    setCurrency,
+    currencyLoading: loadingFlag === "1",
+    t: (key: TranslationKey) => translations[currentLanguage][key],
   };
 }

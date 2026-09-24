@@ -1,6 +1,9 @@
 name: Publicar nova versão
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       bump:
@@ -18,28 +21,56 @@ permissions:
 
 jobs:
   release:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Definir tipo de versão
+        id: bump
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          last_tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+
+          if [ -z "$last_tag" ]; then
+            commits="$(git log -1 --pretty=%B)"
+          else
+            commits="$(git log "$last_tag"..HEAD --pretty=%B)"
+          fi
+
+          if printf '%s\n' "$commits" | grep -Eq 'BREAKING CHANGE|BREAKING-CHANGE|^[[:alnum:]_-]+!:'; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+          elif printf '%s\n' "$commits" | grep -Eq '^feat([(:]|$)'; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Atualizar versão
-        run: npm run version:${{ inputs.bump }}
+        run: npm run version:${{ steps.bump.outputs.type }}
 
       - name: Ler versão
         id: version
         run: echo "version=$(node --input-type=module -e "import { readFileSync } from 'node:fs'; console.log(JSON.parse(readFileSync('package.json', 'utf8')).version)")" >> "$GITHUB_OUTPUT"
 
-      - name: Commit da versão
+      - name: Commit e tag da versão
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json
-          git commit -m "chore: publica v${{ steps.version.outputs.version }}"
+          git commit -m "chore: publica v${{ steps.version.outputs.version }} [skip ci]"
           git tag "v${{ steps.version.outputs.version }}"
           git push origin main --follow-tags

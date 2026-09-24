@@ -387,7 +387,13 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
   return result.sort((a, b) => rank[a.kind] - rank[b.kind] || a.title.localeCompare(b.title));
 }
 
-export function billDueDateLabel(monthKey: string, dueDay: number) {\n  const { year, month } = parseMonthKey(monthKey);\n  const locale = getCurrentLanguage();\n  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))));\n}\n\nexport function monthLabel(key: string, short = false) {
+export function billDueDateLabel(monthKey: string, dueDay: number) {
+  const { year, month } = parseMonthKey(monthKey);
+  const locale = getCurrentLanguage();
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))));
+}
+
+export function monthLabel(key: string, short = false) {
   const { year, month } = parseMonthKey(key);
   const locale = getCurrentLanguage();
   const name = new Intl.DateTimeFormat(locale, { month: short ? "short" : "long" }).format(new Date(year, month - 1, 1));

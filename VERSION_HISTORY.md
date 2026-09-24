@@ -1,4 +1,4 @@
-## v1.9.3 — ajuste do cabeçalho de contas
+## v1.10.0 — período do gráfico de evolução\n\n- adicionada seleção de **3, 6 ou 12 meses** no gráfico de evolução do saldo;\n- o gráfico limita a visualização a no máximo **12 meses**;\n- seleção inicial em 6 meses para manter a leitura mais compacta;\n- controles responsivos e acessíveis, mantendo os demais gráficos e dados históricos intactos.\n\n## v1.9.3 — ajuste do cabeçalho de contas
 
 - alterado o título da seção inicial para **Contas do mês**;
 - movido **Ver histórico completo** para a mesma linha do título, no lado oposto;

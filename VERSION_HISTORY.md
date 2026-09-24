@@ -1,3 +1,11 @@
+## v1.12.4 — central de notificações com detalhes da conta
+
+- clicar em uma notificação agora abre uma janela suspensa com os detalhes da conta;
+- contas de meses anteriores permanecem associadas ao mês correto;
+- adicionada opção para **marcar como paga** diretamente na janela;
+- adicionada opção de **voltar** sem realizar nenhuma ação;
+- removida a navegação automática para a lista de contas do mês atual.
+
 ## v1.12.3 — correção da central de notificações
 
 - o botão de sino do cabeçalho agora abre diretamente a **Central de notificações**;

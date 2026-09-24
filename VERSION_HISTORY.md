@@ -1,4 +1,4 @@
-## v1.11.2 — refinamento visual dos gráficos
+## v1.11.3 — refinamento visual dos gráficos
 
 - filtros de período de 3, 6 e 12 meses agora são idênticos e sincronizados nos três gráficos;
 - adicionada escala de valores no eixo Y e leitura monetária mais clara;

@@ -19,7 +19,7 @@ import {
   XAxis,
 } from "recharts";
 
-type ChartMode = "month" | "compare" | "year" | null;
+type ChartMode = "month" | "compare" | "year" | "history" | null;
 
 type AiReply = {
   title: string;
@@ -58,6 +58,14 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
       title: "Gráfico anual",
       text: `Aqui está a evolução de receitas, contas e valores guardados em ${year}, mês a mês.`,
       chart: "year",
+    };
+  }
+
+  if (query.includes("ultimos 6") || query.includes("6 meses")) {
+    return {
+      title: "Últimos 6 meses",
+      text: "Aqui está a evolução das suas receitas, contas e valores guardados nos últimos seis meses com dados disponíveis.",
+      chart: "history",
     };
   }
 
@@ -138,6 +146,7 @@ function FinAiChart({
   const previousData = state.months[previousKey] ?? { incomes: [], bills: [], savings: [] };
   const previousTotals = computeTotals(previousData, previousKey);
   const annualRows = useHistoryRows(12, year);
+  const historyRows = useHistoryRows(6);
   const annualTotals = useAnnualTotals(year);
 
   const data = useMemo(() => {
@@ -155,20 +164,34 @@ function FinAiChart({
         { label: "Guardado", atual: monthTotals.totalSaved, anterior: previousTotals.totalSaved },
       ];
     }
+    if (mode === "history") {
+      return historyRows.map((row) => ({
+        label: row.label,
+        Receitas: row.receitas,
+        Contas: row.despesas,
+        Guardado: row.guardado,
+      }));
+    }
     return annualRows.map((row) => ({
       label: row.label,
       Receitas: row.receitas,
       Contas: row.despesas,
       Guardado: row.guardado,
     }));
-  }, [annualRows, mode, monthTotals, previousTotals]);
+  }, [annualRows, historyRows, mode, monthTotals, previousTotals]);
 
   return (
     <div className="mt-3 rounded-2xl border border-border/60 bg-background/30 p-3">
       <div className="mb-2 flex items-center gap-2">
         <BarChart3 className="size-3.5 text-brand" />
         <span className="text-[10px] font-semibold uppercase tracking-wider text-mut">
-          {mode === "month" ? monthLabel(monthKey) : mode === "compare" ? "Mês atual × anterior" : `Ano ${year}`}
+          {mode === "month"
+            ? monthLabel(monthKey)
+            : mode === "compare"
+              ? "Mês atual × anterior"
+              : mode === "history"
+                ? "Últimos 6 meses"
+                : `Ano ${year}`}
         </span>
       </div>
       <div className="h-44">
@@ -191,7 +214,7 @@ function FinAiChart({
                 <Bar dataKey="anterior" name="Anterior" fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="atual" name="Atual" fill="var(--brand)" radius={[4, 4, 0, 0]} />
               </>
-            ) : mode === "year" ? (
+) : mode === "year" || mode === "history" ? (
               <>
                 <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
                 <Bar dataKey="Receitas" fill="var(--pos)" radius={[4, 4, 0, 0]} />

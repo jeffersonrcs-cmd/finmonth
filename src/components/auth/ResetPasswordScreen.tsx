@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 export function ResetPasswordScreen() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -22,12 +24,12 @@ export function ResetPasswordScreen() {
     setError("");
 
     if (password.length < 6) {
-      setError("A nova senha precisa ter pelo menos 6 caracteres.");
+      setError("t("minPassword")");
       return;
     }
 
     if (password !== confirmation) {
-      setError("As senhas não conferem.");
+      setError("t("confirmPassword")");
       return;
     }
 
@@ -38,9 +40,9 @@ export function ResetPasswordScreen() {
 
       setPassword("");
       setConfirmation("");
-      setMessage("Senha atualizada com sucesso. Você já pode continuar usando o FinMonth.");
+      setMessage("t("accountUpdated")");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível atualizar sua senha.");
+      setError(err instanceof Error ? err.message : "t("operationFailed")");
     } finally {
       setBusy(false);
     }
@@ -57,22 +59,22 @@ export function ResetPasswordScreen() {
             {message ? <Check className="size-6" /> : <KeyRound className="size-6" />}
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
-          <h1 className="mt-2 font-display text-2xl font-semibold">Criar nova senha</h1>
+          <h1 className="mt-2 font-display text-2xl font-semibold">t("newPassword")</h1>
           <p className="mt-2 text-sm text-mut">
-            Escolha uma nova senha para recuperar o acesso à sua conta.
+            t("passwordRecovery")
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5 shadow-xl">
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut">Nova senha</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("newPassword")}</Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Mínimo de 6 caracteres"
+                placeholder={t("minPassword")}
                 autoComplete="new-password"
                 minLength={6}
                 required
@@ -81,7 +83,7 @@ export function ResetPasswordScreen() {
               <button
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? "Ocultar nova senha" : "Mostrar nova senha"}
+                aria-label={showPassword ? t("hideNewPassword") : t("showNewPassword")}
                 className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
                 disabled={busy || Boolean(message)}
               >
@@ -91,14 +93,14 @@ export function ResetPasswordScreen() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut">Confirmar nova senha</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("confirmPassword")}</Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
                 type={showConfirmation ? "text" : "password"}
                 value={confirmation}
                 onChange={(event) => setConfirmation(event.target.value)}
-                placeholder="Digite a senha novamente"
+                placeholder={t("repeatPassword")}
                 autoComplete="new-password"
                 minLength={6}
                 required
@@ -107,7 +109,7 @@ export function ResetPasswordScreen() {
               <button
                 type="button"
                 onClick={() => setShowConfirmation((value) => !value)}
-                aria-label={showConfirmation ? "Ocultar confirmação" : "Mostrar confirmação"}
+                aria-label={showConfirmation ? t("hidePassword") : t("showPassword")}
                 className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
                 disabled={busy || Boolean(message)}
               >
@@ -138,7 +140,7 @@ export function ResetPasswordScreen() {
               disabled={busy}
               className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90"
             >
-              {busy ? "Salvando..." : "Salvar nova senha"}
+              {busy ? t("wait") : t("saveNewPassword")}
             </Button>
           )}
 
@@ -148,7 +150,7 @@ export function ResetPasswordScreen() {
             disabled={busy}
             className="w-full text-center text-xs text-mut transition-colors hover:text-brand disabled:opacity-60"
           >
-            Voltar para o login
+            {t("backToLogin")}
           </button>
         </form>
       </section>

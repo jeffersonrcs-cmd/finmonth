@@ -122,7 +122,7 @@ export function MonthlyOverview({
   rows: Row[];
   totals: { totalIncomes: number; totalBills: number; totalSaved: number; availableBalance: number };
   period?: "monthly" | "annual";
-  comparison?: { totalIncomes: number; totalBills: number; totalSaved: number };
+  comparison?: { totalIncomes: number; totalBills: number; totalSaved: number } | undefined;
 }) {
   const previous = rows.length > 1 ? rows[rows.length - 2] : undefined;
   const current = rows[rows.length - 1];

@@ -10,6 +10,7 @@ import {
 } from "@/lib/finance";
 import { useHistoryRows, useAnnualTotals } from "@/components/finance/HistoryChart";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 import {
   Bar,
   BarChart,
@@ -66,13 +67,7 @@ Transformar dados financeiros em respostas simples, inteligentes e acionáveis p
 `;
 
 
-const suggestions = [
-  "Faça uma análise completa",
-  "Como foi meu mês?",
-  "Onde estou gastando mais?",
-  "Quanto posso guardar?",
-  "Quais contas estão pendentes?",
-];
+
 
 function normalize(value: string) {
   return value
@@ -282,12 +277,13 @@ function FinAiChart({
   const annualRows = useHistoryRows(12, year);
   const historyRows = useHistoryRows(6);
   const annualTotals = useAnnualTotals(year);
+  const { t } = useLanguage();
 
   const data = useMemo(() => {
     if (mode === "month") return [
-      { label: "Receitas", value: monthTotals.totalIncomes },
-      { label: "Contas", value: monthTotals.totalBills },
-      { label: "Guardado", value: monthTotals.totalSaved },
+      { label: t("incomes"), value: monthTotals.totalIncomes },
+      { label: t("bills"), value: monthTotals.totalBills },
+      { label: t("savings"), value: monthTotals.totalSaved },
     ];
     if (mode === "compare") return [
       { label: "Receitas", atual: monthTotals.totalIncomes, anterior: previousTotals.totalIncomes },
@@ -299,19 +295,19 @@ function FinAiChart({
       { label: "Receitas", value: monthTotals.totalIncomes },
       { label: "Contas", value: monthTotals.totalBills },
       { label: "Guardado", value: monthTotals.totalSaved },
-      { label: "Saldo", value: monthTotals.availableBalance },
+      { label: t("monthBalance"), value: monthTotals.availableBalance },
     ];
     if (mode === "incomeBreakdown") return [...monthData.incomes].sort((a, b) => b.amount - a.amount).slice(0, 6).map((income) => ({ label: income.description, value: income.amount }));
     if (mode === "billStatus") return [
-      { label: "Pagas", value: monthTotals.paidTotal },
-      { label: "Pendentes", value: monthTotals.pendingTotal },
+      { label: t("paidBills"), value: monthTotals.paidTotal },
+      { label: t("pendingBills"), value: monthTotals.pendingTotal },
     ];
     if (mode === "dailyFlow") {
       const days = new Date(year, Number(monthKey.slice(5, 7)), 0).getDate();
       return [
-        { label: "Receitas/dia", value: monthTotals.totalIncomes / days },
-        { label: "Contas/dia", value: monthTotals.totalBills / days },
-        { label: "Guardado/dia", value: monthTotals.totalSaved / days },
+        { label: `${t("incomes")}/dia`, value: monthTotals.totalIncomes / days },
+        { label: `${t("bills")}/dia`, value: monthTotals.totalBills / days },
+        { label: `${t("savings")}/dia`, value: monthTotals.totalSaved / days },
       ];
     }
     if (mode === "recurring") {
@@ -320,22 +316,22 @@ function FinAiChart({
     }
     if (mode === "balance") return historyRows.map((row) => ({ label: row.label, value: row.saldo }));
     if (mode === "savings") return historyRows.map((row) => ({ label: row.label, value: row.guardado }));
-    if (mode === "history") return historyRows.map((row) => ({ label: row.label, Receitas: row.receitas, Contas: row.despesas, Guardado: row.guardado }));
+    if (mode === "history") return historyRows.map((row) => ({ label: row.label, [t("incomes")]: row.receitas, [t("bills")]: row.despesas, [t("savings")]: row.guardado }));
     return annualRows.map((row) => ({ label: row.label, Receitas: row.receitas, Contas: row.despesas, Guardado: row.guardado }));
   }, [annualRows, historyRows, mode, monthData.bills, monthTotals, previousTotals]);
 
   const title = mode === "month" ? monthLabel(monthKey)
-    : mode === "compare" ? "Mês atual × anterior"
-    : mode === "history" ? "Últimos 6 meses"
-    : mode === "balance" ? "Evolução do saldo"
-    : mode === "savings" ? "Evolução do valor guardado"
-    : mode === "topBills" ? "Maiores contas"
-    : mode === "cashflow" ? "Fluxo financeiro"
-    : mode === "incomeBreakdown" ? "Maiores receitas"
-    : mode === "billStatus" ? "Pagas × pendentes"
-    : mode === "dailyFlow" ? "Média diária"
-    : mode === "recurring" ? "Contas recorrentes"
-    : `Ano ${year}`;
+    : mode === "compare" ? t("monthlyComparisonTitle")
+    : mode === "history" ? t("last6Months")
+    : mode === "balance" ? t("balanceChart")
+    : mode === "savings" ? t("savingsChart")
+    : mode === "topBills" ? t("largestBills")
+    : mode === "cashflow" ? t("cashFlow")
+    : mode === "incomeBreakdown" ? t("detailedIncome")
+    : mode === "billStatus" ? t("paidBills")
+    : mode === "dailyFlow" ? t("dailyAverage")
+    : mode === "recurring" ? t("recurringBills")
+    : `${t("history")} ${year}`;
 
   return (
     <div className="mt-3 rounded-2xl border border-border/60 bg-background/30 p-3">
@@ -350,7 +346,7 @@ function FinAiChart({
               <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis dataKey="label" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 11 }} formatter={(value: number) => formatCurrency(value)} />
-              <Line type="monotone" dataKey="value" name={mode === "balance" ? "Saldo" : "Guardado"} stroke="var(--brand)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--brand)" }} />
+              <Line type="monotone" dataKey="value" name={mode === "balance" ? t("monthBalance") : t("savings")} stroke="var(--brand)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--brand)" }} />
             </LineChart>
           ) : (
             <BarChart data={data}>
@@ -360,20 +356,19 @@ function FinAiChart({
               {mode === "compare" ? (
                 <>
                   <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar dataKey="anterior" name="Anterior" fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="atual" name="Atual" fill="var(--brand)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="anterior" name={t("previousMonth")} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="atual" name={t("home")} fill="var(--brand)" radius={[4, 4, 0, 0]} />
                 </>
               ) : mode === "year" || mode === "history" ? (
                 <>
                   <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar dataKey="Receitas" name="Receitas" fill="var(--pos)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Contas" name="Contas" fill="var(--neg)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Guardado" name="Guardado" fill="var(--econ)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Receitas" name={t("incomes")} fill="var(--pos)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Contas" name={t("bills")} fill="var(--neg)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Guardado" name={t("savings")} fill="var(--econ)" radius={[4, 4, 0, 0]} />
                 </>
               ) : (
                 <Bar dataKey="value" name={
-                  mode === "topBills" || mode === "incomeBreakdown" || mode === "recurring" ? "Valor" :
-                  mode === "billStatus" ? "Total" : "Valor"
+                  mode === "topBills" || mode === "incomeBreakdown" || mode === "recurring" ? t("amount") : mode === "billStatus" ? t("totalExpenses") : t("amount")
                 } fill="var(--brand)" radius={[5, 5, 0, 0]} />
               )}
             </BarChart>
@@ -381,13 +376,15 @@ function FinAiChart({
         </ResponsiveContainer>
       </div>
       {mode === "year" && annualTotals.totalIncomes + annualTotals.totalBills + annualTotals.totalSaved === 0 && (
-        <p className="mt-2 text-center text-[10px] text-mut">Ainda não há dados registrados para este ano.</p>
+        <p className="mt-2 text-center text-[10px] text-mut">{t("noMonth")}</p>
       )}
     </div>
   );
 }
 
 export function FinAi({ monthKey }: { monthKey: string }) {
+  const { language, t } = useLanguage();
+  const suggestions = [t("analysisSuggestion"), t("monthQuestion"), t("spendingQuestion"), t("savingQuestion"), t("pendingQuestion")];
   const state = useFinanceState();
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState<AiReply | null>(null);
@@ -443,10 +440,10 @@ export function FinAi({ monthKey }: { monthKey: string }) {
     try {
       const history = reply ? [{ role: "assistant", text: reply.text }] : [];
       const { data, error } = await supabase.functions.invoke("fin-ai", {
-        body: { question: value, monthKey, history },
+        body: { question: value, monthKey, history, language },
       });
 
-      if (error) throw new Error(error.message || "Não foi possível consultar a FinAI.");
+      if (error) throw new Error(error.message || t("operationFailed"));
 
       const result = data as {
         title?: string;
@@ -459,16 +456,14 @@ export function FinAi({ monthKey }: { monthKey: string }) {
 
       setReply({
         title: result.title?.trim() || "FinAI",
-        text: result.text?.trim() || "Não consegui gerar uma resposta agora. Tente novamente.",
+        text: result.text?.trim() || t("financialDataInsufficient"),
         chart: result.chartMode ?? null,
       });
       setPrompt("");
     } catch (error) {
       setReply({
         title: "FinAI",
-        text: error instanceof Error
-          ? error.message
-          : "Não foi possível consultar a FinAI agora. Tente novamente.",
+        text: error instanceof Error ? error.message : t("operationFailed"),
         chart: null,
       });
     } finally {
@@ -490,30 +485,30 @@ export function FinAi({ monthKey }: { monthKey: string }) {
           </div>
           <div>
             <h1 className="font-display text-xl font-semibold">FinAI</h1>
-            <p className="mt-0.5 text-xs text-mut">Sua inteligência financeira no FinMonth.</p>
+            <p className="mt-0.5 text-xs text-mut">{t("finaiHint")}</p>
           </div>
         </div>
       </div>
 
       <section className="glass rounded-3xl p-4">
-        <p className="text-sm font-medium">O que você quer saber?</p>
+        <p className="text-sm font-medium">{t("analysisSuggestion")}</p>
         <p className="mt-1 text-xs leading-relaxed text-mut">
-          Pergunte sobre seu mês, compare períodos ou peça um gráfico.
+          {t("monthQuestion")}
         </p>
         {aiLoading && (
           <div className="mt-3 flex items-center gap-2 text-[10px] text-mut">
             <span className="size-1.5 animate-pulse rounded-full bg-brand" />
-            FinAI está analisando seus dados...
+            {t("financialDataInsufficient")}
           </div>
         )}
         {FIN_AI_QUOTA_ENABLED && (
           <>
             <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-[10px] text-mut">
-              <span>Consultas hoje</span>
+              <span>{t("notifications")}</span>
               <span className="font-semibold text-foreground">{quotaLoading ? "…" : `${quota.count}/${DAILY_LIMIT}`}</span>
             </div>
-            {quotaError && <p className="mt-2 text-[10px] text-warn">Não foi possível consultar a cota agora. Tente novamente.</p>}
-            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">Cota diária atingida. Você poderá usar a FinAI novamente amanhã.</p>}
+            {quotaError && <p className="mt-2 text-[10px] text-warn">{t("operationFailed")}</p>}
+            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">{t("financialDataInsufficient")}</p>}
           </>
         )}
 
@@ -553,13 +548,13 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         <input
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder="Digite sua pergunta..."
+          placeholder={t("canAnalyze")}
           className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-mut/70"
-          aria-label="Pergunte à FinAI"
+          aria-label={t("canAnalyze")}
         />
         <button
           type="submit"
-          aria-label="Enviar pergunta"
+          aria-label={t("save")}
           className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
           disabled={!prompt.trim() || aiLoading || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))}
         >
@@ -569,7 +564,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
 
       <div className="flex items-center justify-center gap-1.5 text-[9px] text-mut/70">
         <ArrowUpRight className="size-3" />
-        A FinAI usa os dados financeiros do seu FinMonth para gerar análises.
+        {t("finaiHint")}
       </div>
     </section>
   );

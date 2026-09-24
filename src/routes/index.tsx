@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Home, PiggyBank, ReceiptText, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
@@ -127,16 +127,6 @@ function Dashboard() {
 
         {activeScreen === "finai" && <FinAi monthKey={monthKey} />}
 
-        {activeScreen === "inicio" && (
-          <div className="mt-6 flex justify-center">
-            <Link
-              to="/historico"
-              className="border-b border-transparent pb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-mut transition-colors hover:border-brand/40 hover:text-brand"
-            >
-              {t("fullHistory")}
-            </Link>
-          </div>
-        )}
       </div>
 
       <div

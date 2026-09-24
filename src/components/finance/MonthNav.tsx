@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronLeft, ChevronRight, LogOut, Moon, Settings, Sun, UserRound } from "lucide-react";
-import { financeActions, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
+import { financeActions, getBillNotifications, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
 export function MonthNav({
@@ -12,7 +12,9 @@ export function MonthNav({
   onChange: (key: string) => void;
   onOpenSettings: () => void;
 }) {
-  const { theme, userName } = useFinanceState();
+  const financeState = useFinanceState();
+  const { theme, userName } = financeState;
+  const notificationCount = getBillNotifications(financeState).length;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const displayName = userName.trim() || "Minha conta";
@@ -70,7 +72,7 @@ export function MonthNav({
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label="Abrir notificações" className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"><Bell className="size-4" /></button>
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"} className="relative glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"><Bell className="size-4" />{notificationCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-neg px-1 text-[8px] font-bold leading-4 text-background">{notificationCount > 9 ? "9+" : notificationCount}</span>}</button>
         <button onClick={() => onChange(shiftMonthKey(monthKey, -1))} aria-label="Mês anterior" className="glass-soft grid size-9 place-items-center rounded-full text-brand transition-colors hover:bg-foreground/10">
           <ChevronLeft className="size-4" />
         </button>

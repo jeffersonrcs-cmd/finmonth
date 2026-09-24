@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { useLanguage } from "@/lib/i18n";
 
 export function AuthScreen() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,13 +30,13 @@ export function AuthScreen() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: name.trim() } },
+          options: {\n            data: { full_name: name.trim() },\n            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",\n          },
         });
 
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          setMessage(t("signupCreated"));
+          try { sessionStorage.setItem("finmonth:confirmation-email", email.trim()); } catch { /* ignore */ }\n          void navigate({ to: "/confirmar-email" });
         } else {
           setMessage(t("accountCreated"));
         }

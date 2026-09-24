@@ -8,6 +8,7 @@ import {
   Line,
   LineChart,
   ResponsiveContainer,
+  ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
@@ -357,41 +358,86 @@ export function BalanceEvolutionChart({
     { key: "despesas" as const, label: t("bills") },
     { key: "guardado" as const, label: t("savings") },
   ];
+  const balanceValues = visibleRows.map((row) => row.saldo);
+  const minBalance = Math.min(...balanceValues, 0);
+  const maxBalance = Math.max(...balanceValues, 0);
+  const balanceSpan = maxBalance - minBalance;
+  const zeroOffset = balanceSpan === 0 ? 0.5 : Math.max(0, Math.min(1, maxBalance / balanceSpan));
+  const zeroOffsetPercent = `${zeroOffset * 100}%`;
 
   return (
     <ChartShell title={t("balanceEvolution")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
       <LineChart data={visibleRows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
-          <linearGradient id="balance-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--brand)" stopOpacity={0.22} />
-            <stop offset="100%" stopColor="var(--brand)" stopOpacity={0.02} />
+          <linearGradient id="balance-line-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--pos)" />
+            <stop offset={zeroOffsetPercent} stopColor="var(--pos)" />
+            <stop offset={zeroOffsetPercent} stopColor="var(--neg)" />
+            <stop offset="100%" stopColor="var(--neg)" />
+          </linearGradient>
+          <linearGradient id="balance-fill-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--pos)" stopOpacity={0.14} />
+            <stop offset={zeroOffsetPercent} stopColor="var(--pos)" stopOpacity={0.1} />
+            <stop offset={zeroOffsetPercent} stopColor="var(--neg)" stopOpacity={0.1} />
+            <stop offset="100%" stopColor="var(--neg)" stopOpacity={0.14} />
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
-        <YAxis {...yAxisProps} />
+        <YAxis {...yAxisProps} domain={[minBalance, maxBalance]} />
+        <ReferenceLine
+          y={0}
+          stroke="var(--muted-foreground)"
+          strokeOpacity={0.45}
+          strokeDasharray="4 4"
+          strokeWidth={1.2}
+        />
         <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ stroke: "var(--brand)", strokeOpacity: 0.2 }} />
-        <Area type="monotone" dataKey="saldo" stroke="none" fill="url(#balance-area)" />
+        <Area
+          type="monotone"
+          dataKey="saldo"
+          baseValue={0}
+          stroke="none"
+          fill="url(#balance-fill-gradient)"
+        />
         <Line
           type="monotone"
           dataKey="saldo"
-          stroke="var(--brand)"
+          stroke="url(#balance-line-gradient)"
           strokeWidth={3}
           dot={(props) => {
             const row = props.payload as Row;
+            const positive = row?.saldo >= 0;
             const active = row?.isCurrent;
+            const tone = positive ? "var(--pos)" : "var(--neg)";
             return (
               <circle
                 cx={props.cx}
                 cy={props.cy}
-                r={active ? 5 : 3}
-                fill="var(--brand)"
+                r={active ? 5 : 3.2}
+                fill={tone}
                 stroke="var(--background)"
-                strokeWidth={active ? 2 : 1.5}
+                strokeWidth={active ? 2.5 : 1.5}
               />
             );
           }}
-          activeDot={{ r: 7, fill: "var(--brand)", stroke: "var(--background)", strokeWidth: 2 }}
+          activeDot={(props) => {
+            const row = props.payload as Row;
+            const tone = row?.saldo >= 0 ? "var(--pos)" : "var(--neg)";
+            return (
+              <g>
+                <circle cx={props.cx} cy={props.cy} r={9} fill={tone} opacity={0.14} />
+                <circle
+                  cx={props.cx}
+                  cy={props.cy}
+                  r={6.5}
+                  fill={tone}
+                  stroke="var(--background)"
+                  strokeWidth={2.5}
+                />
+              </g>
+            );
+          }}
         />
       </LineChart>
     </ChartShell>

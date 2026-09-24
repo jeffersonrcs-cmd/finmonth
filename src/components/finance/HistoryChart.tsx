@@ -4,6 +4,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -265,11 +266,11 @@ export function MonthlyOverview({
         </div>
       </div>
 
-      <ChartShell title={period === "annual" ? t("annualComparison") : t("monthlyComparison")} subtitle={period === "annual" ? t("januaryToDecember") : t("lastMonths")} rows={rows}>
+      <ChartShell title={period === "annual" ? t("annualComparison") : t("monthlyComparison")} rows={rows} range={12} onRangeChange={() => {}}>
         <BarChart data={rows}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis {...axisProps} />
-          <Tooltip {...tooltipStyle} />
+          <Tooltip content={<FinanceTooltip fields={[{ key: "receitas", label: t("incomes") }, { key: "despesas", label: t("bills") }, { key: "guardado", label: t("savings") }]} />} />
           <Legend wrapperStyle={{ fontSize: 10, paddingTop: 6 }} />
           <Bar dataKey="receitas" name={t("incomes")} fill="var(--pos)" radius={[5, 5, 0, 0]} />
           <Bar dataKey="despesas" name={t("bills")} fill="var(--neg)" radius={[5, 5, 0, 0]} />

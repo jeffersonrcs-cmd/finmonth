@@ -22,7 +22,12 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
     });
-    async function handleDeleteAccount() {
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleDeleteAccount() {
     const confirmed = window.confirm(
       "Excluir sua conta apagará permanentemente seu cadastro e todos os seus dados financeiros. Esta ação não pode ser desfeita. Deseja continuar?",
     );

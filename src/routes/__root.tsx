@@ -139,7 +139,9 @@ function RootComponent() {
   const { language, t } = useLanguage();
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const isPublicAuthRoute = typeof window !== "undefined" && ["/confirmar-email", "/redefinir-senha"].includes(window.location.pathname);
+  const publicAuthRoutes = ["/confirmar-email", "/redefinir-senha"] as const;
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+  const isPublicAuthRoute = publicAuthRoutes.includes(currentPath as (typeof publicAuthRoutes)[number]);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));

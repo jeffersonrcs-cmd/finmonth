@@ -178,6 +178,17 @@ function Dashboard() {
         )}
       </div>
 
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-5"
+      >
+        <div className="mx-auto flex max-w-[440px] justify-end">
+          <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">
+            FinMonth
+          </span>
+        </div>
+      </div>
+
       <nav
         aria-label="Navegação principal"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl"

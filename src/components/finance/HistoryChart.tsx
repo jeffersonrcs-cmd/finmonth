@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -22,9 +23,10 @@ type Row = {
 
 export function useHistoryRows(limit = 7, year?: number): Row[] {
   const state = useFinanceState();
+  const safeLimit = Math.min(Math.max(limit, 1), 12);
   const keys = year
     ? Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
-    : Object.keys(state.months).sort().slice(-limit);
+    : Object.keys(state.months).sort().slice(-safeLimit);
 
   return keys.map((key) => {
       const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);

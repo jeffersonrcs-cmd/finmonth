@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
 import { daysInMonth } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 
 function parseAmount(value: string) {
   const normalized = value.replace(/\./g, "").replace(",", ".");
@@ -32,6 +33,7 @@ type Shell = {
 };
 
 function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -87,6 +89,7 @@ export function IncomeDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -106,7 +109,7 @@ export function IncomeDialog({
   return (
     <FormDialog
       trigger={trigger}
-      title={initial ? "Editar receita" : "Nova receita"}
+      title={initial ? t("editIncome") : t("newIncome")}
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
@@ -123,16 +126,16 @@ export function IncomeDialog({
       }}
     >
       <div className="space-y-1.5">
-        <Label className={labelClass}>Descrição</Label>
+        <Label className={labelClass}>{t("description")}</Label>
         <Input
           className={fieldClass}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Salário"
+          placeholder={t("salary")}
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>Valor (R$)</Label>
+        <Label className={labelClass}>{t("amountBrl")}</Label>
         <Input
           className={fieldClass}
           inputMode="decimal"
@@ -142,22 +145,22 @@ export function IncomeDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>Dia da receita</Label>
+        <Label className={labelClass}>{t("incomeDay")}</Label>
         <Select value={day} onValueChange={setDay}>
           <SelectTrigger className={fieldClass}>
-            <SelectValue placeholder="Selecione o dia" />
+            <SelectValue placeholder={t("selectDay")} />
           </SelectTrigger>
           <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
             {Array.from(
               { length: daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1])) },
               (_, index) => {
                 const value = String(index + 1);
-                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">Dia {value}</SelectItem>;
+                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">{t("day")} {value}</SelectItem>;
               },
             )}
           </SelectContent>
         </Select>
-        <p className="text-[10px] text-mut">Mês e ano: {monthKey.split("-").reverse().join("/")}</p>
+        <p className="text-[10px] text-mut">{t("monthYear")}: {monthKey.split("-").reverse().join("/")}</p>
       </div>
     </FormDialog>
   );
@@ -178,6 +181,7 @@ export function BillDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -204,7 +208,7 @@ export function BillDialog({
   return (
     <FormDialog
       trigger={trigger}
-      title={initial ? "Editar conta" : "Nova conta"}
+      title={initial ? t("editBill") : t("newBill")}
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
@@ -226,7 +230,7 @@ export function BillDialog({
           className={fieldClass}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Energia elétrica"
+          placeholder={t("electricity")}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -241,7 +245,7 @@ export function BillDialog({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className={labelClass}>Vencimento</Label>
+          <Label className={labelClass}>{t("dueDate")}</Label>
           <Select value={dueDay} onValueChange={setDueDay}>
             <SelectTrigger className={fieldClass}>
               <SelectValue placeholder="Selecione o dia" />
@@ -256,11 +260,11 @@ export function BillDialog({
         </div>
       </div>
       <div className="glass-soft flex items-center justify-between rounded-xl px-3 py-2.5">
-        <span className="text-xs">Conta paga</span>
+        <span className="text-xs">{t("paidAccount")}</span>
         <Switch checked={paid} onCheckedChange={setPaid} />
       </div>
       <div className="glass-soft flex items-center justify-between rounded-xl px-3 py-2.5">
-        <span className="text-xs">Recorrente</span>
+        <span className="text-xs">{t("recurringAccount")}</span>
         <Switch checked={recurrent} onCheckedChange={setRecurrent} />
       </div>
     </FormDialog>
@@ -292,7 +296,7 @@ export function ManageEntriesDialog({
         <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
           {items.length === 0 ? (
             <p className="rounded-xl border border-dashed border-border/70 px-3 py-5 text-center text-xs text-mut">
-              Nenhum item cadastrado neste mês.
+              {t("noItems")}
             </p>
           ) : (
             items.map((item) => (
@@ -303,7 +307,7 @@ export function ManageEntriesDialog({
                 </div>
                 <button
                   type="button"
-                  aria-label="Editar item"
+                  aria-label={t("manageItem")}
                   onClick={() => { setOpen(false); onEdit(item.id); }}
                   className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-brand"
                 >
@@ -311,7 +315,7 @@ export function ManageEntriesDialog({
                 </button>
                 <button
                   type="button"
-                  aria-label="Excluir item"
+                  aria-label={`${t("delete")} ${t("item")}`}
                   onClick={() => onDelete(item.id)}
                   className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-neg"
                 >
@@ -339,6 +343,7 @@ export function SavingDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const { t } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -354,7 +359,7 @@ export function SavingDialog({
   return (
     <FormDialog
       trigger={trigger}
-      title={initial ? "Editar valor guardado" : "Novo valor guardado"}
+      title={initial ? t("editSaving") : t("newSaving")}
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
@@ -369,7 +374,7 @@ export function SavingDialog({
           className={fieldClass}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Reserva de emergência"
+          placeholder={t("emergencyReserve")}
         />
       </div>
       <div className="space-y-1.5">

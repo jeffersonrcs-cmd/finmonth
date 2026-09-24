@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
@@ -97,7 +98,9 @@ export function IncomeDialog({
     if (!dialogOpen) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
-    setDay(initial?.date?.split("-")[2] ?? "1");
+    const [year = 0, month = 1] = monthKey.split("-").map(Number);
+    const maxDay = daysInMonth(year, month);
+    setDay(String(Math.min(Math.max(Number(initial?.date?.split("-")[2]) || 1, 1), maxDay)));
   }, [dialogOpen, initial, monthKey]);
 
   return (
@@ -140,16 +143,20 @@ export function IncomeDialog({
       </div>
       <div className="space-y-1.5">
         <Label className={labelClass}>Dia da receita</Label>
-        <Input
-          className={fieldClass}
-          type="number"
-          min={1}
-          max={daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1]))}
-          inputMode="numeric"
-          value={day}
-          onChange={(e) => setDay(e.target.value)}
-          placeholder="1"
-        />
+        <Select value={day} onValueChange={setDay}>
+          <SelectTrigger className={fieldClass}>
+            <SelectValue placeholder="Selecione o dia" />
+          </SelectTrigger>
+          <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
+            {Array.from(
+              { length: daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1])) },
+              (_, index) => {
+                const value = String(index + 1);
+                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">Dia {value}</SelectItem>;
+              },
+            )}
+          </SelectContent>
+        </Select>
         <p className="text-[10px] text-mut">Mês e ano: {monthKey.split("-").reverse().join("/")}</p>
       </div>
     </FormDialog>
@@ -184,7 +191,9 @@ export function BillDialog({
     if (!dialogOpen) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
-    setDueDay(String(initial?.dueDay ?? 5));
+    const [year = 0, month = 1] = monthKey.split("-").map(Number);
+    const maxDay = daysInMonth(year, month);
+    setDueDay(String(Math.min(Math.max(Number(initial?.dueDay) || 5, 1), maxDay)));
     setPaid(initial?.paid ?? false);
     setRecurrent(initial?.recurrent ?? true);
   }, [dialogOpen, initial]);
@@ -233,13 +242,17 @@ export function BillDialog({
         </div>
         <div className="space-y-1.5">
           <Label className={labelClass}>Vencimento</Label>
-          <Input
-            className={fieldClass}
-            inputMode="numeric"
-            value={dueDay}
-            onChange={(e) => setDueDay(e.target.value)}
-            placeholder="10"
-          />
+          <Select value={dueDay} onValueChange={setDueDay}>
+            <SelectTrigger className={fieldClass}>
+              <SelectValue placeholder="Selecione o dia" />
+            </SelectTrigger>
+            <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
+              {Array.from({ length: maxDay }, (_, index) => {
+                const value = String(index + 1);
+                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">Dia {value}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="glass-soft flex items-center justify-between rounded-xl px-3 py-2.5">

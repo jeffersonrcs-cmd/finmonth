@@ -3,6 +3,7 @@ import { ArrowLeft, Bell, Check, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
@@ -189,13 +190,27 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
           </label>
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-widest text-mut">Antecedência</Label>
-            <select className="glass-soft h-11 w-full rounded-xl border-0 px-3 text-base outline-none" value={notificationPreferences.leadDays} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, leadDays: Number(e.target.value) })}>
-              <option value={0}>Somente no vencimento</option>
-              <option value={1}>1 dia antes</option>
-              <option value={2}>2 dias antes</option>
-              <option value={3}>3 dias antes</option>
-              <option value={7}>7 dias antes</option>
-            </select>
+            <Select
+              value={String(notificationPreferences.leadDays)}
+              disabled={!notificationPreferences.enabled}
+              onValueChange={(value) =>
+                financeActions.setNotificationPreferences({
+                  ...notificationPreferences,
+                  leadDays: Number(value),
+                })
+              }
+            >
+              <SelectTrigger className="glass-soft h-11 w-full rounded-xl border-0 px-3 text-base shadow-none focus:ring-1 focus:ring-brand/40">
+                <SelectValue placeholder="Selecione a antecedência" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
+                <SelectItem value="0" className="rounded-lg py-2.5 text-sm">Somente no vencimento</SelectItem>
+                <SelectItem value="1" className="rounded-lg py-2.5 text-sm">1 dia antes</SelectItem>
+                <SelectItem value="2" className="rounded-lg py-2.5 text-sm">2 dias antes</SelectItem>
+                <SelectItem value="3" className="rounded-lg py-2.5 text-sm">3 dias antes</SelectItem>
+                <SelectItem value="7" className="rounded-lg py-2.5 text-sm">7 dias antes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs">
             <span>Conta vencendo hoje</span>

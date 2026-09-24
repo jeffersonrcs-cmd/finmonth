@@ -15,7 +15,7 @@ const APP_VERSION = __FINMONTH_VERSION__;
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
-import { getCurrentLanguage, useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -121,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang={typeof window !== "undefined" ? getCurrentLanguage() : "pt-BR"}>
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

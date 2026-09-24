@@ -48,7 +48,7 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const [accountSettingsSection, setAccountSettingsSection] = useState<"profile" | "notifications">("profile");
+  const [accountSettingsSection, setAccountSettingsSection] = useState<"profile" | "notifications" | "version">("profile");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
@@ -100,6 +100,10 @@ function Dashboard() {
           onChange={setMonthKey}
           onOpenSettings={() => {
             setAccountSettingsSection("profile");
+            setAccountSettingsOpen(true);
+          }}
+          onOpenVersion={() => {
+            setAccountSettingsSection("version");
             setAccountSettingsOpen(true);
           }}
           onOpenNotifications={() => {

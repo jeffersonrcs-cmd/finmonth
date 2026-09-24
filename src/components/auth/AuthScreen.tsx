@@ -34,9 +34,9 @@ export function AuthScreen() {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          setMessage("t("signupCreated")");
+          setMessage(t("signupCreated"));
         } else {
-          setMessage("t("accountCreated")");
+          setMessage(t("accountCreated"));
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -47,7 +47,7 @@ export function AuthScreen() {
         if (signInError) throw signInError;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "t("operationFailed")");
+      setError(err instanceof Error ? err.message : t("operationFailed"));
     } finally {
       setBusy(false);
     }
@@ -59,7 +59,7 @@ export function AuthScreen() {
     setError("");
 
     if (!normalizedEmail) {
-      setError("t("email")");
+      setError(t("email"));
       return;
     }
 
@@ -69,7 +69,7 @@ export function AuthScreen() {
         redirectTo: "https://finmonth.lovable.app/redefinir-senha",
       });
       if (resetError) throw resetError;
-      setMessage("t("recoverySent")");
+      setMessage(t("recoverySent"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "t("operationFailed")");
     } finally {
@@ -89,10 +89,10 @@ export function AuthScreen() {
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
           <h1 className="mt-2 font-display text-2xl font-semibold">
-            {mode === "login" ? "t("enterAccount")" : "t("createAccount")"}
+            {mode === "login" ? t("enterAccount") : t("createAccount")}
           </h1>
           <p className="mt-2 text-sm text-mut">
-            t("financialDataSaved")
+            {t("financialDataSaved")}
           </p>
         </div>
 
@@ -189,7 +189,7 @@ export function AuthScreen() {
             }}
             className="w-full text-center text-xs text-mut transition-colors hover:text-brand"
           >
-            {mode === "login" ? "{t("noAccount")}" : "{t("hasAccount")}"}
+            {mode === "login" ? t("noAccount") : t("hasAccount")}
           </button>
         </form>
       </section>

@@ -424,7 +424,7 @@ export function BalanceEvolutionChart({
               />
             );
           }}
-          activeDot={(props) => {
+          activeDot={(props: any) => {
             const row = props.payload as Row;
             const tone = row?.saldo >= 0 ? "var(--pos)" : "var(--neg)";
             return (

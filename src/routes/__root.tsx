@@ -137,6 +137,17 @@ function RootComponent() {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const isRecoveryFlow = hashParams.get("type") === "recovery";
+    const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+    if (isRecoveryFlow && isLocalHost) {
+      const productionRecoveryUrl = new URL("https://" + ["finmonth", "lovable", "app"].join(".") + "/redefinir-senha");
+      productionRecoveryUrl.hash = window.location.hash.replace(/^#/, "");
+      window.location.replace(productionRecoveryUrl.toString());
+      return;
+    }
+
     hydrateStore();
     let active = true;
     let connectedUserId: string | null = null;

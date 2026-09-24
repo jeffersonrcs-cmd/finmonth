@@ -17,7 +17,14 @@ const translations = {
 
 type TranslationKey = keyof (typeof translations)["pt-BR"];
 let language: LanguageCode = DEFAULT_LANGUAGE;
-let hydrated = false;
+if (typeof window !== "undefined") {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    language = LANGUAGES.some((item) => item.code === stored) ? (stored as LanguageCode) : detectLanguage();
+  } catch {
+    language = detectLanguage();
+  }
+}
 const listeners = new Set<() => void>();
 function emit() { listeners.forEach((listener) => listener()); }
 function detectLanguage(): LanguageCode {
@@ -26,15 +33,6 @@ function detectLanguage(): LanguageCode {
   if (preferred.startsWith("en")) return "en-US";
   if (preferred.startsWith("es")) return "es-ES";
   return DEFAULT_LANGUAGE;
-}
-function hydrate() {
-  if (hydrated || typeof window === "undefined") return;
-  hydrated = true;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    language = LANGUAGES.some((item) => item.code === stored) ? (stored as LanguageCode) : detectLanguage();
-  } catch { language = detectLanguage(); }
-  document.documentElement.lang = language;
 }
 export function setLanguage(next: LanguageCode) {
   language = next;
@@ -46,7 +44,6 @@ function subscribe(listener: () => void) { listeners.add(listener); return () =>
 const getSnapshot = () => language;
 const getServerSnapshot = () => DEFAULT_LANGUAGE;
 export function useLanguage() {
-  hydrate();
   const current = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return { language: current, setLanguage, t: (key: TranslationKey) => translations[current][key] };
 }

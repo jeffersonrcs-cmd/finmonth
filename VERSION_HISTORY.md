@@ -1,3 +1,9 @@
+## v1.11.9 — ajuste dos filtros do histórico mensal
+
+- removida a barra de rolagem horizontal dos filtros de período do histórico mensal;
+- abreviados os rótulos para **Últimos 3 m, Últimos 6 m, Últimos 12 m e Mais que 12 m**;
+- filtros reorganizados em quatro colunas para caberem na largura disponível, inclusive em telas menores.
+
 ## v1.11.7 — filtros do histórico mensal
 
 - substituídos os filtros **Todos, Receitas, Contas e Saldo do mês** por períodos de histórico;

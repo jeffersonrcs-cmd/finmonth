@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Bell, ChevronLeft, ChevronRight, UserRound } from "lucide-react";
-import { financeActions, getBillNotifications, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
+import { getBillNotifications, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 
 export function MonthNav({
   monthKey,
@@ -43,11 +42,11 @@ export function MonthNav({
         <button
           type="button"
           onClick={(event) => {
-            window.dispatchEvent(new CustomEvent("finmonth:open-notifications"));
+            onOpenNotifications();
             event.currentTarget.blur();
           }}
           aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"}
-          className="grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-mut outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+          className="relative grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-mut outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
         >
           <Bell className="size-4" />
           {notificationCount > 0 && (

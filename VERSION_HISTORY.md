@@ -60,6 +60,12 @@ Marco reconstruído, consolidando:
 
 Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
 
+## v1.5.0 — atualização do aplicativo
+
+- botão **Atualizar aplicativo** dentro de Configurações > Versão;
+- recarga com cache-busting para abrir a publicação mais recente no Safari/iPhone instalado como app;
+- verificação automática contínua de nova Build ID já publicada.
+
 ## v1.4.0 — FinAI
 
 Nova central de inteligência financeira do FinMonth:

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, LogOut, Moon, Settings, Sun, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, LogOut, Moon, RefreshCw, Settings, Sun, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,6 +98,12 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
     }
   }
 
+  const reloadLatestVersion = () => {
+    const updateUrl = new URL(window.location.href);
+    updateUrl.searchParams.set("finmonth-update", Date.now().toString());
+    window.location.replace(updateUrl.toString());
+  };
+
   return (
     <section className="space-y-5">
       <div className="flex items-center gap-3">
@@ -181,6 +187,18 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
               {new Date(__FINMONTH_BUILD_ID__).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={reloadLatestVersion}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 text-[11px] font-semibold uppercase tracking-widest text-background transition-colors hover:bg-brand/90"
+          >
+            <RefreshCw className="size-4" />
+            Atualizar aplicativo
+          </button>
+          <p className="text-center text-[10px] leading-relaxed text-mut">
+            O FinMonth verifica automaticamente se existe uma versão publicada mais recente.
+          </p>
         </section>
       )}
 

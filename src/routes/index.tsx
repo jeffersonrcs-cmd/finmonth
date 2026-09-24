@@ -9,6 +9,7 @@ import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
 import { FinAi } from "@/components/finance/FinAI";
 import { computeTotals, currentMonthKey, monthLabel, useMonthData, useFinanceState, getBillNotifications } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,19 +34,20 @@ export const Route = createFileRoute("/")({
 type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finai";
 
 const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
-  { id: "inicio", label: "Início", Icon: Home },
-  { id: "contas", label: "Contas", Icon: ReceiptText },
-  { id: "receitas", label: "Receitas", Icon: WalletCards },
-  { id: "guardado", label: "Guardado", Icon: PiggyBank },
-  { id: "finai", label: "FinAI", Icon: Sparkles },
+  { id: "inicio", label: t("home"), Icon: Home },
+  { id: "contas", label: t("bills"), Icon: ReceiptText },
+  { id: "receitas", label: t("incomes"), Icon: WalletCards },
+  { id: "guardado", label: t("savings"), Icon: PiggyBank },
+  { id: "finai", label: t("finai"), Icon: Sparkles },
 ];
 
 function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const [accountSettingsSection, setAccountSettingsSection] = useState<"menu" | "profile" | "notifications" | "version">("menu");
+  const [accountSettingsSection, setAccountSettingsSection] = useState<"menu" | "profile" | "notifications" | "language" | "version">("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { t } = useLanguage();
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
   const data = useMonthData(monthKey);

@@ -138,7 +138,8 @@ function RootComponent() {
   const { theme } = useFinanceState();
   const { language, t } = useLanguage();
   const [authReady, setAuthReady] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);\n  const isPublicAuthRoute = typeof window !== "undefined" && ["/confirmar-email", "/redefinir-senha"].includes(window.location.pathname);
+  const [authenticated, setAuthenticated] = useState(false);
+  const isPublicAuthRoute = typeof window !== "undefined" && ["/confirmar-email", "/redefinir-senha"].includes(window.location.pathname);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -341,7 +342,7 @@ function RootComponent() {
         <div className="flex min-h-screen items-center justify-center bg-background text-xs text-mut">
           {t("loadingData")}
         </div>
-      ) : authenticated ? (
+      ) : authenticated || isPublicAuthRoute ? (
         <>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />

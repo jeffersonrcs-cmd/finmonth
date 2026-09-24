@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronLeft, ChevronRight, LogOut, Moon, Settings, Sun, UserRound } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Info, LogOut, Moon, Settings, Sun, UserRound } from "lucide-react";
 import { financeActions, getBillNotifications, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
@@ -8,11 +8,13 @@ export function MonthNav({
   onChange,
   onOpenSettings,
   onOpenNotifications,
+  onOpenVersion,
 }: {
   monthKey: string;
   onChange: (key: string) => void;
   onOpenSettings: () => void;
   onOpenNotifications: () => void;
+  onOpenVersion: () => void;
 }) {
   const financeState = useFinanceState();
   const { theme, userName } = financeState;
@@ -73,6 +75,18 @@ export function MonthNav({
             >
               <Bell className="size-4 text-mut" />
               Notificações
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                setMenuOpen(false);
+                onOpenVersion();
+                event.currentTarget.blur();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+            >
+              <Info className="size-4 text-mut" />
+              Versão
             </button>
             <button
               type="button"

@@ -79,7 +79,7 @@ function Dashboard() {
         <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
         <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
         <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">
-          <AccountSettings onBack={() => setAccountSettingsOpen(false)} />
+          <AccountSettings section={accountSettingsSection} onBack={() => setAccountSettingsOpen(false)} />
         </div>
       </div>
     );
@@ -94,7 +94,18 @@ function Dashboard() {
       {notificationsOpen && <NotificationsPanel notifications={notifications} onClose={() => setNotificationsOpen(false)} onOpenBills={() => { setNotificationsOpen(false); goTo("contas"); }} />}
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-5">
-        <MonthNav monthKey={monthKey} onChange={setMonthKey} onOpenSettings={() => setAccountSettingsOpen(true)} />
+        <MonthNav
+          monthKey={monthKey}
+          onChange={setMonthKey}
+          onOpenSettings={() => {
+            setAccountSettingsSection("profile");
+            setAccountSettingsOpen(true);
+          }}
+          onOpenNotifications={() => {
+            setAccountSettingsSection("notifications");
+            setAccountSettingsOpen(true);
+          }}
+        />
 
         {activeScreen === "inicio" && (
           <>

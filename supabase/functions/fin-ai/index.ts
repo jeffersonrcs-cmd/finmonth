@@ -175,8 +175,8 @@ Deno.serve(async (req) => {
       system_instruction: SYSTEM_INSTRUCTION,
       store: false,
       generation_config: {
-        thinking_level: "low",
-        max_output_tokens: 1200,
+        thinking_level: "minimal",
+        max_output_tokens: 800,
       },
     }),
   });

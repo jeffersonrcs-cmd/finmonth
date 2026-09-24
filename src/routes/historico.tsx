@@ -72,14 +72,14 @@ function Historico() {
             </p>
           )}
           {keys.map((key) => {
-            const t = computeTotals(state.months[key]!, key);
+            const totals = computeTotals(state.months[key]!, key);
             return (
               <div key={key} className="glass rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <p className="font-display text-sm font-semibold">{monthLabel(key)}</p>
                   <span
                     className={`num font-display text-sm font-semibold ${
-                      t.availableBalance >= 0 ? "text-pos" : "text-neg"
+                      totals.availableBalance >= 0 ? "text-pos" : "text-neg"
                     }`}
                   >
                     {formatCurrency(t.availableBalance)}
@@ -87,18 +87,18 @@ function Historico() {
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
                   <span className="text-mut">
-                    Receitas <span className="num block text-pos">{formatCurrency(t.totalIncomes, true)}</span>
+                    {t("incomes")} <span className="num block text-pos">{formatCurrency(totals.totalIncomes, true)}</span>
                   </span>
                   <span className="text-mut">
-                    Contas <span className="num block text-neg">{formatCurrency(t.totalBills, true)}</span>
+                    {t("bills")} <span className="num block text-neg">{formatCurrency(totals.totalBills, true)}</span>
                   </span>
                   <span className="text-mut">
-                    Guardado <span className="num block text-econ">{formatCurrency(t.totalSaved, true)}</span>
+                    {t("savings")} <span className="num block text-econ">{formatCurrency(totals.totalSaved, true)}</span>
                   </span>
                 </div>
                 <p className="mt-2 text-[11px] text-mut">
-                  {t.paidCount} paga(s) · {t.pendingCount} pendente(s)
-                  {t.overdueCount > 0 ? ` · ${t.overdueCount} vencida(s)` : ""}
+                  {totals.paidCount} {t("paid").toLowerCase()} · {totals.pendingCount} {t("pending").toLowerCase()}
+                  {totals.overdueCount > 0 ? ` · ${totals.overdueCount} ${t("overdue").toLowerCase()}` : ""}
                 </p>
               </div>
             );

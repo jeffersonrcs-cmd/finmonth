@@ -40,7 +40,7 @@ export function MonthNav({
             setMenuOpen((value) => !value);
             event.currentTarget.blur();
           }}
-          className="flex items-center gap-2 font-display text-left text-2xl font-bold leading-none outline-none transition-colors hover:text-brand focus:outline-none [-webkit-tap-highlight-color:transparent]"
+          className="flex items-center gap-2 font-display text-left text-2xl font-bold leading-none outline-none shadow-none transition-colors hover:text-brand focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
           aria-expanded={menuOpen}
           aria-haspopup="menu"
         >
@@ -49,14 +49,14 @@ export function MonthNav({
         </button>
 
         {menuOpen && (
-          <div className="absolute left-0 top-full z-50 mt-3 w-56 rounded-2xl border border-border bg-popover p-1.5 shadow-xl">
+          <div className="absolute left-0 top-full z-50 mt-3 w-56 rounded-2xl border border-border bg-popover p-1.5 shadow-none">
             <button
               type="button"
               onClick={() => {
                 setMenuOpen(false);
                 onOpenSettings();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none transition-colors hover:bg-foreground/5 focus:outline-none [-webkit-tap-highlight-color:transparent]"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none transition-colors hover:bg-foreground/5 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <Settings className="size-4 text-mut" />
               Editar dados do usuário
@@ -67,7 +67,7 @@ export function MonthNav({
                 setMenuOpen(false);
                 onOpenNotifications();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition-colors hover:bg-foreground/5"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none transition-colors hover:bg-foreground/5 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <Bell className="size-4 text-mut" />
               Notificações
@@ -87,7 +87,7 @@ export function MonthNav({
                 setMenuOpen(false);
                 void supabase.auth.signOut();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg outline-none transition-colors hover:bg-neg/10 focus:outline-none [-webkit-tap-highlight-color:transparent]"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg outline-none shadow-none transition-colors hover:bg-neg/10 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <LogOut className="size-4" />
               Sair da conta

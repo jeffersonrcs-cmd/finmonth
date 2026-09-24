@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { computeTotals, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
+import { computeTotals, currentMonthKey, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
 export type ChartRange = 3 | 6 | 12;
@@ -27,18 +27,14 @@ type Row = {
   isCurrent: boolean;
 };
 
-function currentMonthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
 export function useHistoryRows(limit = 7, year?: number): Row[] {
   const state = useFinanceState();
   const safeLimit = Math.min(Math.max(limit, 1), 12);
   const currentKey = currentMonthKey();
-  const keys = year
-    ? Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
-    : Object.keys(state.months).sort().slice(-safeLimit);
+  const keys = Object.keys(state.months)
+    .filter((key) => key <= currentKey && (!year || key.startsWith(`${year}-`)))
+    .sort()
+    .slice(-safeLimit);
 
   return keys.map((key) => {
     const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);
@@ -178,7 +174,11 @@ function sliceRows(rows: Row[], range: ChartRange) {
 
 export function useAnnualTotals(year: number) {
   const state = useFinanceState();
-  return Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`).reduce(
+  const currentKey = currentMonthKey();
+  const keys = Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
+    .filter((key) => key <= currentKey);
+
+  return keys.reduce(
     (totals, key) => {
       const month = state.months[key];
       if (!month) return totals;

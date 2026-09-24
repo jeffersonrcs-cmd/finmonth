@@ -156,7 +156,7 @@ function Historico() {
           </div>
 
           <div className="mb-3 grid grid-cols-4 gap-1.5">
-            {[["3", "3 meses"], ["6", "6 meses"], ["12", "12 meses"], ["older", "Acima de 12 meses"]].map(([value, label]) => (
+            {[["3", t("history3Months")], ["6", t("history6Months")], ["12", t("history12Months")], ["older", t("historyAbove12Months")]].map(([value, label]) => (
               <button key={value} type="button" onClick={() => setHistoryRange(value as typeof historyRange)} className={`min-h-8 min-w-0 rounded-lg px-1.5 text-center text-[9px] font-semibold leading-tight transition-colors ${historyRange === value ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"}`} aria-pressed={historyRange === value}>{label}</button>
             ))}
           </div>

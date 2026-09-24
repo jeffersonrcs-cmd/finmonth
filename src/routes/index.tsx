@@ -183,9 +183,14 @@ function Dashboard() {
         className="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-5"
       >
         <div className="mx-auto flex max-w-[440px] justify-end">
-          <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">
-            FinMonth
-          </span>
+          <div className="flex flex-col items-end leading-none">
+            <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">
+              FinMonth
+            </span>
+            <span className="mt-0.5 select-none text-[7px] font-medium tracking-[0.16em] text-mut/25">
+              v{__FINMONTH_VERSION__}
+            </span>
+          </div>
         </div>
       </div>
 

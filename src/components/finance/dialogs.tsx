@@ -33,7 +33,7 @@ type Shell = {
 };
 
 function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -89,7 +89,7 @@ export function IncomeDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -135,7 +135,7 @@ export function IncomeDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>{t("amountBrl")}</Label>
+        <Label className={labelClass}>{t("amountCurrency").replace("{currency}", currency)}</Label>
         <Input
           className={fieldClass}
           inputMode="decimal"
@@ -181,7 +181,7 @@ export function BillDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -235,7 +235,7 @@ export function BillDialog({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className={labelClass}>{t("amountBrl")}</Label>
+          <Label className={labelClass}>{t("amountCurrency").replace("{currency}", currency)}</Label>
           <Input
             className={fieldClass}
             inputMode="decimal"
@@ -284,7 +284,7 @@ export function ManageEntriesDialog({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   const [open, setOpen] = useState(false);
 
   return (
@@ -344,7 +344,7 @@ export function SavingDialog({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(false);
   const dialogOpen = open ?? internalOpen;
   const setDialogOpen = onOpenChange ?? setInternalOpen;
@@ -379,7 +379,7 @@ export function SavingDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>{t("amountBrl")}</Label>
+        <Label className={labelClass}>{t("amountCurrency").replace("{currency}", currency)}</Label>
         <Input
           className={fieldClass}
           inputMode="decimal"

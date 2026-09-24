@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase";
-import { getCurrentLanguage, translate } from "@/lib/i18n";
+import { getCurrentCurrency, getCurrencyRate, getCurrentLanguage, translate } from "@/lib/i18n";
 
 export type Income = {
   id: string;
@@ -396,12 +396,19 @@ export function monthLabel(key: string, short = false) {
 
 export function formatCurrency(value: number, compact = false) {
   const locale = getCurrentLanguage();
+  const currency = getCurrentCurrency();
+  const rate = getCurrencyRate();
+
+  if (currency !== "BRL" && !rate) {
+    return "—";
+  }
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "BRL",
+    currency,
     minimumFractionDigits: compact ? 0 : 2,
     maximumFractionDigits: compact ? 0 : 2,
-  }).format(value);
+  }).format(value * (rate ?? 1));
 }
 
 /* ---------- cálculos ---------- */

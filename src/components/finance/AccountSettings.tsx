@@ -32,7 +32,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
 
   async function handleDeleteAccount() {
     const confirmed = window.confirm(
-      "Excluir sua conta apagará permanentemente seu cadastro e todos os seus dados financeiros. Esta ação não pode ser desfeita. Deseja continuar?",
+      t("accountDeleted"),
     );
     if (!confirmed) return;
 
@@ -48,7 +48,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível excluir sua conta.");
+      setError(err instanceof Error ? err.message : t("accountNotUpdated"));
       setDeleting(false);
     }
   }
@@ -61,11 +61,11 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
 
     try {
       const trimmedName = name.trim();
-      if (!trimmedName) throw new Error("Informe seu nome.");
+      if (!trimmedName) throw new Error(t("enterName"));
 
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) throw new Error("Sua sessão expirou. Entre novamente.");
+      if (!userId) throw new Error(t("sessionExpired"));
 
       const normalizedEmail = email.trim();
       const currentEmail = userData.user?.email ?? "";
@@ -90,11 +90,11 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
       financeActions.setUserName(trimmedName);
       setMessage(
         normalizedEmail !== currentEmail
-          ? "Dados salvos. Verifique seu e-mail para confirmar a alteração do endereço."
-          : "Dados da conta atualizados.",
+          ? t("emailChanged")
+          : t("accountUpdated"),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível atualizar sua conta.");
+      setError(err instanceof Error ? err.message : t("accountNotUpdated"));
     } finally {
       setBusy(false);
     }
@@ -128,7 +128,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
                 ? "Configure os avisos das suas contas."
                 : section === "version"
                   ? "Informações técnicas desta versão do aplicativo."
-                  : "Edite os dados usados no seu cadastro."}
+                  : t("profile")}
           </p>
         </div>
       </div>
@@ -202,7 +202,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
 
           <div className="grid grid-cols-2 gap-3">
             <div className="glass-soft rounded-2xl p-3">
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Versão</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">{t("version")}</p>
               <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__}</p>
             </div>
             <div className="glass-soft rounded-2xl p-3">
@@ -212,9 +212,9 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
           </div>
 
           <div className="rounded-2xl border border-border/60 bg-muted/30 px-3 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Gerada em</p>
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">{t("generatedAt")}</p>
             <p className="mt-1 text-xs font-medium">
-              {new Date(__FINMONTH_BUILD_ID__).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}
+              {new Date(__FINMONTH_BUILD_ID__).toLocaleString(language, { dateStyle: "medium", timeStyle: "short" })}
             </p>
           </div>
 
@@ -227,7 +227,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
             Atualizar aplicativo
           </button>
           <p className="text-center text-[10px] leading-relaxed text-mut">
-            O FinMonth verifica automaticamente se existe uma versão publicada mais recente.
+            {t("autoUpdateInfo")}
           </p>
         </section>
       )}
@@ -236,28 +236,28 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
         <>
           <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5">
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-mut">Nome</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-mut">{t("name")}</Label>
               <Input className="glass-soft h-11 rounded-xl border-0 text-base" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-mut">E-mail</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-mut">{t("email")}</Label>
               <Input className="glass-soft h-11 rounded-xl border-0 text-base" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-mut">Nova senha</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-mut">{t("newPassword")}</Label>
               <div className="relative">
                 <Input
                   className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Deixe em branco para manter"
+                  placeholder={t("passwordRecovery")}
                   autoComplete="new-password"
                   minLength={6}
                 />
-                <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"} className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut">
+                <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("hidePassword") : t("showPassword")} className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut">
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
@@ -271,7 +271,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
             )}
 
             <Button type="submit" disabled={busy} className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90">
-              {busy ? "Salvando..." : "Salvar alterações"}
+              {busy ? t("wait") : t("saveChanges")}
             </Button>
           </form>
 
@@ -282,7 +282,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
               disabled={deleting}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-neg/20 bg-neg/5 px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-neg transition-colors hover:bg-neg/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Trash2 className="size-4" /> {deleting ? "Excluindo conta..." : "Excluir conta"}
+              <Trash2 className="size-4" /> {deleting ? t("deletingAccount") : t("deleteAccount")}
             </button>
           </div>
         </>
@@ -293,16 +293,16 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
           <div className="flex items-start gap-3">
             <div className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand"><Bell className="size-4" /></div>
             <div>
-              <h2 className="font-display text-sm font-semibold">Avisos de contas</h2>
-              <p className="mt-1 text-xs leading-relaxed text-mut">Configure os avisos de contas próximas, vencendo hoje e atrasadas.</p>
+              <h2 className="font-display text-sm font-semibold">{t("notificationsSettings")}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-mut">{t("notificationsDescription")}</p>
             </div>
           </div>
           <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs">
-            <span>Ativar avisos</span>
+            <span>{t("enableNotifications")}</span>
             <input type="checkbox" checked={notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, enabled: e.target.checked })} className="size-4" />
           </label>
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut">Antecedência</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut">{t("advanceNotice")}</Label>
             <Select
               value={String(notificationPreferences.leadDays)}
               disabled={!notificationPreferences.enabled}
@@ -314,23 +314,23 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
               }
             >
               <SelectTrigger className="glass-soft h-11 w-full rounded-xl border-0 px-3 text-base shadow-none focus:ring-1 focus:ring-brand/40">
-                <SelectValue placeholder="Selecione a antecedência" />
+                <SelectValue placeholder={t("selectAdvance")} />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
-                <SelectItem value="0" className="rounded-lg py-2.5 text-sm">Somente no vencimento</SelectItem>
-                <SelectItem value="1" className="rounded-lg py-2.5 text-sm">1 dia antes</SelectItem>
-                <SelectItem value="2" className="rounded-lg py-2.5 text-sm">2 dias antes</SelectItem>
-                <SelectItem value="3" className="rounded-lg py-2.5 text-sm">3 dias antes</SelectItem>
-                <SelectItem value="7" className="rounded-lg py-2.5 text-sm">7 dias antes</SelectItem>
+                <SelectItem value="0" className="rounded-lg py-2.5 text-sm">{t("onlyDue")}</SelectItem>
+                <SelectItem value="1" className="rounded-lg py-2.5 text-sm">{t("oneDay")}</SelectItem>
+                <SelectItem value="2" className="rounded-lg py-2.5 text-sm">{t("twoDays")}</SelectItem>
+                <SelectItem value="3" className="rounded-lg py-2.5 text-sm">{t("threeDays")}</SelectItem>
+                <SelectItem value="7" className="rounded-lg py-2.5 text-sm">{t("sevenDays")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs">
-            <span>Conta vencendo hoje</span>
+            <span>{t("dueToday")}</span>
             <input type="checkbox" checked={notificationPreferences.dueToday} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, dueToday: e.target.checked })} className="size-4" />
           </label>
           <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs">
-            <span>Conta atrasada</span>
+            <span>{t("overdueNotice")}</span>
             <input type="checkbox" checked={notificationPreferences.overdue} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, overdue: e.target.checked })} className="size-4" />
           </label>
         </section>

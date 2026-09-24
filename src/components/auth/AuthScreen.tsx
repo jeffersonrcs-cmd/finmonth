@@ -30,13 +30,16 @@ export function AuthScreen() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: {\n            data: { full_name: name.trim() },\n            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",\n          },
+          options: {
+            data: { full_name: name.trim() },\n            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",
+          },
         });
 
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          try { sessionStorage.setItem("finmonth:confirmation-email", email.trim()); } catch { /* ignore */ }\n          void navigate({ to: "/confirmar-email" });
+          try { sessionStorage.setItem("finmonth:confirmation-email", email.trim()); } catch { /* ignore */ }
+          void navigate({ to: "/confirmar-email" });
         } else {
           setMessage(t("accountCreated"));
         }

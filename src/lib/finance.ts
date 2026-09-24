@@ -29,17 +29,27 @@ export type MonthData = {
   savings: Saving[];
 };
 
+export type NotificationPreferences = {
+  enabled: boolean;
+  leadDays: number;
+  dueToday: boolean;
+  overdue: boolean;
+};
+
 export type FinanceState = {
   months: Record<string, MonthData>;
   theme: "dark" | "light";
   userName: string;
+  notificationPreferences: NotificationPreferences;
 };
 
 const STORAGE_KEY = "finmonth.v1";
 
 const emptyMonth = (): MonthData => ({ incomes: [], bills: [], savings: [] });
 
-const initialState: FinanceState = { months: {}, theme: "dark", userName: "" };
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, leadDays: 1, dueToday: true, overdue: true };
+
+const initialState: FinanceState = { months: {}, theme: "dark", userName: "", notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES };
 
 let state: FinanceState = initialState;
 let hydrated = false;
@@ -81,6 +91,10 @@ async function syncCloudNow() {
       id: userId,
       full_name: state.userName,
       theme: state.theme,
+      notifications_enabled: state.notificationPreferences.enabled,
+      notification_lead_days: state.notificationPreferences.leadDays,
+      notify_due_today: state.notificationPreferences.dueToday,
+      notify_overdue: state.notificationPreferences.overdue,
     }),
     months.length > 0
       ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
@@ -106,7 +120,7 @@ export async function connectCloud(userId: string) {
 
   const [{ data: rows, error: monthsError }, { data: profile, error: profileError }] = await Promise.all([
     supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
-    supabase.from("profiles").select("full_name,theme").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("full_name,theme,notifications_enabled,notification_lead_days,notify_due_today,notify_overdue").eq("id", userId).maybeSingle(),
   ]);
 
   if (monthsError) throw monthsError;
@@ -119,6 +133,7 @@ export async function connectCloud(userId: string) {
         ...state,
         userName: profile.full_name ?? state.userName,
         theme: profile.theme === "light" ? "light" : state.theme,
+        notificationPreferences: { enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled, leadDays: Math.min(Math.max(Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays), 0), 7), dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday, overdue: profile.notify_overdue ?? state.notificationPreferences.overdue },
       };
     }
     persist();
@@ -134,6 +149,7 @@ export async function connectCloud(userId: string) {
     ),
     theme: profile?.theme === "light" ? "light" : "dark",
     userName: profile?.full_name ?? "",
+    notificationPreferences: { enabled: profile?.notifications_enabled ?? true, leadDays: Math.min(Math.max(Number(profile?.notification_lead_days ?? 1), 0), 7), dueToday: profile?.notify_due_today ?? true, overdue: profile?.notify_overdue ?? true },
   };
   persist();
   emit();
@@ -165,6 +181,7 @@ export function hydrateStore() {
         months: parsed.months ?? {},
         theme: parsed.theme === "light" ? "light" : "dark",
         userName: typeof parsed.userName === "string" ? parsed.userName : "",
+        notificationPreferences: { enabled: parsed.notificationPreferences?.enabled ?? true, leadDays: Math.min(Math.max(Number(parsed.notificationPreferences?.leadDays ?? 1), 0), 7), dueToday: parsed.notificationPreferences?.dueToday ?? true, overdue: parsed.notificationPreferences?.overdue ?? true },
       };
     }
   } catch {
@@ -201,6 +218,9 @@ export const financeActions = {
   },
   setUserName(userName: string) {
     setState({ ...state, userName });
+  },
+  setNotificationPreferences(notificationPreferences: NotificationPreferences) {
+    setState({ ...state, notificationPreferences });
   },
   addIncome(monthKey: string, data: Omit<Income, "id">) {
     updateMonth(monthKey, (m) => ({ ...m, incomes: [...m.incomes, { ...data, id: uid() }] }));
@@ -333,6 +353,28 @@ export function shiftMonthKey(key: string, delta: number) {
 }
 
 export const previousMonthKey = (key: string) => shiftMonthKey(key, -1);
+
+export type BillNotification = { id: string; kind: "upcoming" | "today" | "overdue"; billId: string; monthKey: string; title: string; message: string };
+
+export function getBillNotifications(financeState: FinanceState, now = new Date()): BillNotification[] {
+  const preferences = financeState.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES;
+  if (!preferences.enabled) return [];
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  const result: BillNotification[] = [];
+  for (const [monthKey, data] of Object.entries(financeState.months)) {
+    const { year, month } = parseMonthKey(monthKey);
+    for (const bill of data.bills) {
+      if (bill.paid) continue;
+      const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month))); due.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
+      if (diffDays < 0 && preferences.overdue) result.push({ id: `overdue:${monthKey}:${bill.id}`, kind: "overdue", billId: bill.id, monthKey, title: `${bill.description} está atrasada`, message: Math.abs(diffDays) === 1 ? "Venceu ontem." : `Venceu há ${Math.abs(diffDays)} dias.` });
+      else if (diffDays === 0 && preferences.dueToday) result.push({ id: `today:${monthKey}:${bill.id}`, kind: "today", billId: bill.id, monthKey, title: `${bill.description} vence hoje`, message: `Valor: ${formatCurrency(bill.amount)}.` });
+      else if (diffDays > 0 && diffDays <= preferences.leadDays) result.push({ id: `upcoming:${monthKey}:${bill.id}`, kind: "upcoming", billId: bill.id, monthKey, title: `${bill.description} vence em ${diffDays} dia${diffDays === 1 ? "" : "s"}`, message: `Valor: ${formatCurrency(bill.amount)}.` });
+    }
+  }
+  const rank = { overdue: 0, today: 1, upcoming: 2 };
+  return result.sort((a, b) => rank[a.kind] - rank[b.kind] || a.title.localeCompare(b.title));
+}
 
 export function monthLabel(key: string, short = false) {
   const { year, month } = parseMonthKey(key);

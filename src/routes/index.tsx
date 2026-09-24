@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
+import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
 import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
@@ -11,7 +12,7 @@ import {
   useAnnualTotals,
   useHistoryRows,
 } from "@/components/finance/HistoryChart";
-import { computeTotals, currentMonthKey, monthLabel, useMonthData } from "@/lib/finance";
+import { computeTotals, currentMonthKey, monthLabel, useMonthData, useFinanceState, getBillNotifications } from "@/lib/finance";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,6 +48,9 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const financeState = useFinanceState();
+  const notifications = getBillNotifications(financeState);
   const [chartPeriod, setChartPeriod] = useState<"monthly" | "annual">("monthly");
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
@@ -61,6 +65,8 @@ function Dashboard() {
           availableBalance: annualTotals.totalIncomes - annualTotals.totalBills - annualTotals.totalSaved,
         }
       : totals;
+
+  useEffect(() => { const open = () => setNotificationsOpen(true); window.addEventListener("finmonth:open-notifications", open); return () => window.removeEventListener("finmonth:open-notifications", open); }, []);
 
   const goTo = (screen: Screen) => {
     setActiveScreen(screen);
@@ -84,6 +90,8 @@ function Dashboard() {
       <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
       <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
+
+      {notificationsOpen && <NotificationsPanel notifications={notifications} onClose={() => setNotificationsOpen(false)} onOpenBills={() => { setNotificationsOpen(false); goTo("contas"); }} />}
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-5">
         <MonthNav monthKey={monthKey} onChange={setMonthKey} onOpenSettings={() => setAccountSettingsOpen(true)} />

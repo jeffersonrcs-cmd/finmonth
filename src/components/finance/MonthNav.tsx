@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, LogOut, Moon, Settings, Sun, UserRound } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, LogOut, Moon, Settings, Sun, UserRound } from "lucide-react";
 import { financeActions, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
@@ -70,6 +70,7 @@ export function MonthNav({
       </div>
 
       <div className="flex items-center gap-2">
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label="Abrir notificações" className="glass-soft grid size-9 place-items-center rounded-full text-mut transition-colors hover:text-brand"><Bell className="size-4" /></button>
         <button onClick={() => onChange(shiftMonthKey(monthKey, -1))} aria-label="Mês anterior" className="glass-soft grid size-9 place-items-center rounded-full text-brand transition-colors hover:bg-foreground/10">
           <ChevronLeft className="size-4" />
         </button>

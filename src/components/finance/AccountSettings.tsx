@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Check, Eye, EyeOff, LogOut, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Check, Eye, EyeOff, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance"
 import { supabase } from "@/lib/supabase";
 
 export function AccountSettings({ onBack }: { onBack: () => void }) {
-  const { userName } = useFinanceState();
+  const { userName, notificationPreferences } = useFinanceState();
   const [name, setName] = useState(userName);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -154,6 +154,14 @@ export function AccountSettings({ onBack }: { onBack: () => void }) {
           {busy ? "Salvando..." : "Salvar alterações"}
         </Button>
       </form>
+
+      <section className="glass space-y-4 rounded-3xl p-5">
+        <div className="flex items-start gap-3"><div className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand"><Bell className="size-4" /></div><div><h2 className="font-display text-sm font-semibold">Avisos de contas</h2><p className="mt-1 text-xs leading-relaxed text-mut">Configure os avisos de contas próximas, vencendo hoje e atrasadas.</p></div></div>
+        <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs"><span>Ativar avisos</span><input type="checkbox" checked={notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, enabled: e.target.checked })} className="size-4" /></label>
+        <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-widest text-mut">Antecedência</Label><select className="glass-soft h-11 w-full rounded-xl border-0 px-3 text-base outline-none" value={notificationPreferences.leadDays} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, leadDays: Number(e.target.value) })}><option value={0}>Somente no vencimento</option><option value={1}>1 dia antes</option><option value={2}>2 dias antes</option><option value={3}>3 dias antes</option><option value={7}>7 dias antes</option></select></div>
+        <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs"><span>Conta vencendo hoje</span><input type="checkbox" checked={notificationPreferences.dueToday} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, dueToday: e.target.checked })} className="size-4" /></label>
+        <label className="glass-soft flex items-center justify-between rounded-xl px-3 py-3 text-xs"><span>Conta atrasada</span><input type="checkbox" checked={notificationPreferences.overdue} disabled={!notificationPreferences.enabled} onChange={(e) => financeActions.setNotificationPreferences({ ...notificationPreferences, overdue: e.target.checked })} className="size-4" /></label>
+      </section>
 
       <div className="space-y-2">
         <button

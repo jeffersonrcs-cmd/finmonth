@@ -362,6 +362,9 @@ export function BalanceEvolutionChart({
   const minBalance = Math.min(...balanceValues, 0);
   const maxBalance = Math.max(...balanceValues, 0);
   const balanceSpan = maxBalance - minBalance;
+  const domainPadding = balanceSpan === 0 ? 1 : Math.max(balanceSpan * 0.08, 1);
+  const domainMin = minBalance === 0 ? 0 : minBalance - domainPadding;
+  const domainMax = maxBalance === 0 ? 0 : maxBalance + domainPadding;
   const zeroOffset = balanceSpan === 0 ? 0.5 : Math.max(0, Math.min(1, maxBalance / balanceSpan));
   const zeroOffsetPercent = `${zeroOffset * 100}%`;
 
@@ -384,7 +387,7 @@ export function BalanceEvolutionChart({
         </defs>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
-        <YAxis {...yAxisProps} domain={[minBalance, maxBalance]} />
+        <YAxis {...yAxisProps} domain={[domainMin, domainMax]} />
         <ReferenceLine
           y={0}
           stroke="var(--muted-foreground)"

@@ -23,7 +23,7 @@ REGRAS OBRIGATÓRIAS:
 - Ao fazer uma análise, considere maior gasto, menor gasto, média, tendência e percentual de variação quando aplicável.
 - Não crie categorias: o modelo atual do FinMonth não possui categorias armazenadas.
 - Você pode analisar descrições reais dos lançamentos, como uma conta chamada "Luz" ou "Energia".
-- Responda em português do Brasil, de forma clara, objetiva, amigável e útil.
+- Responda no idioma solicitado pelo aplicativo, de forma clara, objetiva, amigável e útil.
 - Não dê aconselhamento financeiro baseado em informações externas ao FinMonth.
 - Não diga que executou uma ação no aplicativo; nesta versão você apenas analisa dados.
 - Os gráficos são renderizados pelo aplicativo. Escolha somente um chartMode permitido quando um gráfico realmente ajudar.
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   if (userError || !userData.user) return jsonResponse({ error: "Sessão inválida ou expirada." }, 401);
 
-  let body: { question?: string; monthKey?: string; history?: Array<{ role: string; text: string }> };
+  let body: { question?: string; monthKey?: string; history?: Array<{ role: string; text: string }>; language?: string };
   try {
     body = await req.json();
   } catch {
@@ -125,6 +125,8 @@ Deno.serve(async (req) => {
   }
 
   const question = typeof body.question === "string" ? body.question.trim() : "";
+  const language = body.language === "en-US" ? "en-US" : body.language === "es-ES" ? "es-ES" : "pt-BR";
+  const languageName = language === "en-US" ? "English" : language === "es-ES" ? "Spanish" : "Portuguese (Brazil)";
   if (!question) return jsonResponse({ error: "Informe uma pergunta." }, 400);
 
   const monthKey = typeof body.monthKey === "string" && /^\d{4}-\d{2}$/.test(body.monthKey)
@@ -151,6 +153,7 @@ Deno.serve(async (req) => {
   );
 
   const input = [
+    `Idioma obrigatório da resposta: ${languageName}`,
     `Mês de referência: ${monthKey}`,
     "",
     "Histórico recente da conversa:",
@@ -172,7 +175,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       model: MODEL,
       input,
-      system_instruction: SYSTEM_INSTRUCTION,
+      system_instruction: `${SYSTEM_INSTRUCTION}\n\nIDIOMA OBRIGATÓRIO: Responda exclusivamente em ${languageName}.`,
       store: false,
       generation_config: {
         thinking_level: "minimal",

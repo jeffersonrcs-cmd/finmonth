@@ -9,7 +9,8 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
-import { computeTotals, formatCurrency, monthLabel, MONTH_NAMES, useFinanceState } from "@/lib/finance";
+import { computeTotals, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 
 type Row = {
   label: string;
@@ -28,7 +29,7 @@ export function useHistoryRows(limit = 7, year?: number): Row[] {
   return keys.map((key) => {
       const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);
       return {
-        label: year ? (MONTH_NAMES[Number(key.slice(5, 7)) - 1]?.slice(0, 3) ?? "") : monthLabel(key, true),
+        label: monthLabel(key, true),
         receitas: t.totalIncomes,
         despesas: t.totalBills,
         saldo: t.monthBalance,
@@ -57,7 +58,7 @@ function ChartShell({
         {subtitle && <span className="text-[11px] text-mut">{subtitle}</span>}
       </div>
       {rows.length === 0 ? (
-        <p className="py-6 text-center text-xs text-mut">Sem dados suficientes ainda.</p>
+        <p className="py-6 text-center text-xs text-mut">{t("insufficientData")}</p>
       ) : (
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
@@ -124,6 +125,7 @@ export function MonthlyOverview({
   period?: "monthly" | "annual";
   comparison?: { totalIncomes: number; totalBills: number; totalSaved: number } | undefined;
 }) {
+  const { t } = useLanguage();
   const previous = rows.length > 1 ? rows[rows.length - 2] : undefined;
   const current = rows[rows.length - 1];
   const incomeChange = comparison
@@ -148,42 +150,42 @@ export function MonthlyOverview({
       <div className="glass rounded-3xl p-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h2 className="font-display text-sm font-semibold">Visão geral</h2>
-            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? "Resumo do ano selecionado" : "Resumo do mês selecionado"}</p>
+            <h2 className="font-display text-sm font-semibold">{t("overview")}</h2>
+            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? "{t("selectedYearSummary")}" : "{t("selectedMonthSummary")}"}</p>
           </div>
           <span className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}>
-            Saldo {balancePositive ? "positivo" : "negativo"}
+            {balancePositive ? t("positiveBalance") : t("negativeBalance")}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-pos/10 p-3">
-            <p className="text-[10px] text-mut">Receitas</p>
+            <p className="text-[10px] text-mut">{t("incomes")}</p>
             <p className="num mt-1 font-display text-sm font-semibold text-pos">{formatCurrency(totals.totalIncomes, true)}</p>
           </div>
           <div className="rounded-2xl bg-neg/10 p-3">
-            <p className="text-[10px] text-mut">Contas</p>
+            <p className="text-[10px] text-mut">{t("bills")}</p>
             <p className="num mt-1 font-display text-sm font-semibold text-neg">{formatCurrency(totals.totalBills, true)}</p>
           </div>
           <div className="rounded-2xl bg-econ/10 p-3">
-            <p className="text-[10px] text-mut">Guardado</p>
+            <p className="text-[10px] text-mut">{t("savings")}</p>
             <p className="num mt-1 font-display text-sm font-semibold text-econ">{formatCurrency(totals.totalSaved, true)}</p>
           </div>
           <div className="rounded-2xl bg-brand/10 p-3">
-            <p className="text-[10px] text-mut">Saldo</p>
+            <p className="text-[10px] text-mut">{t("monthBalance")}</p>
             <p className={`num mt-1 font-display text-sm font-semibold ${balancePositive ? "text-brand" : "text-neg"}`}>{formatCurrency(totals.availableBalance, true)}</p>
           </div>
         </div>
       </div>
 
-      <ChartShell title={period === "annual" ? "Comparativo anual" : "Comparativo mensal"} subtitle={period === "annual" ? "Janeiro a dezembro" : "Últimos meses"} rows={rows}>
+      <ChartShell title={period === "annual" ? t("annualComparison") : t("monthlyComparison")} subtitle={period === "annual" ? t("januaryToDecember") : t("lastMonths")} rows={rows}>
         <BarChart data={rows}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis {...axisProps} />
           <Tooltip {...tooltipStyle} />
           <Legend wrapperStyle={{ fontSize: 10, paddingTop: 6 }} />
-          <Bar dataKey="receitas" name="Receitas" fill="var(--pos)" radius={[5, 5, 0, 0]} />
-          <Bar dataKey="despesas" name="Contas" fill="var(--neg)" radius={[5, 5, 0, 0]} />
-          <Bar dataKey="guardado" name="Guardado" fill="var(--econ)" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="receitas" name={t("incomes")} fill="var(--pos)" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="despesas" name={t("bills")} fill="var(--neg)" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="guardado" name={t("savings")} fill="var(--econ)" radius={[5, 5, 0, 0]} />
         </BarChart>
       </ChartShell>
 
@@ -191,8 +193,8 @@ export function MonthlyOverview({
         <div className="mb-3 flex items-center gap-2">
           <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-brand">✦</span>
           <div>
-            <h2 className="font-display text-sm font-semibold">Insights do período</h2>
-            <p className="text-[10px] text-mut">{comparison ? "Comparação com o ano anterior" : "Comparação com o mês anterior"}</p>
+            <h2 className="font-display text-sm font-semibold">{t("periodInsights")}</h2>
+            <p className="text-[10px] text-mut">{comparison ? t("previousYearComparison") : t("previousMonthComparison")}</p>
           </div>
         </div>
         <div className="space-y-2.5 text-xs">
@@ -216,7 +218,7 @@ export function MonthlyOverview({
 
 export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
   return (
-    <ChartShell title="Receitas x Despesas" rows={rows}>
+    <ChartShell title={t("incomeExpense")} rows={rows}>
       <BarChart data={rows}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis {...axisProps} />
@@ -230,7 +232,7 @@ export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
 
 export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
   return (
-    <ChartShell title="Evolução do saldo" rows={rows} subtitle={`${rows.length} ${rows.length === 1 ? "mês" : "meses"}`}>
+    <ChartShell title={t("balanceEvolution")} rows={rows} subtitle={`${rows.length} ${rows.length === 1 ? t("month") : t("months")}`}>
       <LineChart data={rows}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis {...axisProps} />
@@ -249,7 +251,7 @@ export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
 
 export function SavingsChart({ rows }: { rows: Row[] }) {
   return (
-    <ChartShell title="Total guardado por mês" rows={rows}>
+    <ChartShell title={t("savedPerMonth")} rows={rows}>
       <BarChart data={rows}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis {...axisProps} />

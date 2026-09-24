@@ -13,6 +13,7 @@ import {
   monthLabel,
   useFinanceState,
 } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/historico")({
   head: () => ({
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/historico")({
 });
 
 function Historico() {
+  const { t } = useLanguage();
   const state = useFinanceState();
   const rows = useHistoryRows(12);
   const keys = monthKeysWithData(state).reverse();
@@ -48,14 +50,14 @@ function Historico() {
         <header className="mb-5 flex items-center gap-3">
           <Link
             to="/"
-            aria-label="Voltar"
+            aria-label={t("back")}
             className="glass-soft grid size-9 place-items-center rounded-full text-brand"
           >
             <ChevronLeft className="size-4" />
           </Link>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">Histórico</p>
-            <h1 className="font-display text-2xl font-bold leading-none">Todos os meses</h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">{t("history")}</p>
+            <h1 className="font-display text-2xl font-bold leading-none">{t("allMonths")}</h1>
           </div>
         </header>
 
@@ -66,7 +68,7 @@ function Historico() {
         <div className="mt-6 space-y-2.5">
           {keys.length === 0 && (
             <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
-              Nenhum mês registrado ainda.
+              {t("noMonth")}
             </p>
           )}
           {keys.map((key) => {

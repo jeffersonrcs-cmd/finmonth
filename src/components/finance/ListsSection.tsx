@@ -1,10 +1,12 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { financeActions, formatCurrency, type Income, type Saving } from "@/lib/finance";
+import { useLanguage } from "@/lib/i18n";
 import { IncomeDialog, SavingDialog } from "./dialogs";
 
 const rowClass = "glass-soft flex items-center gap-3 rounded-2xl p-3.5";
 
 export function IncomesSection({ monthKey, incomes }: { monthKey: string; incomes: Income[] }) {
+  const { t } = useLanguage();
   const sorted = [...incomes].sort((a, b) => a.date.localeCompare(b.date));
 
   return (
@@ -15,7 +17,7 @@ export function IncomesSection({ monthKey, incomes }: { monthKey: string; income
       <div className="mb-5 space-y-2.5">
         {sorted.length === 0 && (
           <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
-            Nenhuma receita neste mês.
+            {t("noIncomes")}
           </p>
         )}
         {sorted.map((income) => (
@@ -37,7 +39,7 @@ export function IncomesSection({ monthKey, incomes }: { monthKey: string; income
                 onSave={(data) => financeActions.updateIncome(monthKey, income.id, data)}
                 trigger={
                   <button
-                    aria-label="Editar receita"
+                    aria-label={`${t("edit")} ${t("incomes").toLowerCase()}`}
                     className="grid size-7 place-items-center rounded-full text-mut hover:text-brand"
                   >
                     <Pencil className="size-3.5" />
@@ -45,7 +47,7 @@ export function IncomesSection({ monthKey, incomes }: { monthKey: string; income
                 }
               />
               <button
-                aria-label="Excluir receita"
+                aria-label={`${t("delete")} ${t("incomes").toLowerCase()}`}
                 onClick={() => financeActions.removeIncome(monthKey, income.id)}
                 className="grid size-7 place-items-center rounded-full text-mut hover:text-neg"
               >
@@ -61,7 +63,7 @@ export function IncomesSection({ monthKey, incomes }: { monthKey: string; income
         trigger={
           <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3.5 text-mut transition-all hover:border-foreground/25 hover:text-foreground active:scale-[0.98]">
             <Plus className="size-4" />
-            <span className="text-xs font-medium uppercase tracking-widest">Nova receita</span>
+            <span className="text-xs font-medium uppercase tracking-widest">{t("newIncome")}</span>
           </button>
         }
       />
@@ -70,6 +72,7 @@ export function IncomesSection({ monthKey, incomes }: { monthKey: string; income
 }
 
 export function SavingsSection({ monthKey, savings }: { monthKey: string; savings: Saving[] }) {
+  const { t } = useLanguage();
   return (
     <section className="mb-8">
       <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-mut">
@@ -78,7 +81,7 @@ export function SavingsSection({ monthKey, savings }: { monthKey: string; saving
       <div className="mb-5 space-y-2.5">
         {savings.length === 0 && (
           <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
-            Nenhum valor guardado neste mês.
+            {t("noSavings")}
           </p>
         )}
         {savings.map((saving) => (
@@ -94,7 +97,7 @@ export function SavingsSection({ monthKey, savings }: { monthKey: string; saving
                 onSave={(data) => financeActions.updateSaving(monthKey, saving.id, data)}
                 trigger={
                   <button
-                    aria-label="Editar valor guardado"
+                    aria-label={`${t("edit")} ${t("savings").toLowerCase()}`}
                     className="grid size-7 place-items-center rounded-full text-mut hover:text-brand"
                   >
                     <Pencil className="size-3.5" />
@@ -102,7 +105,7 @@ export function SavingsSection({ monthKey, savings }: { monthKey: string; saving
                 }
               />
               <button
-                aria-label="Excluir valor guardado"
+                aria-label={`${t("delete")} ${t("savings").toLowerCase()}`}
                 onClick={() => financeActions.removeSaving(monthKey, saving.id)}
                 className="grid size-7 place-items-center rounded-full text-mut hover:text-neg"
               >
@@ -117,7 +120,7 @@ export function SavingsSection({ monthKey, savings }: { monthKey: string; saving
         trigger={
           <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3.5 text-mut transition-all hover:border-foreground/25 hover:text-foreground active:scale-[0.98]">
             <Plus className="size-4" />
-            <span className="text-xs font-medium uppercase tracking-widest">Guardar valor</span>
+            <span className="text-xs font-medium uppercase tracking-widest">{t("addSaving")}</span>
           </button>
         }
       />

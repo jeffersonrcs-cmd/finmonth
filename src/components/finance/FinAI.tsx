@@ -36,18 +36,10 @@ const FIN_AI_QUOTA_ENABLED = false;
 
 const suggestions = [
   "Como foi meu mês?",
-  "Quanto recebi este mês?",
-  "Quanto gastei este mês?",
   "Quanto consegui guardar?",
   "Quais contas estão pendentes?",
-  "Quais foram minhas maiores contas?",
-  "Meu saldo está melhorando?",
   "Compare com o mês passado",
-  "Compare meus últimos 6 meses",
   "Mostre a evolução do saldo",
-  "Mostre a evolução do que guardei",
-  "Gerar gráfico do mês",
-  "Gerar gráfico do ano",
 ];
 
 function normalize(value: string) {

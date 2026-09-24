@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase";
+import { getCurrentLanguage, translate } from "@/lib/i18n";
 
 export type Income = {
   id: string;
@@ -367,9 +368,19 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
       if (bill.paid) continue;
       const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month))); due.setHours(0, 0, 0, 0);
       const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
-      if (diffDays < 0 && preferences.overdue) result.push({ id: `overdue:${monthKey}:${bill.id}`, kind: "overdue", billId: bill.id, monthKey, title: `${bill.description} está atrasada`, message: Math.abs(diffDays) === 1 ? "Venceu ontem." : `Venceu há ${Math.abs(diffDays)} dias.` });
-      else if (diffDays === 0 && preferences.dueToday) result.push({ id: `today:${monthKey}:${bill.id}`, kind: "today", billId: bill.id, monthKey, title: `${bill.description} vence hoje`, message: `Valor: ${formatCurrency(bill.amount)}.` });
-      else if (diffDays > 0 && diffDays <= preferences.leadDays) result.push({ id: `upcoming:${monthKey}:${bill.id}`, kind: "upcoming", billId: bill.id, monthKey, title: `${bill.description} vence em ${diffDays} dia${diffDays === 1 ? "" : "s"}`, message: `Valor: ${formatCurrency(bill.amount)}.` });
+      const lang = getCurrentLanguage();
+      if (diffDays < 0 && preferences.overdue) {
+        const days = Math.abs(diffDays);
+        result.push({
+          id: `overdue:${monthKey}:${bill.id}`, kind: "overdue", billId: bill.id, monthKey,
+          title: `${bill.description} ${translate(lang, "overdue").toLowerCase()}`,
+          message: days === 1 ? translate(lang, "yesterday") + "." : `${translate(lang, "due")} ${translate(lang, "days")} ${days}.`,
+        });
+      } else if (diffDays === 0 && preferences.dueToday) {
+        result.push({ id: `today:${monthKey}:${bill.id}`, kind: "today", billId: bill.id, monthKey, title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${translate(lang, "today")}`, message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.` });
+      } else if (diffDays > 0 && diffDays <= preferences.leadDays) {
+        result.push({ id: `upcoming:${monthKey}:${bill.id}`, kind: "upcoming", billId: bill.id, monthKey, title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${diffDays} ${diffDays === 1 ? translate(lang, "day") : translate(lang, "days")}`, message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.` });
+      }
     }
   }
   const rank = { overdue: 0, today: 1, upcoming: 2 };
@@ -378,12 +389,14 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
 
 export function monthLabel(key: string, short = false) {
   const { year, month } = parseMonthKey(key);
-  const name = MONTH_NAMES[month - 1] ?? "";
-  return short ? `${name.slice(0, 3)} ${year}` : `${name} ${year}`;
+  const locale = getCurrentLanguage();
+  const name = new Intl.DateTimeFormat(locale, { month: short ? "short" : "long" }).format(new Date(year, month - 1, 1));
+  return `${name} ${year}`;
 }
 
 export function formatCurrency(value: number, compact = false) {
-  return new Intl.NumberFormat("pt-BR", {
+  const locale = getCurrentLanguage();
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "BRL",
     minimumFractionDigits: compact ? 0 : 2,

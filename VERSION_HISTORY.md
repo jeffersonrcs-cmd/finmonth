@@ -1,3 +1,8 @@
+## v1.11.10 — refinamento dos rótulos do histórico mensal
+
+- ajustados os filtros para **3 meses, 6 meses, 12 meses e Acima de 12 meses**;
+- mantido o layout em quatro colunas, sem barra de rolagem horizontal.
+
 ## v1.11.9 — ajuste dos filtros do histórico mensal
 
 - removida a barra de rolagem horizontal dos filtros de período do histórico mensal;

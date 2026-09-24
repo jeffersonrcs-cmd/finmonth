@@ -1,3 +1,9 @@
+## v1.9.3 — ajuste do cabeçalho de contas
+
+- alterado o título da seção inicial para **Contas do mês**;
+- movido **Ver histórico completo** para a mesma linha do título, no lado oposto;
+- ajuste aplicado mantendo o comportamento e a responsividade existentes.
+
 ## v1.9.0 — seleção de moeda de exibição
 
 - adicionadas as moedas BRL, USD e EUR em Configurações > Linguagem;

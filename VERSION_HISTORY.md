@@ -47,7 +47,7 @@ Principais commits de referência:
 
 ## v1.3.0 — versionamento e build
 
-Marco atual, consolidando:
+Marco reconstruído, consolidando:
 
 - versão semântica do aplicativo;
 - identificador único de build;
@@ -56,7 +56,11 @@ Marco atual, consolidando:
 - automação de incremento de versão;
 - publicação automática baseada no tipo de mudança.
 
-## Regra a partir da v1.3.0
+## v1.3.1 — estabilização do versionamento
+
+Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
+
+## Regra a partir da v1.3.1
 
 - correção/ajuste: **patch**;
 - nova funcionalidade: **minor**;
@@ -64,4 +68,4 @@ Marco atual, consolidando:
 
 A Build ID continua independente da versão e identifica cada compilação individual.
 
-> Os marcos v1.1.0 e v1.2.0 são reconstruções históricas baseadas nos commits reais do repositório. Eles não representam releases que tenham sido publicadas separadamente na época. A partir da v1.3.0, o versionamento passa a ser controlado pelo workflow do repositório.
+> Os marcos v1.1.0 e v1.2.0 são reconstruções históricas baseadas nos commits reais do repositório. Eles não representam releases que tenham sido publicadas separadamente na época. A partir da v1.3.1, o versionamento passa a ser controlado pelo workflow do repositório.

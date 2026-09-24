@@ -33,12 +33,12 @@ export const Route = createFileRoute("/")({
 
 type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finai";
 
-const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
-  { id: "inicio", label: t("home"), Icon: Home },
-  { id: "contas", label: t("bills"), Icon: ReceiptText },
-  { id: "receitas", label: t("incomes"), Icon: WalletCards },
-  { id: "guardado", label: t("savings"), Icon: PiggyBank },
-  { id: "finai", label: t("finai"), Icon: Sparkles },
+const navigation: { id: Screen; label: "home" | "bills" | "incomes" | "savings" | "finai"; Icon: LucideIcon }[] = [
+  { id: "inicio", label: "home", Icon: Home },
+  { id: "contas", label: "bills", Icon: ReceiptText },
+  { id: "receitas", label: "incomes", Icon: WalletCards },
+  { id: "guardado", label: "savings", Icon: PiggyBank },
+  { id: "finai", label: "finai", Icon: Sparkles },
 ];
 
 function Dashboard() {
@@ -171,7 +171,7 @@ function Dashboard() {
                 className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-[9px] font-medium transition-colors ${active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"}`}
               >
                 <Icon className="size-4" strokeWidth={active ? 2.2 : 1.8} />
-                <span className="truncate">{label}</span>
+                <span className="truncate">{t(label)}</span>
               </button>
             );
           })}

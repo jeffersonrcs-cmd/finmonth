@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Bell, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
-export function AccountSettings({ onBack, section = "profile" }: { onBack: () => void; section?: "profile" | "notifications" }) {
+export function AccountSettings({ onBack, section = "profile" }: { onBack: () => void; section?: "profile" | "notifications" | "version" }) {
   const { userName, notificationPreferences } = useFinanceState();
   const [name, setName] = useState(userName);
   const [email, setEmail] = useState("");
@@ -111,13 +111,51 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
         </button>
         <div>
           <h1 className="font-display text-xl font-semibold">
-            {section === "notifications" ? "Notificações" : "Editar dados do usuário"}
+            {section === "notifications" ? "Notificações" : section === "version" ? "Versão" : "Editar dados do usuário"}
           </h1>
           <p className="mt-1 text-xs text-mut">
-            {section === "notifications" ? "Configure os avisos das suas contas." : "Edite os dados usados no seu cadastro."}
+            {section === "notifications"
+              ? "Configure os avisos das suas contas."
+              : section === "version"
+                ? "Informações técnicas desta versão do aplicativo."
+                : "Edite os dados usados no seu cadastro."}
           </p>
         </div>
       </div>
+
+      {section === "version" && (
+        <section className="glass space-y-4 rounded-3xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
+              <Info className="size-4" />
+            </div>
+            <div>
+              <h2 className="font-display text-sm font-semibold">FinMonth</h2>
+              <p className="mt-1 text-xs leading-relaxed text-mut">
+                Informações da versão instalada no dispositivo.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="glass-soft rounded-2xl p-3">
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Versão</p>
+              <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__}</p>
+            </div>
+            <div className="glass-soft rounded-2xl p-3">
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Build</p>
+              <p className="mt-1 break-all font-mono text-[10px] font-medium text-mut">{__FINMONTH_BUILD_ID__}</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/60 bg-muted/30 px-3 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Gerada em</p>
+            <p className="mt-1 text-xs font-medium">
+              {new Date(__FINMONTH_BUILD_ID__).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}
+            </p>
+          </div>
+        </section>
+      )}
 
       {section === "profile" && (
         <>

@@ -1,3 +1,12 @@
+## v1.9.0 — seleção de moeda de exibição
+
+- adicionadas as moedas BRL, USD e EUR em Configurações > Linguagem;
+- valores financeiros continuam armazenados na base original em BRL;
+- a moeda escolhida é salva somente no dispositivo, sem ocupar espaço adicional no Supabase;
+- valores exibidos são convertidos pela cotação mais recente disponível;
+- cotação em cache local por até 12 horas para reduzir chamadas externas;
+- labels de valores acompanham a moeda selecionada.
+
 # Histórico de versões do FinMonth
 
 Este arquivo registra os marcos de versão do projeto e evita perder o contexto das mudanças feitas durante o desenvolvimento.

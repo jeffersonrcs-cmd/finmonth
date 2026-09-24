@@ -14,7 +14,7 @@ const BUILD_ID = __FINMONTH_BUILD_ID__;
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
-import { useLanguage } from "@/lib/i18n";
+import { getCurrentLanguage, useLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -24,9 +24,9 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{useLanguage().t("pageNotFound")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          {useLanguage().t("pageNotFoundDescription")}
         </p>
         <div className="mt-6">
           <Link
@@ -52,10 +52,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {useLanguage().t("pageDidNotLoad")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {useLanguage().t("somethingWentWrong")}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -119,7 +119,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang={typeof window !== "undefined" ? getCurrentLanguage() : "pt-BR"}>
       <head>
         <HeadContent />
       </head>
@@ -315,8 +315,8 @@ function RootComponent() {
         <div className="fixed inset-x-3 top-3 z-[100] mx-auto max-w-[420px] rounded-2xl border border-brand/25 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-foreground">Nova versão disponível</p>
-              <p className="mt-0.5 text-[11px] text-mut">Atualize para usar a versão mais recente do FinMonth.</p>
+              <p className="text-xs font-semibold text-foreground">{useLanguage().t("newVersion")}</p>
+              <p className="mt-0.5 text-[11px] text-mut">{useLanguage().t("updateLatest")}</p>
             </div>
             <button
               type="button"
@@ -334,7 +334,7 @@ function RootComponent() {
       )}
       {!authReady ? (
         <div className="flex min-h-screen items-center justify-center bg-background text-xs text-mut">
-          Carregando seus dados...
+          {useLanguage().t("loadingData")}
         </div>
       ) : authenticated ? (
         <>

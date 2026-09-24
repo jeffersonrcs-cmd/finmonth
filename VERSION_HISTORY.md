@@ -60,6 +60,14 @@ Marco reconstruído, consolidando:
 
 Primeiro patch após a criação do sistema automático de versões, consolidando o fluxo de publicação e o histórico reconstruído.
 
+## v1.8.7 — tradução completa
+
+- interface completa traduzida para Português, English e Español;
+- formulários, histórico, notificações, configurações e estados globais adaptados ao idioma selecionado;
+- moeda e nomes dos meses formatados conforme o locale selecionado;
+- FinAI recebe o idioma selecionado e responde nesse idioma;
+- preferência continua armazenada somente no dispositivo.
+
 ## v1.7.0 — idiomas
 
 - opção **Linguagem** dentro de Configurações;

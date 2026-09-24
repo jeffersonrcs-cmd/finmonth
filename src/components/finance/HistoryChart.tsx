@@ -1,69 +1,115 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import {
+  Area,
   Bar,
   BarChart,
-  Legend,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from "recharts";
 import { computeTotals, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
+export type ChartRange = 3 | 6 | 12;
+
 type Row = {
+  key: string;
   label: string;
   receitas: number;
   despesas: number;
   saldo: number;
   guardado: number;
+  isCurrent: boolean;
 };
+
+function currentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export function useHistoryRows(limit = 7, year?: number): Row[] {
   const state = useFinanceState();
   const safeLimit = Math.min(Math.max(limit, 1), 12);
+  const currentKey = currentMonthKey();
   const keys = year
     ? Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
     : Object.keys(state.months).sort().slice(-safeLimit);
 
   return keys.map((key) => {
-      const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);
-      return {
-        label: monthLabel(key, true),
-        receitas: t.totalIncomes,
-        despesas: t.totalBills,
-        saldo: t.monthBalance,
-        guardado: t.totalSaved,
-      };
-    });
+    const t = computeTotals(state.months[key] ?? { incomes: [], bills: [], savings: [] }, key);
+    return {
+      key,
+      label: monthLabel(key, true),
+      receitas: t.totalIncomes,
+      despesas: t.totalBills,
+      saldo: t.monthBalance,
+      guardado: t.totalSaved,
+      isCurrent: key === currentKey,
+    };
+  });
+}
+
+function PeriodFilter({
+  value,
+  onChange,
+  label,
+}: {
+  value: ChartRange;
+  onChange: (value: ChartRange) => void;
+  label: string;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="flex shrink-0 gap-1 rounded-xl bg-muted/25 p-1" role="group" aria-label={label}>
+      {[3, 6, 12].map((months) => {
+        const selected = value === months;
+        return (
+          <button
+            key={months}
+            type="button"
+            onClick={() => onChange(months as ChartRange)}
+            className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-all duration-200 ${selected
+              ? "bg-brand text-background shadow-sm"
+              : "text-foreground/75 hover:bg-muted/60 hover:text-foreground active:scale-[0.98]"}`}
+            aria-pressed={selected}
+          >
+            {months} {t("months")}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function ChartShell({
   title,
-  subtitle,
   rows,
+  range,
+  onRangeChange,
   children,
 }: {
   title: string;
-  subtitle?: string;
   rows: Row[];
+  range: ChartRange;
+  onRangeChange: (value: ChartRange) => void;
   children: React.ReactNode;
 }) {
   const { t } = useLanguage();
   return (
     <section className="glass mb-4 rounded-3xl p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
-          {title}
-        </h2>
-        {subtitle && <span className="text-[11px] text-mut">{subtitle}</span>}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="min-w-0 font-display text-sm font-semibold uppercase tracking-wider text-mut">{title}</h2>
+        <PeriodFilter value={range} onChange={onRangeChange} label={t("historyRange")} />
       </div>
       {rows.length === 0 ? (
         <p className="py-6 text-center text-xs text-mut">{t("insufficientData")}</p>
       ) : (
-        <div className="h-40">
+        <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
             {children as React.ReactElement}
           </ResponsiveContainer>
@@ -73,22 +119,63 @@ function ChartShell({
   );
 }
 
-const tooltipStyle = {
-  contentStyle: {
-    background: "var(--popover)",
-    border: "1px solid var(--border)",
-    borderRadius: 12,
-    fontSize: 12,
-  },
-  formatter: (value: number) => formatCurrency(value),
-};
-
 const axisProps = {
   dataKey: "label",
   tick: { fontSize: 10, fill: "var(--muted-foreground)" },
   axisLine: false,
   tickLine: false,
 };
+
+const yAxisProps = {
+  width: 48,
+  tick: { fontSize: 9, fill: "var(--muted-foreground)" },
+  tickLine: false,
+  axisLine: false,
+  tickFormatter: (value: number) => formatCurrency(value, true),
+};
+
+type TooltipItem = {
+  dataKey?: string | number;
+  value?: number | string;
+};
+
+function FinanceTooltip({
+  active,
+  payload,
+  label,
+  fields,
+}: {
+  active?: boolean;
+  payload?: TooltipItem[];
+  label?: string | number;
+  fields: Array<{ key: keyof Row; label: string }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.dataKey ? payload[0] : undefined;
+  const data = payload[0] as TooltipItem & { payload?: Row };
+  const source = data.payload;
+  if (!source) return null;
+
+  return (
+    <div className="min-w-[150px] rounded-xl border border-border bg-popover px-3 py-2.5 text-xs shadow-lg">
+      <p className="mb-2 font-semibold text-foreground">{label}</p>
+      <div className="space-y-1.5">
+        {fields.map(({ key, label: fieldLabel }) => (
+          <div key={String(key)} className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">{fieldLabel}</span>
+            <span className={`num font-semibold ${key === "saldo" ? (source.saldo >= 0 ? "text-pos" : "text-neg") : ""}`}>
+              {formatCurrency(source[key] as number, true)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VisibleRows({ rows, range }: { rows: Row[]; range: ChartRange }) {
+  return useMemo(() => rows.slice(-Math.min(range, 12)), [rows, range]);
+}
 
 export function useAnnualTotals(year: number) {
   const state = useFinanceState();
@@ -219,87 +306,125 @@ export function MonthlyOverview({
   );
 }
 
-export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
+export function IncomeVsExpenseChart({
+  rows,
+  range,
+  onRangeChange,
+}: {
+  rows: Row[];
+  range: ChartRange;
+  onRangeChange: (value: ChartRange) => void;
+}) {
   const { t } = useLanguage();
+  const visibleRows = VisibleRows({ rows, range });
+  const fields = [
+    { key: "receitas" as const, label: t("incomes") },
+    { key: "despesas" as const, label: t("bills") },
+    { key: "saldo" as const, label: t("monthBalance") },
+  ];
+
   return (
-    <ChartShell title={t("incomeExpense")} rows={rows}>
-      <BarChart data={rows}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+    <ChartShell title={t("incomeExpense")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
+      <BarChart data={visibleRows} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
+        <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
-        <Tooltip {...tooltipStyle} />
-        <Bar dataKey="receitas" fill="var(--pos)" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="despesas" fill="var(--neg)" radius={[6, 6, 0, 0]} />
+        <YAxis {...yAxisProps} />
+        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ fill: "var(--muted)", opacity: 0.18 }} />
+        <Bar dataKey="receitas" fill="var(--pos)" radius={[6, 6, 0, 0]} maxBarSize={18}>
+          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />)}
+        </Bar>
+        <Bar dataKey="despesas" fill="var(--neg)" radius={[6, 6, 0, 0]} maxBarSize={18}>
+          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />)}
+        </Bar>
       </BarChart>
     </ChartShell>
   );
 }
 
-export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
+export function BalanceEvolutionChart({
+  rows,
+  range,
+  onRangeChange,
+}: {
+  rows: Row[];
+  range: ChartRange;
+  onRangeChange: (value: ChartRange) => void;
+}) {
   const { t } = useLanguage();
-  const [range, setRange] = useState<3 | 6 | 12>(6);
-  const visibleRows = rows.slice(-Math.min(range, 12));
+  const visibleRows = VisibleRows({ rows, range });
+  const fields = [
+    { key: "saldo" as const, label: t("monthBalance") },
+    { key: "receitas" as const, label: t("incomes") },
+    { key: "despesas" as const, label: t("bills") },
+    { key: "guardado" as const, label: t("savings") },
+  ];
 
   return (
-    <section className="glass mb-4 rounded-3xl p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
-          {t("balanceEvolution")}
-        </h2>
-        <span className="text-[11px] text-mut">
-          {visibleRows.length} {visibleRows.length === 1 ? t("month") : t("months")}
-        </span>
-      </div>
-      <div className="mb-3 flex justify-end gap-1.5" role="group" aria-label={t("historyRange")}>
-        {[3, 6, 12].map((months) => {
-          const selected = range === months;
-          return (
-            <button
-              key={months}
-              type="button"
-              onClick={() => setRange(months as 3 | 6 | 12)}
-              className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-colors ${
-                selected ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"
-              }`}
-              aria-pressed={selected}
-            >
-              {months} {t("months")}
-            </button>
-          );
-        })}
-      </div>
-      {visibleRows.length === 0 ? (
-        <p className="py-6 text-center text-xs text-mut">{t("insufficientData")}</p>
-      ) : (
-        <div className="h-40">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={visibleRows}>
-              <CartesianGrid vertical={false} stroke="var(--border)" />
-              <XAxis {...axisProps} />
-              <Tooltip {...tooltipStyle} />
-              <Line
-                type="monotone"
-                dataKey="saldo"
-                stroke="var(--brand)"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: "var(--brand)" }}
+    <ChartShell title={t("balanceEvolution")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
+      <LineChart data={visibleRows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="balance-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--brand)" stopOpacity={0.22} />
+            <stop offset="100%" stopColor="var(--brand)" stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
+        <XAxis {...axisProps} />
+        <YAxis {...yAxisProps} />
+        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ stroke: "var(--brand)", strokeOpacity: 0.2 }} />
+        <Area type="monotone" dataKey="saldo" stroke="none" fill="url(#balance-area)" />
+        <Line
+          type="monotone"
+          dataKey="saldo"
+          stroke="var(--brand)"
+          strokeWidth={3}
+          dot={(props) => {
+            const row = props.payload as Row;
+            const active = row?.isCurrent;
+            return (
+              <circle
+                cx={props.cx}
+                cy={props.cy}
+                r={active ? 5 : 3}
+                fill="var(--brand)"
+                stroke="var(--background)"
+                strokeWidth={active ? 2 : 1.5}
               />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </section>
+            );
+          }}
+          activeDot={{ r: 7, fill: "var(--brand)", stroke: "var(--background)", strokeWidth: 2 }}
+        />
+      </LineChart>
+    </ChartShell>
   );
 }
 
-export function SavingsChart({ rows }: { rows: Row[] }) {
+export function SavingsChart({
+  rows,
+  range,
+  onRangeChange,
+}: {
+  rows: Row[];
+  range: ChartRange;
+  onRangeChange: (value: ChartRange) => void;
+}) {
   const { t } = useLanguage();
+  const visibleRows = VisibleRows({ rows, range });
+  const fields = [
+    { key: "guardado" as const, label: t("savings") },
+    { key: "saldo" as const, label: t("monthBalance") },
+  ];
+
   return (
-    <ChartShell title={t("savedPerMonth")} rows={rows}>
-      <BarChart data={rows}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+    <ChartShell title={t("savedPerMonth")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
+      <BarChart data={visibleRows} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="28%">
+        <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
-        <Tooltip {...tooltipStyle} />
-        <Bar dataKey="guardado" fill="var(--econ)" radius={[6, 6, 0, 0]} />
+        <YAxis {...yAxisProps} />
+        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ fill: "var(--muted)", opacity: 0.18 }} />
+        <Bar dataKey="guardado" fill="var(--econ)" radius={[7, 7, 0, 0]} maxBarSize={24}>
+          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.62} />)}
+        </Bar>
       </BarChart>
     </ChartShell>
   );

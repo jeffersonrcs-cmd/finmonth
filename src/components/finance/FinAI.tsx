@@ -286,15 +286,15 @@ function FinAiChart({
       { label: t("savings"), value: monthTotals.totalSaved },
     ];
     if (mode === "compare") return [
-      { label: "Receitas", atual: monthTotals.totalIncomes, anterior: previousTotals.totalIncomes },
-      { label: "Contas", atual: monthTotals.totalBills, anterior: previousTotals.totalBills },
-      { label: "Guardado", atual: monthTotals.totalSaved, anterior: previousTotals.totalSaved },
+      { label: t("incomes"), atual: monthTotals.totalIncomes, anterior: previousTotals.totalIncomes },
+      { label: t("bills"), atual: monthTotals.totalBills, anterior: previousTotals.totalBills },
+      { label: t("savings"), atual: monthTotals.totalSaved, anterior: previousTotals.totalSaved },
     ];
     if (mode === "topBills") return [...monthData.bills].sort((a, b) => b.amount - a.amount).slice(0, 6).map((bill) => ({ label: bill.description, value: bill.amount }));
     if (mode === "cashflow") return [
-      { label: "Receitas", value: monthTotals.totalIncomes },
-      { label: "Contas", value: monthTotals.totalBills },
-      { label: "Guardado", value: monthTotals.totalSaved },
+      { label: t("incomes"), value: monthTotals.totalIncomes },
+      { label: t("bills"), value: monthTotals.totalBills },
+      { label: t("savings"), value: monthTotals.totalSaved },
       { label: t("monthBalance"), value: monthTotals.availableBalance },
     ];
     if (mode === "incomeBreakdown") return [...monthData.incomes].sort((a, b) => b.amount - a.amount).slice(0, 6).map((income) => ({ label: income.description, value: income.amount }));
@@ -317,8 +317,8 @@ function FinAiChart({
     if (mode === "balance") return historyRows.map((row) => ({ label: row.label, value: row.saldo }));
     if (mode === "savings") return historyRows.map((row) => ({ label: row.label, value: row.guardado }));
     if (mode === "history") return historyRows.map((row) => ({ label: row.label, [t("incomes")]: row.receitas, [t("bills")]: row.despesas, [t("savings")]: row.guardado }));
-    return annualRows.map((row) => ({ label: row.label, Receitas: row.receitas, Contas: row.despesas, Guardado: row.guardado }));
-  }, [annualRows, historyRows, mode, monthData.bills, monthTotals, previousTotals]);
+    return annualRows.map((row) => ({ label: row.label, [t("incomes")]: row.receitas, [t("bills")]: row.despesas, [t("savings")]: row.guardado }));
+  }, [annualRows, historyRows, language, mode, monthData.bills, monthTotals, previousTotals, t]);
 
   const title = mode === "month" ? monthLabel(monthKey)
     : mode === "compare" ? t("monthlyComparisonTitle")
@@ -356,15 +356,15 @@ function FinAiChart({
               {mode === "compare" ? (
                 <>
                   <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar dataKey="anterior" name={t("previousMonth")} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="atual" name={t("home")} fill="var(--brand)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="anterior" name={t("previous")} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="atual" name={t("current")} fill="var(--brand)" radius={[4, 4, 0, 0]} />
                 </>
               ) : mode === "year" || mode === "history" ? (
                 <>
                   <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar dataKey="Receitas" name={t("incomes")} fill="var(--pos)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Contas" name={t("bills")} fill="var(--neg)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Guardado" name={t("savings")} fill="var(--econ)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t("incomes")} name={t("incomes")} fill="var(--pos)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t("bills")} name={t("bills")} fill="var(--neg)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t("savings")} name={t("savings")} fill="var(--econ)" radius={[4, 4, 0, 0]} />
                 </>
               ) : (
                 <Bar dataKey="value" name={
@@ -485,30 +485,30 @@ export function FinAi({ monthKey }: { monthKey: string }) {
           </div>
           <div>
             <h1 className="font-display text-xl font-semibold">FinAI</h1>
-            <p className="mt-0.5 text-xs text-mut">{t("finaiHint")}</p>
+            <p className="mt-0.5 text-xs text-mut">{t("finaiSubtitle")}</p>
           </div>
         </div>
       </div>
 
       <section className="glass rounded-3xl p-4">
-        <p className="text-sm font-medium">{t("analysisSuggestion")}</p>
+        <p className="text-sm font-medium">{t("whatWant")}</p>
         <p className="mt-1 text-xs leading-relaxed text-mut">
-          {t("monthQuestion")}
+          {t("askMonth")}
         </p>
         {aiLoading && (
           <div className="mt-3 flex items-center gap-2 text-[10px] text-mut">
             <span className="size-1.5 animate-pulse rounded-full bg-brand" />
-            {t("financialDataInsufficient")}
+            {t("analyzing")}
           </div>
         )}
         {FIN_AI_QUOTA_ENABLED && (
           <>
             <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-[10px] text-mut">
-              <span>{t("notifications")}</span>
+              <span>{t("dailyQueries")}</span>
               <span className="font-semibold text-foreground">{quotaLoading ? "…" : `${quota.count}/${DAILY_LIMIT}`}</span>
             </div>
-            {quotaError && <p className="mt-2 text-[10px] text-warn">{t("operationFailed")}</p>}
-            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">{t("financialDataInsufficient")}</p>}
+            {quotaError && <p className="mt-2 text-[10px] text-warn">{t("quotaError")}</p>}
+            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">{t("quotaReached")}</p>}
           </>
         )}
 
@@ -548,13 +548,13 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         <input
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder={t("canAnalyze")}
+          placeholder={t("enterQuestion")}
           className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-mut/70"
-          aria-label={t("canAnalyze")}
+          aria-label={t("askFinAi")}
         />
         <button
           type="submit"
-          aria-label={t("save")}
+          aria-label={t("sendQuestion")}
           className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
           disabled={!prompt.trim() || aiLoading || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))}
         >

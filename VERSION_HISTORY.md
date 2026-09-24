@@ -1,3 +1,12 @@
+## v1.12.0 — evolução visual do gráfico de saldo
+
+- **Evolução do Saldo** continua em linha, agora com cor dinâmica conforme o saldo;
+- trechos positivos usam verde e trechos negativos usam vermelho;
+- a troca de cor acompanha exatamente a passagem pelo valor zero;
+- adicionada linha de referência em **R$ 0**;
+- preenchimento suave e de baixa opacidade acompanha a cor do saldo;
+- pontos atuais e pontos selecionados receberam maior destaque visual.
+
 ## v1.11.10 — refinamento dos rótulos do histórico mensal
 
 - ajustados os filtros para **3 meses, 6 meses, 12 meses e Acima de 12 meses**;

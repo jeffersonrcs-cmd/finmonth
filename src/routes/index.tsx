@@ -17,13 +17,13 @@ import { computeTotals, currentMonthKey, monthLabel, useMonthData, useFinanceSta
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FinMês — Controle financeiro pessoal por mês" },
+      { title: "FinMonth — Controle financeiro pessoal por mês" },
       {
         name: "description",
         content:
           "Organize receitas, contas a pagar e valores guardados mês a mês, com saldos calculados automaticamente.",
       },
-      { property: "og:title", content: "FinMês — Controle financeiro pessoal por mês" },
+      { property: "og:title", content: "FinMonth — Controle financeiro pessoal por mês" },
       {
         property: "og:description",
         content:

@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FinMês — Controle financeiro pessoal" },
+      { title: "FinMonth — Controle financeiro pessoal" },
       {
         name: "description",
         content: "Controle suas receitas, contas e economias mês a mês.",
@@ -246,7 +246,7 @@ function RootComponent() {
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-foreground">Nova versão disponível</p>
-              <p className="mt-0.5 text-[11px] text-mut">Atualize para usar a versão mais recente do FinMês.</p>
+              <p className="mt-0.5 text-[11px] text-mut">Atualize para usar a versão mais recente do FinMonth.</p>
             </div>
             <button
               type="button"

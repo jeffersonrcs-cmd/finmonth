@@ -38,7 +38,7 @@ export function ResetPasswordScreen() {
 
       setPassword("");
       setConfirmation("");
-      setMessage("Senha atualizada com sucesso. Você já pode continuar usando o FinMês.");
+      setMessage("Senha atualizada com sucesso. Você já pode continuar usando o FinMonth.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível atualizar sua senha.");
     } finally {
@@ -56,7 +56,7 @@ export function ResetPasswordScreen() {
           <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
             {message ? <Check className="size-6" /> : <KeyRound className="size-6" />}
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMês</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
           <h1 className="mt-2 font-display text-2xl font-semibold">Criar nova senha</h1>
           <p className="mt-2 text-sm text-mut">
             Escolha uma nova senha para recuperar o acesso à sua conta.

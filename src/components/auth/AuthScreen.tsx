@@ -85,7 +85,7 @@ export function AuthScreen() {
           <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
             {mode === "login" ? <LogIn className="size-6" /> : <UserPlus className="size-6" />}
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMês</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
           <h1 className="mt-2 font-display text-2xl font-semibold">
             {mode === "login" ? "Entrar na sua conta" : "Criar sua conta"}
           </h1>

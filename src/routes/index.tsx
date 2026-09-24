@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BarChart3, Home, PiggyBank, ReceiptText, WalletCards, type LucideIcon } from "lucide-react";
+import { Home, PiggyBank, ReceiptText, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
@@ -7,11 +7,7 @@ import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
 import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
-import {
-  MonthlyOverview,
-  useAnnualTotals,
-  useHistoryRows,
-} from "@/components/finance/HistoryChart";
+import { FinAi } from "@/components/finance/FinAI";
 import { computeTotals, currentMonthKey, monthLabel, useMonthData, useFinanceState, getBillNotifications } from "@/lib/finance";
 
 export const Route = createFileRoute("/")({
@@ -34,14 +30,14 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Screen = "inicio" | "contas" | "receitas" | "guardado" | "graficos";
+type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finia";
 
 const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
   { id: "inicio", label: "Início", Icon: Home },
   { id: "contas", label: "Contas", Icon: ReceiptText },
   { id: "receitas", label: "Receitas", Icon: WalletCards },
   { id: "guardado", label: "Guardado", Icon: PiggyBank },
-  { id: "graficos", label: "Gráficos", Icon: BarChart3 },
+  { id: "finia", label: "Fin IA", Icon: Sparkles },
 ];
 
 function Dashboard() {
@@ -52,20 +48,9 @@ function Dashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
-  const [chartPeriod, setChartPeriod] = useState<"monthly" | "annual">("monthly");
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
   const selectedYear = Number(monthKey.slice(0, 4));
-  const rows = useHistoryRows(7, chartPeriod === "annual" ? selectedYear : undefined);
-  const annualTotals = useAnnualTotals(selectedYear);
-  const previousAnnualTotals = useAnnualTotals(selectedYear - 1);
-  const chartTotals =
-    chartPeriod === "annual"
-      ? {
-          ...annualTotals,
-          availableBalance: annualTotals.totalIncomes - annualTotals.totalBills - annualTotals.totalSaved,
-        }
-      : totals;
 
   useEffect(() => { const open = () => setNotificationsOpen(true); window.addEventListener("finmonth:open-notifications", open); return () => window.removeEventListener("finmonth:open-notifications", open); }, []);
 
@@ -138,42 +123,7 @@ function Dashboard() {
 
         {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
 
-        {activeScreen === "graficos" && (
-          <section className="space-y-4">
-            <div>
-              <h1 className="font-display text-lg font-semibold">Gráficos</h1>
-              <p className="mt-1 text-xs text-mut">
-                {chartPeriod === "annual" ? `Visão anual de ${selectedYear}, mês a mês.` : "Somente os gráficos da sua evolução financeira."}
-              </p>
-            </div>
-
-            <div className="glass grid grid-cols-2 rounded-2xl p-1">
-              {([
-                ["monthly", "Mensal"],
-                ["annual", "Anual"],
-              ] as const).map(([period, label]) => (
-                <button
-                  key={period}
-                  type="button"
-                  onClick={() => setChartPeriod(period)}
-                  className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                    chartPeriod === period ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"
-                  }`}
-                  aria-pressed={chartPeriod === period}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <MonthlyOverview
-              rows={rows}
-              totals={chartTotals}
-              period={chartPeriod}
-              comparison={chartPeriod === "annual" ? previousAnnualTotals : undefined}
-            />
-          </section>
-        )}
+        {activeScreen === "finia" && <FinAi monthKey={monthKey} />}
 
         {activeScreen === "inicio" && (
           <div className="mt-6 flex justify-center">

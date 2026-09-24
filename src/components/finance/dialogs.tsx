@@ -253,7 +253,7 @@ export function BillDialog({
             <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
               {Array.from({ length: maxDay }, (_, index) => {
                 const value = String(index + 1);
-                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">Dia {value}</SelectItem>;
+                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">{t("day")} {value}</SelectItem>;
               })}
             </SelectContent>
           </Select>
@@ -369,7 +369,7 @@ export function SavingDialog({
       }}
     >
       <div className="space-y-1.5">
-        <Label className={labelClass}>Descrição</Label>
+        <Label className={labelClass}>{t("description")}</Label>
         <Input
           className={fieldClass}
           value={description}
@@ -378,7 +378,7 @@ export function SavingDialog({
         />
       </div>
       <div className="space-y-1.5">
-        <Label className={labelClass}>Valor (R$)</Label>
+        <Label className={labelClass}>{t("amountBrl")}</Label>
         <Input
           className={fieldClass}
           inputMode="decimal"

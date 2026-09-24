@@ -34,6 +34,38 @@ const DAILY_LIMIT = 20;
 // Mantido no código para ativação futura quando a IA real/Gemini estiver conectada.
 const FIN_AI_QUOTA_ENABLED = false;
 
+/**
+ * Diretrizes centrais da FinanIA.
+ * Mantidas como contrato da camada de inteligência para a futura integração
+ * com um modelo real, enquanto o protótipo local usa as mesmas regras.
+ */
+export const FINAN_IA_INSTRUCTIONS = `
+Você é FinanIA, um assistente financeiro inteligente.
+
+Sua função é ajudar o usuário a compreender sua vida financeira utilizando exclusivamente os dados armazenados no aplicativo.
+
+Regras obrigatórias:
+- Nunca invente valores.
+- Nunca estime dados inexistentes.
+- Sempre utilize os registros financeiros disponíveis.
+- Informe quando não houver dados suficientes.
+- Responda de forma clara, objetiva e amigável.
+- Realize cálculos financeiros quando necessário.
+- Identifique tendências, médias, aumentos e reduções de gastos.
+- Compare períodos sempre que solicitado.
+- Gere insights úteis para ajudar o usuário a economizar dinheiro.
+- Ao responder análises, destaque maior gasto, menor gasto, média, tendência e percentual de variação quando houver dados suficientes.
+
+Quando o usuário solicitar gráficos:
+- Retorne dados estruturados para geração visual.
+- Organize os dados cronologicamente.
+- Destaque tendências importantes.
+
+Objetivo principal:
+Transformar dados financeiros em respostas simples, inteligentes e acionáveis para o usuário.
+`;
+
+
 const suggestions = [
   "Faça uma análise completa",
   "Como foi meu mês?",
@@ -52,6 +84,8 @@ function normalize(value: string) {
 
 function buildReply(prompt: string, monthKey: string, year: number, state: ReturnType<typeof useFinanceState>): AiReply {
   const query = normalize(prompt);
+  // A FinanIA só responde com fatos calculados a partir do estado financeiro atual.
+  // Categorias não existem no modelo de dados atual; portanto, nunca são inferidas.
   const data = state.months[monthKey] ?? { incomes: [], bills: [], savings: [] };
   const totals = computeTotals(data, monthKey);
   const previousKey = previousMonthKey(monthKey);
@@ -194,9 +228,37 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
     return { title: "Gráfico do mês", text: `Em ${monthLabel(monthKey)}, você registrou ${formatCurrency(totals.totalIncomes)} em receitas, ${formatCurrency(totals.totalBills)} em contas e ${formatCurrency(totals.totalSaved)} guardados.`, chart: "month" };
   }
 
+  if (query.includes("categoria")) {
+    return {
+      title: "Categorias financeiras",
+      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a FinanIA não pode determinar qual categoria consome mais dinheiro.",
+      chart: null,
+    };
+  }
+
+  if (query.includes("luz") || query.includes("energia")) {
+    const matches = data.bills.filter((bill) => normalize(bill.description).includes("luz") || normalize(bill.description).includes("energia"));
+    const total = matches.reduce((sum, bill) => sum + bill.amount, 0);
+    return {
+      title: "Conta de energia",
+      text: matches.length
+        ? `Encontrei ${matches.length} registro(s) relacionado(s) a luz/energia, totalizando ${formatCurrency(total)} neste mês.`
+        : "Não encontrei registros de luz ou energia nos dados deste mês.",
+      chart: matches.length > 1 ? "topBills" : null,
+    };
+  }
+
+  if (query.includes("gasto") || query.includes("receb") || query.includes("financ") || query.includes("dinheiro") || query.includes("anal")) {
+    return {
+      title: "Dados insuficientes para esta pergunta",
+      text: "Tenho dados financeiros para analisar, mas não encontrei um contexto específico suficiente nessa pergunta. Tente indicar período, tipo de lançamento ou assunto. Não vou inventar informações que não estejam registradas.",
+      chart: null,
+    };
+  }
+
   return {
     title: "Posso analisar seus dados",
-    text: "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico, maiores lançamentos e gráficos mensais ou anuais. Digite sua pergunta do jeito que você falaria normalmente.",
+    text: "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico e gráficos. Quando não houver dados suficientes, vou informar isso em vez de estimar ou inventar.",
     chart: null,
   };
 }

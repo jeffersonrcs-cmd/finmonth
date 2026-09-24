@@ -138,7 +138,7 @@ function RootComponent() {
   const { theme } = useFinanceState();
   const { language, t } = useLanguage();
   const [authReady, setAuthReady] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);\n  const isPublicAuthRoute = typeof window !== "undefined" && ["/confirmar-email", "/redefinir-senha"].includes(window.location.pathname);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));

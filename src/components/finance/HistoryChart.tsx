@@ -234,21 +234,58 @@ export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
 
 export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
   const { t } = useLanguage();
+  const [range, setRange] = useState<3 | 6 | 12>(6);
+  const visibleRows = rows.slice(-Math.min(range, 12));
+
   return (
-    <ChartShell title={t("balanceEvolution")} rows={rows} subtitle={`${rows.length} ${rows.length === 1 ? t("month") : t("months")}`}>
-      <LineChart data={rows}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
-        <XAxis {...axisProps} />
-        <Tooltip {...tooltipStyle} />
-        <Line
-          type="monotone"
-          dataKey="saldo"
-          stroke="var(--brand)"
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: "var(--brand)" }}
-        />
-      </LineChart>
-    </ChartShell>
+    <section className="glass mb-4 rounded-3xl p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
+          {t("balanceEvolution")}
+        </h2>
+        <span className="text-[11px] text-mut">
+          {visibleRows.length} {visibleRows.length === 1 ? t("month") : t("months")}
+        </span>
+      </div>
+      <div className="mb-3 flex justify-end gap-1.5" role="group" aria-label={t("historyRange")}>
+        {[3, 6, 12].map((months) => {
+          const selected = range === months;
+          return (
+            <button
+              key={months}
+              type="button"
+              onClick={() => setRange(months as 3 | 6 | 12)}
+              className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-colors ${
+                selected ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"
+              }`}
+              aria-pressed={selected}
+            >
+              {months} {t("months")}
+            </button>
+          );
+        })}
+      </div>
+      {visibleRows.length === 0 ? (
+        <p className="py-6 text-center text-xs text-mut">{t("insufficientData")}</p>
+      ) : (
+        <div className="h-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={visibleRows}>
+              <CartesianGrid vertical={false} stroke="var(--border)" />
+              <XAxis {...axisProps} />
+              <Tooltip {...tooltipStyle} />
+              <Line
+                type="monotone"
+                dataKey="saldo"
+                stroke="var(--brand)"
+                strokeWidth={2.5}
+                dot={{ r: 3, fill: "var(--brand)" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </section>
   );
 }
 

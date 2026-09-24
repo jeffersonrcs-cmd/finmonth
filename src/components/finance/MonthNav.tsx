@@ -52,30 +52,35 @@ export function MonthNav({
           <div className="absolute left-0 top-full z-50 mt-3 w-56 rounded-2xl border border-border bg-popover p-1.5 shadow-none">
             <button
               type="button"
-              onClick={() => {
+              onClick={(event) => {
                 setMenuOpen(false);
                 onOpenSettings();
+                event.currentTarget.blur();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none transition-colors hover:bg-foreground/5 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <Settings className="size-4 text-mut" />
               Editar dados do usuário
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={(event) => {
                 setMenuOpen(false);
                 onOpenNotifications();
+                event.currentTarget.blur();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none transition-colors hover:bg-foreground/5 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <Bell className="size-4 text-mut" />
               Notificações
             </button>
             <button
               type="button"
-              onClick={() => financeActions.setTheme(theme === "dark" ? "light" : "dark")}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition-colors hover:bg-foreground/5"
+              onClick={(event) => {
+                financeActions.setTheme(theme === "dark" ? "light" : "dark");
+                event.currentTarget.blur();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
               aria-label="Alternar tema"
             >
               {theme === "dark" ? <Sun className="size-4 text-mut" /> : <Moon className="size-4 text-mut" />}
@@ -83,11 +88,12 @@ export function MonthNav({
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={(event) => {
                 setMenuOpen(false);
                 void supabase.auth.signOut();
+                event.currentTarget.blur();
               }}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg outline-none shadow-none transition-colors hover:bg-neg/10 focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-neg outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
             >
               <LogOut className="size-4" />
               Sair da conta
@@ -97,12 +103,43 @@ export function MonthNav({
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("finmonth:open-notifications"))} aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"} className="relative glass-soft grid size-9 place-items-center rounded-full text-mut outline-none transition-colors hover:text-brand focus:outline-none [-webkit-tap-highlight-color:transparent]"><Bell className="size-4" />{notificationCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-neg px-1 text-[8px] font-bold leading-4 text-background">{notificationCount > 9 ? "9+" : notificationCount}</span>}</button>
-        <button onClick={() => onChange(shiftMonthKey(monthKey, -1))} aria-label="Mês anterior" className="glass-soft grid size-9 place-items-center rounded-full text-brand outline-none transition-colors hover:bg-foreground/10 focus:outline-none [-webkit-tap-highlight-color:transparent]">
+        <button
+          type="button"
+          onClick={(event) => {
+            window.dispatchEvent(new CustomEvent("finmonth:open-notifications"));
+            event.currentTarget.blur();
+          }}
+          aria-label={notificationCount ? `Abrir notificações (${notificationCount})` : "Abrir notificações"}
+          className="grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-mut outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+        >
+          <Bell className="size-4" />
+          {notificationCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-neg px-1 text-[8px] font-bold leading-4 text-background">
+              {notificationCount > 9 ? "9+" : notificationCount}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={(event) => {
+            onChange(shiftMonthKey(monthKey, -1));
+            event.currentTarget.blur();
+          }}
+          aria-label="Mês anterior"
+          className="grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-brand outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+        >
           <ChevronLeft className="size-4" />
         </button>
         <div className="glass-soft num rounded-full px-3 py-1.5 text-xs font-medium">{monthLabel(monthKey, true)}</div>
-        <button onClick={() => onChange(shiftMonthKey(monthKey, 1))} aria-label="Próximo mês" className="glass-soft grid size-9 place-items-center rounded-full text-brand transition-colors hover:bg-foreground/10">
+        <button
+          type="button"
+          onClick={(event) => {
+            onChange(shiftMonthKey(monthKey, 1));
+            event.currentTarget.blur();
+          }}
+          aria-label="Próximo mês"
+          className="grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-brand outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
+        >
           <ChevronRight className="size-4" />
         </button>
       </div>

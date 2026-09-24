@@ -171,7 +171,7 @@ function FinanceTooltip({
   );
 }
 
-function visibleRows(rows: Row[], range: ChartRange) {
+function sliceRows(rows: Row[], range: ChartRange) {
   return rows.slice(-Math.min(range, 12));
 }
 
@@ -314,7 +314,7 @@ export function IncomeVsExpenseChart({
   onRangeChange: (value: ChartRange) => void;
 }) {
   const { t } = useLanguage();
-  const visibleRows = visibleRows(rows, range);
+  const visibleRows = sliceRows(rows, range);
   const fields = [
     { key: "receitas" as const, label: t("incomes") },
     { key: "despesas" as const, label: t("bills") },
@@ -349,7 +349,7 @@ export function BalanceEvolutionChart({
   onRangeChange: (value: ChartRange) => void;
 }) {
   const { t } = useLanguage();
-  const visibleRows = visibleRows(rows, range);
+  const visibleRows = sliceRows(rows, range);
   const fields = [
     { key: "saldo" as const, label: t("monthBalance") },
     { key: "receitas" as const, label: t("incomes") },
@@ -407,7 +407,7 @@ export function SavingsChart({
   onRangeChange: (value: ChartRange) => void;
 }) {
   const { t } = useLanguage();
-  const visibleRows = visibleRows(rows, range);
+  const visibleRows = sliceRows(rows, range);
   const fields = [
     { key: "guardado" as const, label: t("savings") },
     { key: "saldo" as const, label: t("monthBalance") },

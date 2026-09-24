@@ -18,7 +18,7 @@ export function SummaryCards({
     <>
       <section className="glass mb-4 rounded-3xl p-5">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-mut">💵 Saldo Disponível</p>
+          <p className="text-xs text-mut">💵 {t("availableBalance")}</p>
           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${positive ? "border-pos/20 bg-pos/10 text-pos" : "border-neg/20 bg-neg/10 text-neg"}`}>
             {positive ? "Positivo" : "Negativo"}
           </span>
@@ -37,7 +37,7 @@ export function SummaryCards({
         <div id="receitas" className="glass scroll-mt-4 rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">💰 Receitas</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">💰 {t("incomes")}</p>
               <p className="num mt-1 font-display text-base font-semibold text-pos">{formatCurrency(totals.totalIncomes, true)}</p>
             </div>
             <IncomeDialog monthKey={monthKey} onSave={(data) => financeActions.addIncome(monthKey, data)} trigger={<button aria-label="Adicionar receita" className="grid size-8 place-items-center rounded-full bg-pos/10 text-pos transition-colors hover:bg-pos/20"><Plus className="size-4" /></button>} />
@@ -48,7 +48,7 @@ export function SummaryCards({
         <div id="guardado" className="glass flex h-full min-h-0 scroll-mt-4 flex-col rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 Guardado</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">🏦 {t("savings")}</p>
               <p className="num mt-1 font-display text-base font-semibold text-econ">{formatCurrency(totals.totalSaved, true)}</p>
             </div>
             <SavingDialog onSave={(data) => financeActions.addSaving(monthKey, data)} trigger={<button aria-label="Adicionar valor guardado" className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"><Plus className="size-4" /></button>} />
@@ -59,7 +59,7 @@ export function SummaryCards({
         <div className="glass rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 Contas</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📄 {t("bills")}</p>
               <p className="num mt-1 font-display text-base font-semibold text-neg">{formatCurrency(totals.totalBills, true)}</p>
             </div>
             <BillDialog monthKey={monthKey} onSave={(data) => financeActions.addBill(monthKey, data)} trigger={<button aria-label="Adicionar conta" className="grid size-8 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/20"><Plus className="size-4" /></button>} />
@@ -67,7 +67,7 @@ export function SummaryCards({
         </div>
 
         <div className="glass rounded-2xl p-3">
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-mut">📈 Saldo do mês</p>
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-mut">📈 {t("monthBalance")}</p>
           <p className={`num font-display text-sm font-semibold ${totals.monthBalance >= 0 ? "text-pos" : "text-neg"}`}>{formatCurrency(totals.monthBalance, true)}</p>
         </div>
       </section>

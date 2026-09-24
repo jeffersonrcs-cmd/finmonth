@@ -10,6 +10,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 const BUILD_ID = __FINMONTH_BUILD_ID__;
+const APP_VERSION = __FINMONTH_VERSION__;
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
@@ -96,6 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "finmonth-build", content: BUILD_ID },
+      { name: "finmonth-version", content: APP_VERSION },
     ],
     links: [
       {
@@ -268,8 +270,11 @@ function RootComponent() {
         });
         if (!response.ok) return;
         const html = await response.text();
-        const match = html.match(/<meta[^>]+name=["']finmonth-build["'][^>]+content=["']([^"']+)["']/i);
-        if (active && match?.[1] && match[1] !== BUILD_ID) {
+        const buildMatch = html.match(/<meta[^>]+name=["']finmonth-build["'][^>]+content=["']([^"']+)["']/i);
+        const versionMatch = html.match(/<meta[^>]+name=["']finmonth-version["'][^>]+content=["']([^"']+)["']/i);
+        const newerBuildAvailable = Boolean(buildMatch?.[1] && buildMatch[1] !== BUILD_ID);
+        const newerVersionAvailable = Boolean(versionMatch?.[1] && versionMatch[1] !== APP_VERSION);
+        if (active && (newerBuildAvailable || newerVersionAvailable)) {
           window.dispatchEvent(new CustomEvent("finmonth:update-available"));
         }
       } catch {

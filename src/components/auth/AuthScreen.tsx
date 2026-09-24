@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ export function AuthScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -45,6 +46,30 @@ export function AuthScreen() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível concluir a operação.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    const normalizedEmail = email.trim();
+    setMessage("");
+    setError("");
+
+    if (!normalizedEmail) {
+      setError("Informe seu e-mail para receber o link de recuperação.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: window.location.origin,
+      });
+      if (resetError) throw resetError;
+      setMessage("Enviamos um link de recuperação para seu e-mail. Verifique também a caixa de spam.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível enviar o link de recuperação.");
     } finally {
       setBusy(false);
     }
@@ -112,6 +137,15 @@ export function AuthScreen() {
               minLength={6}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+            </div>
           </div>
 
           {error && (
@@ -129,12 +163,26 @@ export function AuthScreen() {
             {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
           </Button>
 
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={() => void handleForgotPassword()}
+              disabled={busy}
+              className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-mut transition-colors hover:text-brand disabled:opacity-60"
+            >
+              <KeyRound className="size-3.5" />
+              Esqueci minha senha
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {
               setMode(mode === "login" ? "signup" : "login");
               setMessage("");
               setError("");
+              setPassword("");
+              setShowPassword(false);
             }}
             className="w-full text-center text-xs text-mut transition-colors hover:text-brand"
           >

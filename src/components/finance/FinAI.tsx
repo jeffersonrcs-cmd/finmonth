@@ -16,13 +16,16 @@ import {
   CartesianGrid,
   Legend,
   Line,
+  Pie,
+  PieChart,
+  Cell,
   LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
 } from "recharts";
 
-type ChartMode = "month" | "compare" | "year" | "history" | "balance" | "savings" | "topBills" | null;
+type ChartMode = "month" | "compare" | "year" | "history" | "balance" | "savings" | "topBills" | "cashflow" | "incomeBreakdown" | "billStatus" | "dailyFlow" | "recurring" | null;
 
 type AiReply = {
   title: string;
@@ -35,11 +38,11 @@ const DAILY_LIMIT = 20;
 const FIN_AI_QUOTA_ENABLED = false;
 
 const suggestions = [
+  "Faça uma análise completa",
   "Como foi meu mês?",
-  "Quanto consegui guardar?",
+  "Onde estou gastando mais?",
+  "Quanto posso guardar?",
   "Quais contas estão pendentes?",
-  "Compare com o mês passado",
-  "Mostre a evolução do saldo",
 ];
 
 function normalize(value: string) {
@@ -59,15 +62,82 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
   const previousTotals = computeTotals(previousData, previousKey);
   const paidBills = data.bills.filter((bill) => bill.paid);
   const pendingBills = data.bills.filter((bill) => !bill.paid);
+  const billStatusLocal = (bill: typeof data.bills[number], key: string) => {
+    const due = new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, bill.dueDay);
+    const today = new Date();
+    due.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return due < today ? "overdue" : "pending";
+  };
   const incomeCount = data.incomes.length;
   const billCount = data.bills.length;
   const savingCount = data.savings.length;
+  const paidTotal = paidBills.reduce((sum, bill) => sum + bill.amount, 0);
+  const pendingTotal = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
+  const largestBill = [...data.bills].sort((a, b) => b.amount - a.amount)[0];
+  const largestIncome = [...data.incomes].sort((a, b) => b.amount - a.amount)[0];
+  const recurringBills = data.bills.filter((bill) => bill.recurrent);
+  const savingsRate = totals.totalIncomes > 0 ? (totals.totalSaved / totals.totalIncomes) * 100 : 0;
+  const billRate = totals.totalIncomes > 0 ? (totals.totalBills / totals.totalIncomes) * 100 : 0;
+
+  if (query.includes("analis") || query.includes("diagnost") || query.includes("completa") || query.includes("panorama")) {
+    return {
+      title: "Análise completa",
+      text: `Neste mês, você recebeu ${formatCurrency(totals.totalIncomes)}, tem ${formatCurrency(totals.totalBills)} em contas e registrou ${formatCurrency(totals.totalSaved)} guardados. O saldo disponível está em ${formatCurrency(totals.availableBalance)}. Sua taxa de economia está em ${Math.round(savingsRate)}% e as contas representam ${Math.round(billRate)}% das receitas. Há ${pendingBills.length} pendência(s), ${paidBills.length} paga(s) e ${recurringBills.length} conta(s) recorrente(s).`,
+      chart: "cashflow",
+    };
+  }
+
+  if (query.includes("onde") && (query.includes("gast") || query.includes("despes") || query.includes("dinheiro"))) {
+    return {
+      title: "Onde seu dinheiro está indo",
+      text: largestBill ? `Sua maior conta neste mês é "${largestBill.description}", de ${formatCurrency(largestBill.amount)}. As seis maiores contas estão no gráfico abaixo.` : "Ainda não há contas suficientes para analisar seus maiores gastos.",
+      chart: data.bills.length ? "topBills" : null,
+    };
+  }
+
+  if (query.includes("quanto posso guardar") || query.includes("posso guardar") || query.includes("taxa de economia")) {
+    const possible = Math.max(totals.totalIncomes - totals.totalBills, 0);
+    return {
+      title: "Potencial de economia",
+      text: `Depois das contas, seu espaço financeiro bruto neste mês é de ${formatCurrency(possible)}. Você já registrou ${formatCurrency(totals.totalSaved)} guardados. Isso equivale a uma taxa de economia de ${Math.round(savingsRate)}% sobre suas receitas.`,
+      chart: "cashflow",
+    };
+  }
+
+  if (query.includes("quanto gastei") || query.includes("total de gastos") || query.includes("total gasto")) {
+    return { title: "Total de gastos", text: `Suas contas somam ${formatCurrency(totals.totalBills)} neste mês. Deste total, ${formatCurrency(paidTotal)} estão pagas e ${formatCurrency(pendingTotal)} estão pendentes.`, chart: "billStatus" };
+  }
+
+  if (query.includes("quanto recebi") || query.includes("maior receita") || query.includes("maior entrada")) {
+    return { title: "Receitas detalhadas", text: largestIncome ? `Você recebeu ${formatCurrency(totals.totalIncomes)} no mês. A maior entrada é "${largestIncome.description}", de ${formatCurrency(largestIncome.amount)}.` : "Ainda não há receitas registradas neste mês.", chart: "incomeBreakdown" };
+  }
+
+  if (query.includes("atrasad") || query.includes("vencid")) {
+    const overdue = data.bills.filter((bill) => billStatusLocal(bill, monthKey) === "overdue");
+    const overdueTotal = overdue.reduce((sum, bill) => sum + bill.amount, 0);
+    return { title: "Contas atrasadas", text: overdue.length ? `Você tem ${overdue.length} conta(s) atrasada(s), totalizando ${formatCurrency(overdueTotal)}.` : "Não há contas atrasadas neste mês.", chart: overdue.length ? "billStatus" : null };
+  }
+
+  if (query.includes("recorrent") || query.includes("fixas") || query.includes("fixos")) {
+    const recurringTotal = recurringBills.reduce((sum, bill) => sum + bill.amount, 0);
+    return { title: "Contas recorrentes", text: recurringBills.length ? `Você tem ${recurringBills.length} conta(s) recorrente(s), somando ${formatCurrency(recurringTotal)}.` : "Não há contas marcadas como recorrentes neste mês.", chart: "recurring" };
+  }
+
+  if (query.includes("fluxo") || query.includes("entrada e saida") || query.includes("entrada e saída")) {
+    return { title: "Fluxo financeiro", text: `O fluxo do mês é de ${formatCurrency(totals.monthBalance)} antes do valor guardado e ${formatCurrency(totals.availableBalance)} depois do valor guardado.`, chart: "cashflow" };
+  }
+
+  if (query.includes("diari") || query.includes("por dia")) {
+    const days = new Date(year, Number(monthKey.slice(5, 7)), 0).getDate();
+    return { title: "Média diária", text: `Considerando ${days} dias no mês, sua média registrada é de ${formatCurrency(totals.totalIncomes / days)} em receitas por dia e ${formatCurrency(totals.totalBills / days)} em contas por dia.`, chart: "dailyFlow" };
+  }
 
   if (query.includes("ultimos 6") || query.includes("6 meses")) {
     return { title: "Últimos 6 meses", text: "Aqui está a evolução das suas receitas, contas e valores guardados nos últimos seis meses com dados disponíveis.", chart: "history" };
   }
 
-  if (query.includes("ano") || query.includes("anual")) {
+  if (query.includes("ano") || query.includes("anual"))
     return { title: "Gráfico anual", text: `Aqui está a evolução de receitas, contas e valores guardados em ${year}, mês a mês.`, chart: "year" };
   }
 
@@ -129,7 +199,7 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
 
   return {
     title: "Posso analisar seus dados",
-    text: "Experimente perguntar sobre receitas, gastos, contas pagas ou pendentes, saldo, valor guardado, comparações e evolução dos seus dados. Também posso mostrar gráficos mensais, anuais, históricos, de saldo, de economia e das maiores contas.",
+    text: "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico, maiores lançamentos e gráficos mensais ou anuais. Digite sua pergunta do jeito que você falaria normalmente.",
     chart: null,
   };
 }
@@ -166,6 +236,29 @@ function FinAiChart({
       { label: "Guardado", atual: monthTotals.totalSaved, anterior: previousTotals.totalSaved },
     ];
     if (mode === "topBills") return [...monthData.bills].sort((a, b) => b.amount - a.amount).slice(0, 6).map((bill) => ({ label: bill.description, value: bill.amount }));
+    if (mode === "cashflow") return [
+      { label: "Receitas", value: monthTotals.totalIncomes },
+      { label: "Contas", value: monthTotals.totalBills },
+      { label: "Guardado", value: monthTotals.totalSaved },
+      { label: "Saldo", value: monthTotals.availableBalance },
+    ];
+    if (mode === "incomeBreakdown") return [...monthData.incomes].sort((a, b) => b.amount - a.amount).slice(0, 6).map((income) => ({ label: income.description, value: income.amount }));
+    if (mode === "billStatus") return [
+      { label: "Pagas", value: monthTotals.paidTotal },
+      { label: "Pendentes", value: monthTotals.pendingTotal },
+    ];
+    if (mode === "dailyFlow") {
+      const days = new Date(year, Number(monthKey.slice(5, 7)), 0).getDate();
+      return [
+        { label: "Receitas/dia", value: monthTotals.totalIncomes / days },
+        { label: "Contas/dia", value: monthTotals.totalBills / days },
+        { label: "Guardado/dia", value: monthTotals.totalSaved / days },
+      ];
+    }
+    if (mode === "recurring") {
+      const recurring = monthData.bills.filter((bill) => bill.recurrent);
+      return recurring.sort((a, b) => b.amount - a.amount).slice(0, 6).map((bill) => ({ label: bill.description, value: bill.amount }));
+    }
     if (mode === "balance") return historyRows.map((row) => ({ label: row.label, value: row.saldo }));
     if (mode === "savings") return historyRows.map((row) => ({ label: row.label, value: row.guardado }));
     if (mode === "history") return historyRows.map((row) => ({ label: row.label, Receitas: row.receitas, Contas: row.despesas, Guardado: row.guardado }));
@@ -178,6 +271,11 @@ function FinAiChart({
     : mode === "balance" ? "Evolução do saldo"
     : mode === "savings" ? "Evolução do valor guardado"
     : mode === "topBills" ? "Maiores contas"
+    : mode === "cashflow" ? "Fluxo financeiro"
+    : mode === "incomeBreakdown" ? "Maiores receitas"
+    : mode === "billStatus" ? "Pagas × pendentes"
+    : mode === "dailyFlow" ? "Média diária"
+    : mode === "recurring" ? "Contas recorrentes"
     : `Ano ${year}`;
 
   return (
@@ -214,7 +312,10 @@ function FinAiChart({
                   <Bar dataKey="Guardado" name="Guardado" fill="var(--econ)" radius={[4, 4, 0, 0]} />
                 </>
               ) : (
-                <Bar dataKey="value" name={mode === "topBills" ? "Valor" : "Total"} fill="var(--brand)" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="value" name={
+                  mode === "topBills" || mode === "incomeBreakdown" || mode === "recurring" ? "Valor" :
+                  mode === "billStatus" ? "Total" : "Valor"
+                } fill="var(--brand)" radius={[5, 5, 0, 0]} />
               )}
             </BarChart>
           )}

@@ -71,7 +71,7 @@ export function AuthScreen() {
       if (resetError) throw resetError;
       setMessage(t("recoverySent"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "t("operationFailed")");
+      setError(err instanceof Error ? err.message : t("operationFailed"));
     } finally {
       setBusy(false);
     }

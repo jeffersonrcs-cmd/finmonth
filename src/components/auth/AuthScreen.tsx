@@ -64,7 +64,7 @@ export function AuthScreen() {
     setBusy(true);
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${window.location.origin}/redefinir-senha`,
+        redirectTo: "https://finmonth.lovable.app/redefinir-senha",
       });
       if (resetError) throw resetError;
       setMessage("Enviamos um link de recuperação para seu e-mail. Verifique também a caixa de spam.");

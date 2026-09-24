@@ -1,5 +1,57 @@
 import { useSyncExternalStore } from "react";
 
+
+export const CURRENCIES = [
+  { code: "BRL", label: "Real brasileiro", symbol: "R$" },
+  { code: "USD", label: "US Dollar", symbol: "$" },
+  { code: "EUR", label: "Euro", symbol: "€" },
+] as const;
+
+export type CurrencyCode = (typeof CURRENCIES)[number]["code"];
+const CURRENCY_STORAGE_KEY = "finmonth.currency";
+const DEFAULT_CURRENCY: CurrencyCode = "BRL";
+const RATE_STORAGE_KEY = "finmonth.currency-rates";
+const RATE_MAX_AGE = 12 * 60 * 60 * 1000;
+let currency: CurrencyCode = DEFAULT_CURRENCY;
+const currencyRates: Partial<Record<CurrencyCode, number>> = { BRL: 1 };
+let currencyLoading = false;
+
+function readCurrencyCache() {
+  if (typeof window === "undefined") return;
+  try {
+    const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
+    if (CURRENCIES.some((item) => item.code === stored)) currency = stored as CurrencyCode;
+    const raw = localStorage.getItem(RATE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, { rate: number; timestamp: number }>;
+      for (const code of ["USD", "EUR"] as const) {
+        const entry = parsed[code];
+        if (entry && Number.isFinite(entry.rate) && Date.now() - entry.timestamp < RATE_MAX_AGE) currencyRates[code] = entry.rate;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+readCurrencyCache();
+
+async function loadCurrencyRate(next: Exclude<CurrencyCode, "BRL">) {
+  const response = await fetch(`https://api.frankfurter.dev/v2/rate/brl/${next.toLowerCase()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Exchange rate unavailable");
+  const data = (await response.json()) as { rate?: number };
+  if (!Number.isFinite(data.rate) || Number(data.rate) <= 0) throw new Error("Invalid exchange rate");
+  currencyRates[next] = Number(data.rate);
+  try {
+    const raw = localStorage.getItem(RATE_STORAGE_KEY);
+    const cache = raw ? JSON.parse(raw) as Record<string, unknown> : {};
+    cache[next] = { rate: currencyRates[next], timestamp: Date.now() };
+    localStorage.setItem(RATE_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    /* ignore */
+  }
+}
+
 export const LANGUAGES = [
   { code: "pt-BR", label: "Português (Brasil)", nativeLabel: "Português" },
   { code: "en-US", label: "English (United States)", nativeLabel: "English" },
@@ -12,7 +64,7 @@ const DEFAULT_LANGUAGE: LanguageCode = "pt-BR";
 
 const translations = {
   "pt-BR": {
-    settings:"Configurações", settingsDescription:"Gerencie sua conta e as preferências do aplicativo.", profile:"Editar dados do usuário", notifications:"Notificações", language:"Linguagem", languageDescription:"Escolha o idioma usado pelo aplicativo.", themeLight:"Tema claro", themeDark:"Tema escuro", version:"Versão", signOut:"Sair da conta", back:"Voltar", chooseLanguage:"Escolha seu idioma", chooseLanguageDescription:"A preferência fica salva neste dispositivo.", selectedLanguage:"Idioma selecionado",
+    settings:"Configurações", settingsDescription:"Gerencie sua conta e as preferências do aplicativo.", profile:"Editar dados do usuário", notifications:"Notificações", language:"Linguagem", languageDescription:"Escolha o idioma usado pelo aplicativo.", currency:"Moeda", currencyDescription:"Escolha a moeda usada para exibir seus valores.", currencyBRL:"Real brasileiro (BRL)", currencyUSD:"Dólar americano (USD)", currencyEUR:"Euro (EUR)", currencyRate:"Cotação atualizada automaticamente. themeLight:"Tema claro", themeDark:"Tema escuro", version:"Versão", signOut:"Sair da conta", back:"Voltar", chooseLanguage:"Escolha seu idioma", chooseLanguageDescription:"A preferência fica salva neste dispositivo.", selectedLanguage:"Idioma selecionado",
     home:"Início", bills:"Contas", incomes:"Receitas", savings:"Guardado", finai:"FinAI", finance:"Finanças", myAccount:"Minha conta", openSettings:"Abrir configurações", openNotifications:"Abrir notificações", previousMonth:"Mês anterior", nextMonth:"Próximo mês",
     availableBalance:"Saldo Disponível", positive:"POSITIVO", negative:"NEGATIVO", monthBalance:"Saldo do mês", copyPrevious:"Copiar mês anterior", addBill:"Adicionar conta", addIncome:"Adicionar receita", addSaving:"Adicionar valor guardado", noBills:"Nenhuma conta adicionada neste mês.", noIncomes:"Nenhuma receita adicionada neste mês.", noSavings:"Nenhum valor guardado neste mês.", onlyBills:"Somente as contas adicionadas neste mês.", onlyIncomes:"Somente as receitas adicionadas neste mês.", onlySavings:"Somente os valores guardados neste mês.", savedInMonth:"Guardado no mês",
     edit:"Editar", delete:"Excluir", item:"item", noItems:"Nenhum item cadastrado neste mês.", markPending:"Marcar como pendente", markPaid:"Marcar como paga", paid:"Paga", pending:"Pendente", overdue:"Vencida", due:"Vence", recurring:"Recorrente", day:"dia", days:"dias", today:"hoje", yesterday:"ontem",
@@ -27,7 +79,7 @@ const translations = {
     historicalDescription:"Consulte receitas, contas e economias de meses anteriores e acompanhe a evolução do seu saldo.", controlFinance:"Controle financeiro pessoal", monthControl:"Controle suas receitas, contas e economias mês a mês",
   },
   "en-US": {
-    settings:"Settings", settingsDescription:"Manage your account and app preferences.", profile:"Edit user data", notifications:"Notifications", language:"Language", languageDescription:"Choose the language used by the app.", themeLight:"Light theme", themeDark:"Dark theme", version:"Version", signOut:"Sign out", back:"Back", chooseLanguage:"Choose your language", chooseLanguageDescription:"Your preference is saved on this device.", selectedLanguage:"Selected language",
+    settings:"Settings", settingsDescription:"Manage your account and app preferences.", profile:"Edit user data", notifications:"Notifications", language:"Language", languageDescription:"Choose the language used by the app.", currency:"Currency", currencyDescription:"Choose the currency used to display your amounts.", currencyBRL:"Brazilian Real (BRL)", currencyUSD:"US Dollar (USD)", currencyEUR:"Euro (EUR)", currencyRate:"Exchange rate updated automatically.", themeLight:"Light theme", themeDark:"Dark theme", version:"Version", signOut:"Sign out", back:"Back", chooseLanguage:"Choose your language", chooseLanguageDescription:"Your preference is saved on this device.", selectedLanguage:"Selected language",
     home:"Home", bills:"Bills", incomes:"Income", savings:"Saved", finai:"FinAI", finance:"Finances", myAccount:"My account", openSettings:"Open settings", openNotifications:"Open notifications", previousMonth:"Previous month", nextMonth:"Next month",
     availableBalance:"Available Balance", positive:"POSITIVE", negative:"NEGATIVE", monthBalance:"Month balance", copyPrevious:"Copy previous month", addBill:"Add bill", addIncome:"Add income", addSaving:"Add saved amount", noBills:"No bills added this month.", noIncomes:"No income added this month.", noSavings:"No saved amount this month.", onlyBills:"Only bills added this month.", onlyIncomes:"Only income added this month.", onlySavings:"Only saved amounts added this month.", savedInMonth:"Saved this month",
     edit:"Edit", delete:"Delete", item:"item", noItems:"No items registered this month.", markPending:"Mark as pending", markPaid:"Mark as paid", paid:"Paid", pending:"Pending", overdue:"Overdue", due:"Due", recurring:"Recurring", day:"day", days:"days", today:"today", yesterday:"yesterday",
@@ -42,7 +94,7 @@ const translations = {
     historicalDescription:"Review income, bills, and savings from previous months and track your balance over time.", controlFinance:"Personal finance control", monthControl:"Track your income, bills, and savings month by month",
   },
   "es-ES": {
-    settings:"Configuración", settingsDescription:"Administra tu cuenta y las preferencias de la aplicación.", profile:"Editar datos del usuario", notifications:"Notificaciones", language:"Idioma", languageDescription:"Elige el idioma utilizado por la aplicación.", themeLight:"Tema claro", themeDark:"Tema oscuro", version:"Versión", signOut:"Cerrar sesión", back:"Volver", chooseLanguage:"Elige tu idioma", chooseLanguageDescription:"Tu preferencia se guarda en este dispositivo.", selectedLanguage:"Idioma seleccionado",
+    settings:"Configuración", settingsDescription:"Administra tu cuenta y las preferencias de la aplicación.", profile:"Editar datos del usuario", notifications:"Notificaciones", language:"Idioma", languageDescription:"Elige el idioma utilizado por la aplicación.", currency:"Moneda", currencyDescription:"Elige la moneda utilizada para mostrar tus valores.", currencyBRL:"Real brasileño (BRL)", currencyUSD:"Dólar estadounidense (USD)", currencyEUR:"Euro (EUR)", currencyRate:"Cotización actualizada automáticamente.", themeLight:"Tema claro", themeDark:"Tema oscuro", version:"Versión", signOut:"Cerrar sesión", back:"Volver", chooseLanguage:"Elige tu idioma", chooseLanguageDescription:"Tu preferencia se guarda en este dispositivo.", selectedLanguage:"Idioma seleccionado",
     home:"Inicio", bills:"Cuentas", incomes:"Ingresos", savings:"Guardado", finai:"FinAI", finance:"Finanzas", myAccount:"Mi cuenta", openSettings:"Abrir configuración", openNotifications:"Abrir notificaciones", previousMonth:"Mes anterior", nextMonth:"Mes siguiente",
     availableBalance:"Saldo disponible", positive:"POSITIVO", negative:"NEGATIVO", monthBalance:"Saldo del mes", copyPrevious:"Copiar mes anterior", addBill:"Añadir cuenta", addIncome:"Añadir ingreso", addSaving:"Añadir cantidad guardada", noBills:"No hay cuentas añadidas este mes.", noIncomes:"No hay ingresos añadidos este mes.", noSavings:"No hay cantidades guardadas este mes.", onlyBills:"Solo las cuentas añadidas este mes.", onlyIncomes:"Solo los ingresos añadidos este mes.", onlySavings:"Solo las cantidades guardadas este mes.", savedInMonth:"Guardado en el mes",
     edit:"Editar", delete:"Eliminar", item:"elemento", noItems:"No hay elementos registrados este mes.", markPending:"Marcar como pendiente", markPaid:"Marcar como pagada", paid:"Pagada", pending:"Pendiente", overdue:"Vencida", due:"Vence", recurring:"Recurrente", day:"día", days:"días", today:"hoy", yesterday:"ayer",
@@ -84,7 +136,7 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
-export function getCurrentLanguage() {
+export function getCurrentCurrency() {\n  return currency;\n}\n\nexport function getCurrencyRate() {\n  return currencyRates[currency];\n}\n\nexport async function setCurrency(next: CurrencyCode) {\n  if (next !== "BRL" && !currencyRates[next]) {\n    currencyLoading = true;\n    emit();\n    try {\n      await loadCurrencyRate(next);\n    } catch {\n      currencyLoading = false;\n      emit();\n      return false;\n    }\n    currencyLoading = false;\n  }\n  currency = next;\n  try { localStorage.setItem(CURRENCY_STORAGE_KEY, next); } catch { /* ignore */ }\n  emit();\n  return true;\n}\n\nexport function isCurrencyLoading() {\n  return currencyLoading;\n}\n\nexport function getCurrentLanguage() {
   return language;
 }
 

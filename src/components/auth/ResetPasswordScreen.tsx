@@ -24,12 +24,12 @@ export function ResetPasswordScreen() {
     setError("");
 
     if (password.length < 6) {
-      setError("t("minPassword")");
+      setError(t("minPassword"));
       return;
     }
 
     if (password !== confirmation) {
-      setError("t("confirmPassword")");
+      setError(t("confirmPassword"));
       return;
     }
 
@@ -40,9 +40,9 @@ export function ResetPasswordScreen() {
 
       setPassword("");
       setConfirmation("");
-      setMessage("t("accountUpdated")");
+      setMessage(t("accountUpdated"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "t("operationFailed")");
+      setError(err instanceof Error ? err.message : t("operationFailed"));
     } finally {
       setBusy(false);
     }
@@ -59,9 +59,9 @@ export function ResetPasswordScreen() {
             {message ? <Check className="size-6" /> : <KeyRound className="size-6" />}
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
-          <h1 className="mt-2 font-display text-2xl font-semibold">t("newPassword")</h1>
+          <h1 className="mt-2 font-display text-2xl font-semibold">{t("newPassword")}</h1>
           <p className="mt-2 text-sm text-mut">
-            t("passwordRecovery")
+            {t("passwordRecovery")}
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export function ResetPasswordScreen() {
                 onClick={() => void navigate({ to: "/" })}
                 className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90"
               >
-                Continuar
+                {t("continue")}
               </Button>
             </div>
           )}

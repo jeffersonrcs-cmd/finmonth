@@ -394,6 +394,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
   const [quota, setQuota] = useState({ count: 0, remaining: DAILY_LIMIT, allowed: true });
   const [quotaLoading, setQuotaLoading] = useState(true);
   const [quotaError, setQuotaError] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const year = Number(monthKey.slice(0, 4));
 
   async function loadQuota() {
@@ -420,7 +421,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
 
   async function ask(question: string) {
     const value = question.trim();
-    if (!value || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))) return;
+    if (!value || aiLoading || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))) return;
     if (FIN_AI_QUOTA_ENABLED) {
       const { data, error } = await supabase.rpc("consume_fin_ai_quota");
       if (error) {
@@ -438,8 +439,41 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         allowed: true,
       });
     }
-    setReply(buildReply(value, monthKey, year, state));
-    setPrompt("");
+    setAiLoading(true);
+    try {
+      const history = reply ? [{ role: "assistant", text: reply.text }] : [];
+      const { data, error } = await supabase.functions.invoke("fin-ai", {
+        body: { question: value, monthKey, history },
+      });
+
+      if (error) throw new Error(error.message || "Não foi possível consultar a Fin IA.");
+
+      const result = data as {
+        title?: string;
+        text?: string;
+        chartMode?: ChartMode;
+        error?: string;
+      };
+
+      if (result.error) throw new Error(result.error);
+
+      setReply({
+        title: result.title?.trim() || "Fin IA",
+        text: result.text?.trim() || "Não consegui gerar uma resposta agora. Tente novamente.",
+        chart: result.chartMode ?? null,
+      });
+      setPrompt("");
+    } catch (error) {
+      setReply({
+        title: "Fin IA",
+        text: error instanceof Error
+          ? error.message
+          : "Não foi possível consultar a Fin IA agora. Tente novamente.",
+        chart: null,
+      });
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -466,6 +500,12 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         <p className="mt-1 text-xs leading-relaxed text-mut">
           Pergunte sobre seu mês, compare períodos ou peça um gráfico.
         </p>
+        {aiLoading && (
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-mut">
+            <span className="size-1.5 animate-pulse rounded-full bg-brand" />
+            Fin IA está analisando seus dados...
+          </div>
+        )}
         {FIN_AI_QUOTA_ENABLED && (
           <>
             <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-[10px] text-mut">
@@ -521,7 +561,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
           type="submit"
           aria-label="Enviar pergunta"
           className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
-          disabled={!prompt.trim() || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))}
+          disabled={!prompt.trim() || aiLoading || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))}
         >
           <Send className="size-4" />
         </button>

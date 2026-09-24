@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowLeft, Bell, CalendarClock, Check, ChevronRight, X } from "lucide-react";
-import { billStatus, financeActions, formatCurrency, monthLabel, useFinanceState, type BillNotification } from "@/lib/finance";
+import { billDueDateLabel, billStatus, financeActions, formatCurrency, monthLabel, useFinanceState, type BillNotification } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
 
@@ -31,7 +31,7 @@ export function NotificationsPanel({ notifications, onClose }: { notifications: 
                 <span className="num font-display text-lg font-semibold">{formatCurrency(selectedBill.amount)}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <div><p className="text-[10px] uppercase tracking-widest text-mut">{t("dueDate")}</p><p className="mt-1 text-sm font-medium">{t("day")} {selectedBill.dueDay}</p></div>
+                <div><p className="text-[10px] uppercase tracking-widest text-mut">{t("dueDate")}</p><p className="mt-1 text-sm font-medium">{billDueDateLabel(selectedNotification.monthKey, selectedBill.dueDay)}</p></div>
                 <div><p className="text-[10px] uppercase tracking-widest text-mut">{t("status")}</p><p className={`mt-1 text-sm font-medium ${billStatus(selectedBill, selectedNotification.monthKey) === "overdue" ? "text-neg" : "text-warn"}`}>{t(billStatus(selectedBill, selectedNotification.monthKey))}</p></div>
               </div>
               {selectedBill.recurrent && <p className="mt-3 text-[10px] text-mut">{t("recurring")}</p>}

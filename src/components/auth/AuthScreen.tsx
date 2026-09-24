@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
 
 export function AuthScreen() {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,9 +34,9 @@ export function AuthScreen() {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          setMessage("Cadastro criado. Confira seu e-mail para confirmar a conta e depois entre.");
+          setMessage("t("signupCreated")");
         } else {
-          setMessage("Conta criada com sucesso.");
+          setMessage("t("accountCreated")");
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -45,7 +47,7 @@ export function AuthScreen() {
         if (signInError) throw signInError;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível concluir a operação.");
+      setError(err instanceof Error ? err.message : "t("operationFailed")");
     } finally {
       setBusy(false);
     }
@@ -57,7 +59,7 @@ export function AuthScreen() {
     setError("");
 
     if (!normalizedEmail) {
-      setError("Informe seu e-mail para receber o link de recuperação.");
+      setError("t("email")");
       return;
     }
 
@@ -67,9 +69,9 @@ export function AuthScreen() {
         redirectTo: "https://finmonth.lovable.app/redefinir-senha",
       });
       if (resetError) throw resetError;
-      setMessage("Enviamos um link de recuperação para seu e-mail. Verifique também a caixa de spam.");
+      setMessage("t("recoverySent")");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível enviar o link de recuperação.");
+      setError(err instanceof Error ? err.message : "t("operationFailed")");
     } finally {
       setBusy(false);
     }
@@ -87,10 +89,10 @@ export function AuthScreen() {
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
           <h1 className="mt-2 font-display text-2xl font-semibold">
-            {mode === "login" ? "Entrar na sua conta" : "Criar sua conta"}
+            {mode === "login" ? "t("enterAccount")" : "t("createAccount")"}
           </h1>
           <p className="mt-2 text-sm text-mut">
-            Seus dados financeiros ficam salvos e vinculados ao seu usuário.
+            t("financialDataSaved")
           </p>
         </div>
 
@@ -100,12 +102,12 @@ export function AuthScreen() {
         >
           {mode === "signup" && (
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-mut">Nome</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("name")}</Label>
               <Input
                 className="glass-soft h-11 rounded-xl border-0 text-base"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
+                placeholder={t("yourName")}
                 autoComplete="name"
                 required
               />
@@ -113,7 +115,7 @@ export function AuthScreen() {
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut">E-mail</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("email")}</Label>
             <Input
               className="glass-soft h-11 rounded-xl border-0 text-base"
               type="email"
@@ -126,14 +128,14 @@ export function AuthScreen() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut">Senha</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("password")}</Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Mínimo de 6 caracteres"
+                placeholder={t("minPassword")}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 minLength={6}
                 required
@@ -141,7 +143,7 @@ export function AuthScreen() {
               <button
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                 className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut transition-colors hover:text-brand"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -161,7 +163,7 @@ export function AuthScreen() {
             disabled={busy}
             className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90"
           >
-            {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+            {busy ? t("wait") : mode === "login" ? t("login") : t("signup")}
           </Button>
 
           {mode === "login" && (
@@ -172,7 +174,7 @@ export function AuthScreen() {
               className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-mut transition-colors hover:text-brand disabled:opacity-60"
             >
               <KeyRound className="size-3.5" />
-              Esqueci minha senha
+              {t("forgotPassword")}
             </button>
           )}
 
@@ -187,7 +189,7 @@ export function AuthScreen() {
             }}
             className="w-full text-center text-xs text-mut transition-colors hover:text-brand"
           >
-            {mode === "login" ? "Ainda não tenho conta" : "Já tenho uma conta"}
+            {mode === "login" ? "{t("noAccount")}" : "{t("hasAccount")}"}
           </button>
         </form>
       </section>

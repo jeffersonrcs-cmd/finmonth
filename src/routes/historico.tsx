@@ -82,7 +82,7 @@ function Historico() {
                       totals.availableBalance >= 0 ? "text-pos" : "text-neg"
                     }`}
                   >
-                    {formatCurrency(t.availableBalance)}
+                    {formatCurrency(totals.availableBalance)}
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">

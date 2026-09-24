@@ -33,7 +33,7 @@ jobs:
 
       - name: Ler versão
         id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node --input-type=module -e "import { readFileSync } from 'node:fs'; console.log(JSON.parse(readFileSync('package.json', 'utf8')).version)")" >> "$GITHUB_OUTPUT"
 
       - name: Commit da versão
         run: |

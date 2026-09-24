@@ -1,3 +1,9 @@
+## v1.12.11 — sincronização da árvore de rotas
+
+- registrada a rota `/confirmar-email` na árvore gerada do TanStack Router;
+- sincronizados os tipos e os filhos da árvore de rotas com a tela de confirmação de e-mail;
+- mantido o fluxo existente de autenticação e redefinição de senha.
+
 ## v1.12.10 — correção de inicialização e sincronização
 
 - reestruturada a identificação das rotas públicas de autenticação no componente raiz;

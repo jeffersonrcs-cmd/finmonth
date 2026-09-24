@@ -35,12 +35,12 @@ const DAILY_LIMIT = 20;
 const FIN_AI_QUOTA_ENABLED = false;
 
 /**
- * Diretrizes centrais da Fin IA.
+ * Diretrizes centrais da FinAI.
  * Mantidas como contrato da camada de inteligência para a futura integração
  * com um modelo real, enquanto o protótipo local usa as mesmas regras.
  */
-export const FIN_IA_INSTRUCTIONS = `
-Você é Fin IA, um assistente financeiro inteligente.
+export const FINAI_INSTRUCTIONS = `
+Você é FinAI, um assistente financeiro inteligente.
 
 Sua função é ajudar o usuário a compreender sua vida financeira utilizando exclusivamente os dados armazenados no aplicativo.
 
@@ -84,7 +84,7 @@ function normalize(value: string) {
 
 function buildReply(prompt: string, monthKey: string, year: number, state: ReturnType<typeof useFinanceState>): AiReply {
   const query = normalize(prompt);
-  // A Fin IA só responde com fatos calculados a partir do estado financeiro atual.
+  // A FinAI só responde com fatos calculados a partir do estado financeiro atual.
   // Categorias não existem no modelo de dados atual; portanto, nunca são inferidas.
   const data = state.months[monthKey] ?? { incomes: [], bills: [], savings: [] };
   const totals = computeTotals(data, monthKey);
@@ -231,7 +231,7 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
   if (query.includes("categoria")) {
     return {
       title: "Categorias financeiras",
-      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a Fin IA não pode determinar qual categoria consome mais dinheiro.",
+      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a FinAI não pode determinar qual categoria consome mais dinheiro.",
       chart: null,
     };
   }
@@ -446,7 +446,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         body: { question: value, monthKey, history },
       });
 
-      if (error) throw new Error(error.message || "Não foi possível consultar a Fin IA.");
+      if (error) throw new Error(error.message || "Não foi possível consultar a FinAI.");
 
       const result = data as {
         title?: string;
@@ -458,17 +458,17 @@ export function FinAi({ monthKey }: { monthKey: string }) {
       if (result.error) throw new Error(result.error);
 
       setReply({
-        title: result.title?.trim() || "Fin IA",
+        title: result.title?.trim() || "FinAI",
         text: result.text?.trim() || "Não consegui gerar uma resposta agora. Tente novamente.",
         chart: result.chartMode ?? null,
       });
       setPrompt("");
     } catch (error) {
       setReply({
-        title: "Fin IA",
+        title: "FinAI",
         text: error instanceof Error
           ? error.message
-          : "Não foi possível consultar a Fin IA agora. Tente novamente.",
+          : "Não foi possível consultar a FinAI agora. Tente novamente.",
         chart: null,
       });
     } finally {
@@ -489,7 +489,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
             <Sparkles className="size-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold">Fin IA</h1>
+            <h1 className="font-display text-xl font-semibold">FinAI</h1>
             <p className="mt-0.5 text-xs text-mut">Sua inteligência financeira no FinMonth.</p>
           </div>
         </div>
@@ -503,7 +503,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         {aiLoading && (
           <div className="mt-3 flex items-center gap-2 text-[10px] text-mut">
             <span className="size-1.5 animate-pulse rounded-full bg-brand" />
-            Fin IA está analisando seus dados...
+            FinAI está analisando seus dados...
           </div>
         )}
         {FIN_AI_QUOTA_ENABLED && (
@@ -513,7 +513,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
               <span className="font-semibold text-foreground">{quotaLoading ? "…" : `${quota.count}/${DAILY_LIMIT}`}</span>
             </div>
             {quotaError && <p className="mt-2 text-[10px] text-warn">Não foi possível consultar a cota agora. Tente novamente.</p>}
-            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">Cota diária atingida. Você poderá usar a Fin IA novamente amanhã.</p>}
+            {!quotaLoading && !quota.allowed && <p className="mt-2 text-[10px] text-warn">Cota diária atingida. Você poderá usar a FinAI novamente amanhã.</p>}
           </>
         )}
 
@@ -540,7 +540,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="font-display text-sm font-semibold">{reply.title}</h2>
-                <span className="text-[9px] uppercase tracking-widest text-mut">Fin IA</span>
+                <span className="text-[9px] uppercase tracking-widest text-mut">FinAI</span>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-mut">{reply.text}</p>
               {reply.chart && <FinAiChart mode={reply.chart} monthKey={monthKey} year={year} state={state} />}
@@ -555,7 +555,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
           onChange={(event) => setPrompt(event.target.value)}
           placeholder="Digite sua pergunta..."
           className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-mut/70"
-          aria-label="Pergunte à Fin IA"
+          aria-label="Pergunte à FinAI"
         />
         <button
           type="submit"
@@ -569,7 +569,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
 
       <div className="flex items-center justify-center gap-1.5 text-[9px] text-mut/70">
         <ArrowUpRight className="size-3" />
-        A Fin IA usa os dados financeiros do seu FinMonth para gerar análises.
+        A FinAI usa os dados financeiros do seu FinMonth para gerar análises.
       </div>
     </section>
   );

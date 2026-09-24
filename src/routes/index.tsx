@@ -30,14 +30,14 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finia";
+type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finai";
 
 const navigation: { id: Screen; label: string; Icon: LucideIcon }[] = [
   { id: "inicio", label: "Início", Icon: Home },
   { id: "contas", label: "Contas", Icon: ReceiptText },
   { id: "receitas", label: "Receitas", Icon: WalletCards },
   { id: "guardado", label: "Guardado", Icon: PiggyBank },
-  { id: "finia", label: "Fin IA", Icon: Sparkles },
+  { id: "finai", label: "FinAI", Icon: Sparkles },
 ];
 
 function Dashboard() {
@@ -123,7 +123,7 @@ function Dashboard() {
 
         {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
 
-        {activeScreen === "finia" && <FinAi monthKey={monthKey} />}
+        {activeScreen === "finai" && <FinAi monthKey={monthKey} />}
 
         {activeScreen === "inicio" && (
           <div className="mt-6 flex justify-center">

@@ -133,7 +133,7 @@ function Dashboard() {
               to="/historico"
               className="border-b border-transparent pb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-mut transition-colors hover:border-brand/40 hover:text-brand"
             >
-              Ver histórico completo
+              {t("fullHistory")}
             </Link>
           </div>
         )}
@@ -156,7 +156,7 @@ function Dashboard() {
       </div>
 
       <nav
-        aria-label="Navegação principal"
+        aria-label={t("navigation")}
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       >
         <div className="mx-auto grid max-w-[440px] grid-cols-5 gap-1 rounded-2xl bg-muted/30 p-1">

@@ -200,15 +200,15 @@ export function MonthlyOverview({
         </div>
         <div className="space-y-2.5 text-xs">
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
-            <span className="text-mut">Receitas</span>
+            <span className="text-mut">{t("incomes")}</span>
             <span className="font-medium text-pos">{formatChange(incomeChange, t("new"))}</span>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
-            <span className="text-mut">Contas</span>
+            <span className="text-mut">{t("bills")}</span>
             <span className={`font-medium ${expenseChange !== null && expenseChange > 0 ? "text-neg" : "text-pos"}`}>{formatChange(expenseChange, t("new"))}</span>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
-            <span className="text-mut">Guardado</span>
+            <span className="text-mut">{t("savings")}</span>
             <span className="font-medium text-econ">{formatChange(savedChange, t("new"))}</span>
           </div>
         </div>

@@ -7,10 +7,12 @@ export function MonthNav({
   monthKey,
   onChange,
   onOpenSettings,
+  onOpenNotifications,
 }: {
   monthKey: string;
   onChange: (key: string) => void;
   onOpenSettings: () => void;
+  onOpenNotifications: () => void;
 }) {
   const financeState = useFinanceState();
   const { theme, userName } = financeState;

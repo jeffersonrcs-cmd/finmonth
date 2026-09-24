@@ -284,6 +284,7 @@ export function ManageEntriesDialog({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   return (

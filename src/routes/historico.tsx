@@ -10,9 +10,11 @@ import {
 } from "@/components/finance/HistoryChart";
 import {
   computeTotals,
+  currentMonthKey,
   formatCurrency,
   monthKeysWithData,
   monthLabel,
+  previousMonthKey,
   useFinanceState,
 } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
@@ -40,24 +42,24 @@ export const Route = createFileRoute("/historico")({
 function Historico() {
   const { t } = useLanguage();
   const state = useFinanceState();
+  const analysisMonthKey = currentMonthKey();
   const rows = useHistoryRows(12);
-  const allKeys = monthKeysWithData(state).reverse();
+  const allKeys = monthKeysWithData(state).filter((key) => key <= analysisMonthKey).reverse();
   const years = Array.from(new Set(allKeys.map((key) => Number(key.slice(0, 4))))).sort((a, b) => b - a);
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [filter, setFilter] = useState<"all" | "income" | "expense" | "balance">("all");
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [chartRange, setChartRange] = useState<ChartRange>(6);
-  const comparisonRange = chartRange;
 
   const keys = useMemo(
     () => selectedYear === "all" ? allKeys : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear),
     [allKeys, selectedYear],
   );
 
-  const latestKey = allKeys[0];
-  const previousKey = allKeys[1];
-  const latestTotals = latestKey ? computeTotals(state.months[latestKey]!, latestKey) : null;
-  const previousTotals = previousKey ? computeTotals(state.months[previousKey]!, previousKey) : null;
+  const latestKey = analysisMonthKey;
+  const previousKey = previousMonthKey(analysisMonthKey);
+  const latestTotals = computeTotals(state.months[latestKey] ?? { incomes: [], bills: [], savings: [] }, latestKey);
+  const previousTotals = computeTotals(state.months[previousKey] ?? { incomes: [], bills: [], savings: [] }, previousKey);
 
   const changePercent = (current: number, previous: number) =>
     previous === 0 ? (current === 0 ? 0 : null) : ((current - previous) / Math.abs(previous)) * 100;
@@ -119,7 +121,7 @@ function Historico() {
               <section className="glass mb-4 rounded-3xl p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="font-display text-sm font-semibold">{t("periodComparison")}</h2>
+                    <h2 className="font-display text-sm font-semibold">{t("monthlyComparison")}</h2>
                     <p className="mt-0.5 text-[10px] text-mut">{monthLabel(latestKey!)} · {t("vsPrevious")} · {monthLabel(previousKey!)}</p>
                   </div>
                   <div className="flex shrink-0 gap-1 rounded-xl bg-muted/25 p-1" role="group" aria-label={t("historyRange")}>

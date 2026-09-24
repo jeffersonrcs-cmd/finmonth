@@ -127,7 +127,14 @@ Deno.serve(async (req) => {
   const question = typeof body.question === "string" ? body.question.trim() : "";
   const language = body.language === "en-US" ? "en-US" : body.language === "es-ES" ? "es-ES" : "pt-BR";
   const languageName = language === "en-US" ? "English" : language === "es-ES" ? "Spanish" : "Portuguese (Brazil)";
-  if (!question) return jsonResponse({ error: "Informe uma pergunta." }, 400);
+  const localized = {
+    invalidQuestion: language === "en-US" ? "Enter a question." : language === "es-ES" ? "Introduce una pregunta." : "Informe uma pergunta.",
+    financeError: language === "en-US" ? "Could not access your financial data." : language === "es-ES" ? "No se pudieron consultar tus datos financieros." : "Não foi possível consultar seus dados financeiros.",
+    geminiRate: language === "en-US" ? "Gemini reached its free limit right now. Try again later." : language === "es-ES" ? "Gemini alcanzó su límite gratuito en este momento. Inténtalo más tarde." : "O Gemini atingiu o limite gratuito neste momento. Tente novamente mais tarde.",
+    geminiError: language === "en-US" ? "Gemini could not process the question right now." : language === "es-ES" ? "Gemini no pudo procesar la pregunta ahora." : "O Gemini não conseguiu processar a pergunta agora.",
+    noResponse: language === "en-US" ? "I could not generate a response right now. Try again." : language === "es-ES" ? "No pude generar una respuesta ahora. Inténtalo de nuevo." : "Não consegui gerar uma resposta agora. Tente novamente.",
+  };
+  if (!question) return jsonResponse({ error: localized.invalidQuestion }, 400);
 
   const monthKey = typeof body.monthKey === "string" && /^\d{4}-\d{2}$/.test(body.monthKey)
     ? body.monthKey
@@ -146,7 +153,7 @@ Deno.serve(async (req) => {
     .eq("user_id", userData.user.id)
     .order("month_key", { ascending: true });
 
-  if (financeError) return jsonResponse({ error: "Não foi possível consultar seus dados financeiros." }, 500);
+  if (financeError) return jsonResponse({ error: localized.financeError }, 500);
 
   const financeData = Object.fromEntries(
     (rows ?? []).map((row) => [row.month_key, row.data]),
@@ -188,9 +195,9 @@ Deno.serve(async (req) => {
     const errorText = await geminiResponse.text();
     console.error("Gemini API error", geminiResponse.status, errorText.slice(0, 1000));
     if (geminiResponse.status === 429) {
-      return jsonResponse({ error: "O Gemini atingiu o limite gratuito neste momento. Tente novamente mais tarde." }, 429);
+      return jsonResponse({ error: localized.geminiRate }, 429);
     }
-    return jsonResponse({ error: "O Gemini não conseguiu processar a pergunta agora." }, 502);
+    return jsonResponse({ error: localized.geminiError }, 502);
   }
 
   const interaction = await geminiResponse.json();
@@ -200,7 +207,7 @@ Deno.serve(async (req) => {
   if (!parsed || typeof parsed.text !== "string") {
     return jsonResponse({
       title: "Fin IA",
-      text: raw || "Não consegui gerar uma resposta agora. Tente novamente.",
+      text: raw || localized.noResponse,
       chartMode: null,
     });
   }

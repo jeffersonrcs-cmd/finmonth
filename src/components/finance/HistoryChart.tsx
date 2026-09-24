@@ -49,6 +49,7 @@ function ChartShell({
   rows: Row[];
   children: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   return (
     <section className="glass mb-4 rounded-3xl p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -151,7 +152,7 @@ export function MonthlyOverview({
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="font-display text-sm font-semibold">{t("overview")}</h2>
-            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? "{t("selectedYearSummary")}" : "{t("selectedMonthSummary")}"}</p>
+            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? t("selectedYearSummary") : t("selectedMonthSummary")}</p>
           </div>
           <span className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}>
             {balancePositive ? t("positiveBalance") : t("negativeBalance")}
@@ -217,6 +218,7 @@ export function MonthlyOverview({
 }
 
 export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
+  const { t } = useLanguage();
   return (
     <ChartShell title={t("incomeExpense")} rows={rows}>
       <BarChart data={rows}>
@@ -231,6 +233,7 @@ export function IncomeVsExpenseChart({ rows }: { rows: Row[] }) {
 }
 
 export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
+  const { t } = useLanguage();
   return (
     <ChartShell title={t("balanceEvolution")} rows={rows} subtitle={`${rows.length} ${rows.length === 1 ? t("month") : t("months")}`}>
       <LineChart data={rows}>
@@ -250,6 +253,7 @@ export function BalanceEvolutionChart({ rows }: { rows: Row[] }) {
 }
 
 export function SavingsChart({ rows }: { rows: Row[] }) {
+  const { t } = useLanguage();
   return (
     <ChartShell title={t("savedPerMonth")} rows={rows}>
       <BarChart data={rows}>

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, Trash2 } from "lucide-react";
+import { ArrowLeft, Bell, Check, Eye, EyeOff, Info, LogOut, Moon, Settings, Sun, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { disconnectCloud, financeActions, useFinanceState } from "@/lib/finance";
 import { supabase } from "@/lib/supabase";
 
-export function AccountSettings({ onBack, section = "profile" }: { onBack: () => void; section?: "profile" | "notifications" | "version" }) {
-  const { userName, notificationPreferences } = useFinanceState();
+export function AccountSettings({ onBack, section = "menu", onOpenSection, onSignOut }: { onBack: () => void; section?: "menu" | "profile" | "notifications" | "version"; onOpenSection?: (section: "profile" | "notifications" | "version") => void; onSignOut?: () => void }) {
+  const { userName, notificationPreferences, theme } = useFinanceState();
   const [name, setName] = useState(userName);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,17 +111,44 @@ export function AccountSettings({ onBack, section = "profile" }: { onBack: () =>
         </button>
         <div>
           <h1 className="font-display text-xl font-semibold">
-            {section === "notifications" ? "Notificações" : section === "version" ? "Versão" : "Editar dados do usuário"}
+            {section === "menu" ? "Configurações" : section === "notifications" ? "Notificações" : section === "version" ? "Versão" : "Editar dados do usuário"}
           </h1>
           <p className="mt-1 text-xs text-mut">
-            {section === "notifications"
-              ? "Configure os avisos das suas contas."
-              : section === "version"
-                ? "Informações técnicas desta versão do aplicativo."
-                : "Edite os dados usados no seu cadastro."}
+            {section === "menu"
+              ? "Gerencie sua conta e as preferências do aplicativo."
+              : section === "notifications"
+                ? "Configure os avisos das suas contas."
+                : section === "version"
+                  ? "Informações técnicas desta versão do aplicativo."
+                  : "Edite os dados usados no seu cadastro."}
           </p>
         </div>
       </div>
+
+      {section === "menu" && (
+        <section className="glass space-y-2 rounded-3xl p-3">
+          <button type="button" onClick={() => onOpenSection?.("profile")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
+            <Settings className="size-4 text-mut" />
+            Editar dados do usuário
+          </button>
+          <button type="button" onClick={() => onOpenSection?.("notifications")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
+            <Bell className="size-4 text-mut" />
+            Notificações
+          </button>
+          <button type="button" onClick={() => financeActions.setTheme(theme === "dark" ? "light" : "dark")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
+            {theme === "dark" ? <Sun className="size-4 text-mut" /> : <Moon className="size-4 text-mut" />}
+            {theme === "dark" ? "Tema claro" : "Tema escuro"}
+          </button>
+          <button type="button" onClick={() => onOpenSection?.("version")} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium">
+            <Info className="size-4 text-mut" />
+            Versão
+          </button>
+          <button type="button" onClick={onSignOut} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-xs font-medium text-neg">
+            <LogOut className="size-4" />
+            Sair da conta
+          </button>
+        </section>
+      )}
 
       {section === "version" && (
         <section className="glass space-y-4 rounded-3xl p-5">

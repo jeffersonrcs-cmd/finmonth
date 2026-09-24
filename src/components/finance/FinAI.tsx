@@ -35,12 +35,12 @@ const DAILY_LIMIT = 20;
 const FIN_AI_QUOTA_ENABLED = false;
 
 /**
- * Diretrizes centrais da FinanIA.
+ * Diretrizes centrais da Fin IA.
  * Mantidas como contrato da camada de inteligência para a futura integração
  * com um modelo real, enquanto o protótipo local usa as mesmas regras.
  */
-export const FINAN_IA_INSTRUCTIONS = `
-Você é FinanIA, um assistente financeiro inteligente.
+export const FIN_IA_INSTRUCTIONS = `
+Você é Fin IA, um assistente financeiro inteligente.
 
 Sua função é ajudar o usuário a compreender sua vida financeira utilizando exclusivamente os dados armazenados no aplicativo.
 
@@ -84,7 +84,7 @@ function normalize(value: string) {
 
 function buildReply(prompt: string, monthKey: string, year: number, state: ReturnType<typeof useFinanceState>): AiReply {
   const query = normalize(prompt);
-  // A FinanIA só responde com fatos calculados a partir do estado financeiro atual.
+  // A Fin IA só responde com fatos calculados a partir do estado financeiro atual.
   // Categorias não existem no modelo de dados atual; portanto, nunca são inferidas.
   const data = state.months[monthKey] ?? { incomes: [], bills: [], savings: [] };
   const totals = computeTotals(data, monthKey);
@@ -231,7 +231,7 @@ function buildReply(prompt: string, monthKey: string, year: number, state: Retur
   if (query.includes("categoria")) {
     return {
       title: "Categorias financeiras",
-      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a FinanIA não pode determinar qual categoria consome mais dinheiro.",
+      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a Fin IA não pode determinar qual categoria consome mais dinheiro.",
       chart: null,
     };
   }

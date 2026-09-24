@@ -206,7 +206,7 @@ export function AccountSettings({ onBack, section = "menu", onOpenSection, onSig
               <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__}</p>
             </div>
             <div className="glass-soft rounded-2xl p-3">
-              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">Build</p>
+              <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">{t("build")}</p>
               <p className="mt-1 break-all font-mono text-[10px] font-medium text-mut">{__FINMONTH_BUILD_ID__}</p>
             </div>
           </div>

@@ -56,13 +56,13 @@ function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell
               className="text-mut text-xs uppercase tracking-widest"
               onClick={() => setOpen(false)}
             >
-              Cancelar
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
               className="rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90"
             >
-              Salvar
+              {t("save")}
             </Button>
           </DialogFooter>
         </form>
@@ -225,7 +225,7 @@ export function BillDialog({
       }}
     >
       <div className="space-y-1.5">
-        <Label className={labelClass}>Descrição</Label>
+        <Label className={labelClass}>{t("description")}</Label>
         <Input
           className={fieldClass}
           value={description}
@@ -235,7 +235,7 @@ export function BillDialog({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className={labelClass}>Valor (R$)</Label>
+          <Label className={labelClass}>{t("amountBrl")}</Label>
           <Input
             className={fieldClass}
             inputMode="decimal"
@@ -248,7 +248,7 @@ export function BillDialog({
           <Label className={labelClass}>{t("dueDate")}</Label>
           <Select value={dueDay} onValueChange={setDueDay}>
             <SelectTrigger className={fieldClass}>
-              <SelectValue placeholder="Selecione o dia" />
+              <SelectValue placeholder={t("selectDay")} />
             </SelectTrigger>
             <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
               {Array.from({ length: maxDay }, (_, index) => {

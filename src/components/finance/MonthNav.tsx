@@ -6,12 +6,10 @@ export function MonthNav({
   monthKey,
   onChange,
   onOpenNotifications,
-  onOpenVersion,
 }: {
   monthKey: string;
   onChange: (key: string) => void;
   onOpenNotifications: () => void;
-  onOpenVersion: () => void;
 }) {
   const { t } = useLanguage();
   const financeState = useFinanceState();

@@ -39,7 +39,7 @@ export function SummaryCards({
         >
           {formatCurrency(totals.availableBalance)}
         </p>
-        <div className="mt-2 flex items-baseline justify-end gap-2">
+        <div className="mt-2 flex items-baseline justify-end gap-2 rounded-xl border border-border/50 bg-background/25 px-3 py-2">
           <span className="text-[10px] text-mut">{t("futureBalance")}</span>
           <span
             className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}

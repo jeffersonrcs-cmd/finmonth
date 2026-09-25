@@ -575,6 +575,7 @@ export type MonthTotals = {
   totalSaved: number;
   monthBalance: number;
   availableBalance: number;
+  futureBalance: number;
 };
 
 export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
@@ -608,7 +609,10 @@ export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
     overdueCount,
     totalSaved,
     monthBalance,
-    availableBalance: monthBalance - totalSaved,
+    // Available balance only reflects bills that have already been paid.
+    availableBalance: totalIncomes - paidTotal - totalSaved,
+    // Future balance projects the full month, including pending bills.
+    futureBalance: totalIncomes - totalBills - totalSaved,
   };
 }
 

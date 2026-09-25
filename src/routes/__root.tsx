@@ -357,12 +357,11 @@ function RootComponent() {
 
   // Check and trigger notifications if user has enabled alerts
   useEffect(() => {
-    if (authenticated) {
-      const timer = setTimeout(() => {
-        void checkAndSendDueAlerts(financeState, t);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!authenticated) return undefined;
+    const timer = setTimeout(() => {
+      void checkAndSendDueAlerts(financeState, t);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, [authenticated, financeState.notificationPreferences.enabled]);
 
   useEffect(() => {
@@ -374,7 +373,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {updateAvailable && (
-        <div className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+6.75rem)] z-[100] mx-auto max-w-[420px] md:top-3" rounded-2xl border border-brand/25 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl">
+        <div className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+6.75rem)] z-[100] mx-auto max-w-[420px] rounded-2xl border border-brand/25 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl md:top-3">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-foreground">{t("newVersion")}</p>

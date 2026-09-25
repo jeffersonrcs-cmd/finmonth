@@ -10,13 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConfirmarEmailRouteImport } from './routes/confirmar-email'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
-import { Route as ConfirmarEmailRouteImport } from './routes/confirmar-email'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarEmailRoute = ConfirmarEmailRouteImport.update({
+  id: '/confirmar-email',
+  path: '/confirmar-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoricoRoute = HistoricoRouteImport.update({
@@ -29,44 +34,39 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfirmarEmailRoute = ConfirmarEmailRouteImport.update({
-  id: '/confirmar-email',
-  path: '/confirmar-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/historico': typeof HistoricoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/confirmar-email': typeof ConfirmarEmailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/historico': typeof HistoricoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/confirmar-email': typeof ConfirmarEmailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/historico': typeof HistoricoRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/confirmar-email': typeof ConfirmarEmailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/historico' | '/redefinir-senha' | '/confirmar-email'
+  fullPaths: '/' | '/confirmar-email' | '/historico' | '/redefinir-senha'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/historico' | '/redefinir-senha' | '/confirmar-email'
-  id: '__root__' | '/' | '/historico' | '/redefinir-senha' | '/confirmar-email'
+  to: '/' | '/confirmar-email' | '/historico' | '/redefinir-senha'
+  id: '__root__' | '/' | '/confirmar-email' | '/historico' | '/redefinir-senha'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfirmarEmailRoute: typeof ConfirmarEmailRoute
   HistoricoRoute: typeof HistoricoRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
-  ConfirmarEmailRoute: typeof ConfirmarEmailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar-email': {
+      id: '/confirmar-email'
+      path: '/confirmar-email'
+      fullPath: '/confirmar-email'
+      preLoaderRoute: typeof ConfirmarEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historico': {
@@ -92,21 +99,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/confirmar-email': {
-      id: '/confirmar-email'
-      path: '/confirmar-email'
-      fullPath: '/confirmar-email'
-      preLoaderRoute: typeof ConfirmarEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfirmarEmailRoute: ConfirmarEmailRoute,
   HistoricoRoute: HistoricoRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
-  ConfirmarEmailRoute: ConfirmarEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

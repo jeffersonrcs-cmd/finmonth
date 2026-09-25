@@ -506,7 +506,8 @@ export function BalanceEvolutionChart({
               />
             );
           }}
-          activeDot={(props: { cx?: number; cy?: number; payload?: Row; key?: string | number }) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          activeDot={(props: any) => {
             const row = props.payload as Row;
             const tone = row?.saldo >= 0 ? "var(--pos)" : "var(--neg)";
             const key = props.key ?? `active-dot-${row?.key ?? props.cx ?? Math.random()}`;

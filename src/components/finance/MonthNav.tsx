@@ -1,17 +1,15 @@
-import { Bell, ChevronLeft, ChevronRight, UserRound } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { getBillNotifications, monthLabel, shiftMonthKey, useFinanceState } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
 export function MonthNav({
   monthKey,
   onChange,
-  onOpenSettings,
   onOpenNotifications,
   onOpenVersion,
 }: {
   monthKey: string;
   onChange: (key: string) => void;
-  onOpenSettings: () => void;
   onOpenNotifications: () => void;
   onOpenVersion: () => void;
 }) {
@@ -25,18 +23,9 @@ export function MonthNav({
   return (
     <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-border/50 bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.875rem)] shadow-sm transition-all">
       <div>
-        <button
-          type="button"
-          onClick={(event) => {
-            onOpenSettings();
-            event.currentTarget.blur();
-          }}
-          className="flex items-center gap-2 font-display text-left text-2xl font-bold leading-none outline-none shadow-none transition-colors hover:text-brand focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
-          aria-label={t("openSettings")}
-        >
+        <div className="font-display text-left text-2xl font-bold leading-none">
           {displayName}
-          <UserRound className="size-4 text-mut" />
-        </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

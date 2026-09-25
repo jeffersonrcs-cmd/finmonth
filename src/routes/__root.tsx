@@ -192,11 +192,12 @@ function RootComponent() {
         await connectCloud(session.user.id);
         connectedUserId = session.user.id;
         if (active) setAuthenticated(true);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Não foi possível carregar os dados do usuário.", error);
         // If error is related to JWT clock skew or transient network, keep the user session
         // instead of abruptly logging them out, allowing retry on next interaction
-        if (error?.code === "PGRST303" || error?.message?.includes("future")) {
+        const err = error as { code?: string; message?: string } | null;
+        if (err?.code === "PGRST303" || err?.message?.includes("future")) {
           connectedUserId = session.user.id;
           if (active) setAuthenticated(true);
         } else {

@@ -71,14 +71,14 @@ export function AccountSettings({
     getNotificationPermission(),
   );
   const [pushTestMessage, setPushTestMessage] = useState("");
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const nav = window.navigator as unknown as { standalone?: boolean };
     const isRunningStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+      window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
     setIsStandalone(isRunningStandalone);
 
     const handler = (e: Event) => {
@@ -406,9 +406,7 @@ export function AccountSettings({
           )}
 
           <div className="rounded-2xl border border-pos/20 bg-pos/5 px-3.5 py-3">
-            <p className="text-[11px] leading-relaxed text-pos/90">
-              ✓ {t("offlineReadyNotice")}
-            </p>
+            <p className="text-[11px] leading-relaxed text-pos/90">✓ {t("offlineReadyNotice")}</p>
           </div>
 
           <p className="text-center text-[10px] leading-relaxed text-mut">{t("autoUpdateInfo")}</p>
@@ -639,9 +637,7 @@ export function AccountSettings({
                   {t("pushNotificationTest")}
                 </button>
                 {pushTestMessage && (
-                  <p className="text-center text-[10px] text-pos font-medium">
-                    {pushTestMessage}
-                  </p>
+                  <p className="text-center text-[10px] text-pos font-medium">{pushTestMessage}</p>
                 )}
               </div>
             )}

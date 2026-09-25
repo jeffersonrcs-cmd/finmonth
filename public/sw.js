@@ -7,7 +7,7 @@ const OFFLINE_URLS = [
   "/favicon.ico",
   "/apple-touch-icon-finmonth-v3.png",
   "/apple-touch-icon.png",
-  "/icon-192.png"
+  "/icon-192.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -16,7 +16,7 @@ self.addEventListener("install", (event) => {
       return cache.addAll(OFFLINE_URLS).catch(() => {
         // Continue even if some asset cannot be cached immediately
       });
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -27,16 +27,21 @@ self.addEventListener("activate", (event) => {
       Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) return caches.delete(key);
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || request.url.includes("supabase.co") || request.url.includes("/api/")) return;
+  if (
+    request.method !== "GET" ||
+    request.url.includes("supabase.co") ||
+    request.url.includes("/api/")
+  )
+    return;
 
   event.respondWith(
     fetch(request)
@@ -55,7 +60,7 @@ self.addEventListener("fetch", (event) => {
           if (fallback) return fallback;
         }
         return new Response("Offline", { status: 503, statusText: "Offline" });
-      })
+      }),
   );
 });
 
@@ -78,7 +83,7 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification("FinMonth", {
         body: text,
         icon: "/icon-192.png",
-      })
+      }),
     );
   }
 });
@@ -92,6 +97,6 @@ self.addEventListener("notificationclick", (event) => {
         if (client.url === targetUrl && "focus" in client) return client.focus();
       }
       if (clients.openWindow) return clients.openWindow(targetUrl);
-    })
+    }),
   );
 });

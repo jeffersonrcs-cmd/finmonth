@@ -126,7 +126,10 @@ async function syncCloudNow() {
       hasPendingOfflineSync = false;
     }
   } catch (err) {
-    console.warn("Falha de conexão durante a sincronização em nuvem. Os dados serão reenviados assim que a conexão restabelecer.", err);
+    console.warn(
+      "Falha de conexão durante a sincronização em nuvem. Os dados serão reenviados assim que a conexão restabelecer.",
+      err,
+    );
     hasPendingOfflineSync = true;
   }
 }
@@ -193,7 +196,9 @@ export async function connectCloud(userId: string) {
     (monthsError && (monthsError.code === "PGRST303" || monthsError.message?.includes("future"))) ||
     (profileError && (profileError.code === "PGRST303" || profileError.message?.includes("future")))
   ) {
-    console.warn("Diferença de relógio detectada com o servidor (PGRST303). Mantendo dados locais.");
+    console.warn(
+      "Diferença de relógio detectada com o servidor (PGRST303). Mantendo dados locais.",
+    );
     cloudReady = true;
     return;
   }

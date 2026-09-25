@@ -1,4 +1,5 @@
 import { getBillNotifications, useFinanceState } from "@/lib/finance";
+import type { TranslationKey } from "@/lib/i18n";
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (typeof window === "undefined" || !("Notification" in window)) {
@@ -65,7 +66,7 @@ export async function sendNativeBillNotification(title: string, body: string, ur
  */
 export async function checkAndSendDueAlerts(
   state: ReturnType<typeof useFinanceState>,
-  t: (key: any) => string,
+  t: (key: TranslationKey) => string,
 ) {
   if (!isNotificationSupported() || Notification.permission !== "granted") return;
   if (!state.notificationPreferences.enabled) return;

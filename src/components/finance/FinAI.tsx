@@ -1,7 +1,18 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, BarChart3, Send, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  Send,
+  Sparkles,
+  X,
+  PlusCircle,
+  Calendar,
+  DollarSign,
+  RefreshCw,
+} from "lucide-react";
 import {
   computeTotals,
+  financeActions,
   formatCurrency,
   monthLabel,
   previousMonthKey,
@@ -10,7 +21,7 @@ import {
 } from "@/lib/finance";
 import { useHistoryRows, useAnnualTotals } from "@/components/finance/HistoryChart";
 import { supabase } from "@/lib/supabase";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type TranslationKey } from "@/lib/i18n";
 import {
   Bar,
   BarChart,
@@ -23,7 +34,7 @@ import {
   XAxis,
 } from "recharts";
 
-type ChartMode =
+export type ChartMode =
   | "month"
   | "compare"
   | "year"
@@ -38,46 +49,42 @@ type ChartMode =
   | "recurring"
   | null;
 
-type AiReply = {
+export type FinAiAction =
+  | {
+      type: "create_bill";
+      data: {
+        description: string;
+        amount: number;
+        dueDay: number;
+        recurrent?: boolean;
+        paid?: boolean;
+      };
+    }
+  | {
+      type: "create_income";
+      data: {
+        description: string;
+        amount: number;
+        day: number;
+      };
+    }
+  | {
+      type: "create_saving";
+      data: {
+        description: string;
+        amount: number;
+      };
+    };
+
+export type AiReply = {
   title: string;
   text: string;
   chart: ChartMode;
+  action?: FinAiAction | null;
 };
 
 const DAILY_LIMIT = 20;
-// Mantido no código para ativação futura quando a IA real/Gemini estiver conectada.
 const FIN_AI_QUOTA_ENABLED = false;
-
-/**
- * Diretrizes centrais da FinAI.
- * Mantidas como contrato da camada de inteligência para a futura integração
- * com um modelo real, enquanto o protótipo local usa as mesmas regras.
- */
-export const FINAI_INSTRUCTIONS = `
-Você é FinAI, um assistente financeiro inteligente.
-
-Sua função é ajudar o usuário a compreender sua vida financeira utilizando exclusivamente os dados armazenados no aplicativo.
-
-Regras obrigatórias:
-- Nunca invente valores.
-- Nunca estime dados inexistentes.
-- Sempre utilize os registros financeiros disponíveis.
-- Informe quando não houver dados suficientes.
-- Responda de forma clara, objetiva e amigável.
-- Realize cálculos financeiros quando necessário.
-- Identifique tendências, médias, aumentos e reduções de gastos.
-- Compare períodos sempre que solicitado.
-- Gere insights úteis para ajudar o usuário a economizar dinheiro.
-- Ao responder análises, destaque maior gasto, menor gasto, média, tendência e percentual de variação quando houver dados suficientes.
-
-Quando o usuário solicitar gráficos:
-- Retorne dados estruturados para geração visual.
-- Organize os dados cronologicamente.
-- Destaque tendências importantes.
-
-Objetivo principal:
-Transformar dados financeiros em respostas simples, inteligentes e acionáveis para o usuário.
-`;
 
 function normalize(value: string) {
   return value
@@ -87,354 +94,161 @@ function normalize(value: string) {
     .trim();
 }
 
-function buildReply(
+function parseAmountFromText(text: string): number {
+  const match = text.match(/(?:r\$|\$|€)?\s*(\d+(?:[.,]\d{1,2})?)/i);
+  if (!match) return 0;
+  const numStr = match[1].replace(",", ".");
+  const val = parseFloat(numStr);
+  return Number.isFinite(val) ? val : 0;
+}
+
+function parseDayFromText(text: string): number {
+  const match = text.match(/(?:dia|vencimento|para o dia|vence dia)\s*(\d{1,2})/i);
+  if (match) {
+    const d = parseInt(match[1], 10);
+    if (d >= 1 && d <= 31) return d;
+  }
+  return 5;
+}
+
+function parseDescriptionFromText(text: string, fallback: string): string {
+  const cleaned = text
+    .replace(/(?:cadastr[ea]|adicion[ea]|lanç[ae]|cri[ae]|inser[ea]|registra)/gi, "")
+    .replace(
+      /(?:uma?\s+)?(?:conta|despesa|receita|ganho|entrada|guardado|reserva|economia)(?:\s+de)?/gi,
+      "",
+    )
+    .replace(/(?:r\$|\$|€)?\s*\d+(?:[.,]\d{1,2})?/gi, "")
+    .replace(/(?:no|para o)?\s*dia\s*\d{1,2}/gi, "")
+    .replace(/(?:recorrente|fix[oa]|mensal)/gi, "")
+    .replace(/(?:com\s+vencimento|vencendo|vence)/gi, "")
+    .trim();
+  return cleaned.length > 1 ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : fallback;
+}
+
+export function buildFallbackReply(
   prompt: string,
   monthKey: string,
   year: number,
   state: ReturnType<typeof useFinanceState>,
+  t: (k: TranslationKey) => string,
 ): AiReply {
   const query = normalize(prompt);
-  // A FinAI só responde com fatos calculados a partir do estado financeiro atual.
-  // Categorias não existem no modelo de dados atual; portanto, nunca são inferidas.
   const data = state.months[monthKey] ?? { incomes: [], bills: [], savings: [] };
   const totals = computeTotals(data, monthKey);
+
+  // Intent: Register bill (conta / despesa)
+  if (
+    query.includes("cadastr") ||
+    query.includes("adicion") ||
+    query.includes("lanc") ||
+    query.includes("cri") ||
+    query.includes("inser") ||
+    query.includes("registra")
+  ) {
+    if (
+      query.includes("conta") ||
+      query.includes("despesa") ||
+      query.includes("boleto") ||
+      query.includes("fatura")
+    ) {
+      const amount = parseAmountFromText(prompt);
+      const dueDay = parseDayFromText(prompt);
+      const desc = parseDescriptionFromText(prompt, t("bills"));
+      const recurrent =
+        query.includes("recorrente") || query.includes("fixa") || query.includes("mensal");
+      return {
+        title: t("newBill"),
+        text: `Identifiquei uma nova conta para você: "${desc}", no valor de ${formatCurrency(amount)}, vencendo no dia ${dueDay}. Revise os dados abaixo e confirme o cadastro:`,
+        chart: null,
+        action: {
+          type: "create_bill",
+          data: {
+            description: desc,
+            amount,
+            dueDay,
+            recurrent,
+            paid: false,
+          },
+        },
+      };
+    }
+
+    if (
+      query.includes("receita") ||
+      query.includes("salario") ||
+      query.includes("renda") ||
+      query.includes("ganho") ||
+      query.includes("entrada")
+    ) {
+      const amount = parseAmountFromText(prompt);
+      const day = parseDayFromText(prompt);
+      const desc = parseDescriptionFromText(prompt, t("salary"));
+      return {
+        title: t("newIncome"),
+        text: `Identifiquei uma nova receita: "${desc}", no valor de ${formatCurrency(amount)}, referente ao dia ${day}. Revise os dados e confirme o cadastro:`,
+        chart: null,
+        action: {
+          type: "create_income",
+          data: {
+            description: desc,
+            amount,
+            day,
+          },
+        },
+      };
+    }
+
+    if (
+      query.includes("guardad") ||
+      query.includes("econom") ||
+      query.includes("reserva") ||
+      query.includes("poup")
+    ) {
+      const amount = parseAmountFromText(prompt);
+      const desc = parseDescriptionFromText(prompt, t("emergencyReserve"));
+      return {
+        title: t("newSaving"),
+        text: `Identifiquei um valor guardado: "${desc}", no valor de ${formatCurrency(amount)}. Revise os dados e confirme o cadastro:`,
+        chart: null,
+        action: {
+          type: "create_saving",
+          data: {
+            description: desc,
+            amount,
+          },
+        },
+      };
+    }
+  }
+
+  // Fallback financial analysis
   const previousKey = previousMonthKey(monthKey);
   const previousData = state.months[previousKey] ?? { incomes: [], bills: [], savings: [] };
-  const previousTotals = computeTotals(previousData, previousKey);
   const paidBills = data.bills.filter((bill) => bill.paid);
   const pendingBills = data.bills.filter((bill) => !bill.paid);
-  const billStatusLocal = (bill: (typeof data.bills)[number], key: string) => {
-    const due = new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, bill.dueDay);
-    const today = new Date();
-    due.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    return due < today ? "overdue" : "pending";
-  };
-  const incomeCount = data.incomes.length;
-  const billCount = data.bills.length;
-  const savingCount = data.savings.length;
-  const paidTotal = paidBills.reduce((sum, bill) => sum + bill.amount, 0);
-  const pendingTotal = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
-  const largestBill = [...data.bills].sort((a, b) => b.amount - a.amount)[0];
-  const largestIncome = [...data.incomes].sort((a, b) => b.amount - a.amount)[0];
-  const recurringBills = data.bills.filter((bill) => bill.recurrent);
   const savingsRate = totals.totalIncomes > 0 ? (totals.totalSaved / totals.totalIncomes) * 100 : 0;
   const billRate = totals.totalIncomes > 0 ? (totals.totalBills / totals.totalIncomes) * 100 : 0;
 
   if (
     query.includes("analis") ||
-    query.includes("diagnost") ||
     query.includes("completa") ||
+    query.includes("como foi") ||
     query.includes("panorama")
   ) {
     return {
-      title: "Análise completa",
-      text: `Neste mês, você recebeu ${formatCurrency(totals.totalIncomes)}, tem ${formatCurrency(totals.totalBills)} em contas e registrou ${formatCurrency(totals.totalSaved)} guardados. O saldo disponível está em ${formatCurrency(totals.availableBalance)}. Sua taxa de economia está em ${Math.round(savingsRate)}% e as contas representam ${Math.round(billRate)}% das receitas. Há ${pendingBills.length} pendência(s), ${paidBills.length} paga(s) e ${recurringBills.length} conta(s) recorrente(s).`,
+      title: t("completeAnalysis"),
+      text: `Neste mês (${monthLabel(monthKey)}), você recebeu ${formatCurrency(totals.totalIncomes)}, possui ${formatCurrency(totals.totalBills)} em contas e guardou ${formatCurrency(totals.totalSaved)}. O saldo disponível é de ${formatCurrency(totals.availableBalance)}. Taxa de economia em ${Math.round(savingsRate)}% e contas representam ${Math.round(billRate)}% das receitas.`,
       chart: "cashflow",
-    };
-  }
-
-  if (
-    query.includes("onde") &&
-    (query.includes("gast") || query.includes("despes") || query.includes("dinheiro"))
-  ) {
-    return {
-      title: "Onde seu dinheiro está indo",
-      text: largestBill
-        ? `Sua maior conta neste mês é "${largestBill.description}", de ${formatCurrency(largestBill.amount)}. As seis maiores contas estão no gráfico abaixo.`
-        : "Ainda não há contas suficientes para analisar seus maiores gastos.",
-      chart: data.bills.length ? "topBills" : null,
-    };
-  }
-
-  if (
-    query.includes("quanto posso guardar") ||
-    query.includes("posso guardar") ||
-    query.includes("taxa de economia")
-  ) {
-    const possible = Math.max(totals.totalIncomes - totals.totalBills, 0);
-    return {
-      title: "Potencial de economia",
-      text: `Depois das contas, seu espaço financeiro bruto neste mês é de ${formatCurrency(possible)}. Você já registrou ${formatCurrency(totals.totalSaved)} guardados. Isso equivale a uma taxa de economia de ${Math.round(savingsRate)}% sobre suas receitas.`,
-      chart: "cashflow",
-    };
-  }
-
-  if (
-    query.includes("quanto gastei") ||
-    query.includes("total de gastos") ||
-    query.includes("total gasto")
-  ) {
-    return {
-      title: "Total de gastos",
-      text: `Suas contas somam ${formatCurrency(totals.totalBills)} neste mês. Deste total, ${formatCurrency(paidTotal)} estão pagas e ${formatCurrency(pendingTotal)} estão pendentes.`,
-      chart: "billStatus",
-    };
-  }
-
-  if (
-    query.includes("quanto recebi") ||
-    query.includes("maior receita") ||
-    query.includes("maior entrada")
-  ) {
-    return {
-      title: "Receitas detalhadas",
-      text: largestIncome
-        ? `Você recebeu ${formatCurrency(totals.totalIncomes)} no mês. A maior entrada é "${largestIncome.description}", de ${formatCurrency(largestIncome.amount)}.`
-        : "Ainda não há receitas registradas neste mês.",
-      chart: "incomeBreakdown",
-    };
-  }
-
-  if (query.includes("atrasad") || query.includes("vencid")) {
-    const overdue = data.bills.filter((bill) => billStatusLocal(bill, monthKey) === "overdue");
-    const overdueTotal = overdue.reduce((sum, bill) => sum + bill.amount, 0);
-    return {
-      title: "Contas atrasadas",
-      text: overdue.length
-        ? `Você tem ${overdue.length} conta(s) atrasada(s), totalizando ${formatCurrency(overdueTotal)}.`
-        : "Não há contas atrasadas neste mês.",
-      chart: overdue.length ? "billStatus" : null,
-    };
-  }
-
-  if (query.includes("recorrent") || query.includes("fixas") || query.includes("fixos")) {
-    const recurringTotal = recurringBills.reduce((sum, bill) => sum + bill.amount, 0);
-    return {
-      title: "Contas recorrentes",
-      text: recurringBills.length
-        ? `Você tem ${recurringBills.length} conta(s) recorrente(s), somando ${formatCurrency(recurringTotal)}.`
-        : "Não há contas marcadas como recorrentes neste mês.",
-      chart: "recurring",
-    };
-  }
-
-  if (
-    query.includes("fluxo") ||
-    query.includes("entrada e saida") ||
-    query.includes("entrada e saída")
-  ) {
-    return {
-      title: "Fluxo financeiro",
-      text: `O fluxo do mês é de ${formatCurrency(totals.monthBalance)} antes do valor guardado e ${formatCurrency(totals.availableBalance)} depois do valor guardado.`,
-      chart: "cashflow",
-    };
-  }
-
-  if (query.includes("diari") || query.includes("por dia")) {
-    const days = new Date(year, Number(monthKey.slice(5, 7)), 0).getDate();
-    return {
-      title: "Média diária",
-      text: `Considerando ${days} dias no mês, sua média registrada é de ${formatCurrency(totals.totalIncomes / days)} em receitas por dia e ${formatCurrency(totals.totalBills / days)} em contas por dia.`,
-      chart: "dailyFlow",
-    };
-  }
-
-  if (query.includes("ultimos 6") || query.includes("6 meses")) {
-    return {
-      title: "Últimos 6 meses",
-      text: "Aqui está a evolução das suas receitas, contas e valores guardados nos últimos seis meses com dados disponíveis.",
-      chart: "history",
-    };
-  }
-
-  if (query.includes("ano") || query.includes("anual")) {
-    return {
-      title: "Gráfico anual",
-      text: `Aqui está a evolução de receitas, contas e valores guardados em ${year}, mês a mês.`,
-      chart: "year",
-    };
-  }
-
-  if (
-    query.includes("saldo") &&
-    (query.includes("evol") ||
-      query.includes("melhor") ||
-      query.includes("histor") ||
-      query.includes("graf"))
-  ) {
-    return {
-      title: "Evolução do saldo",
-      text: "Veja como o saldo mensal evoluiu ao longo dos últimos meses.",
-      chart: "balance",
-    };
-  }
-
-  if (
-    (query.includes("guard") || query.includes("econom")) &&
-    (query.includes("evol") || query.includes("histor") || query.includes("graf"))
-  ) {
-    return {
-      title: "Evolução do valor guardado",
-      text: "Veja quanto você conseguiu guardar mês a mês.",
-      chart: "savings",
-    };
-  }
-
-  if (
-    query.includes("maiores") &&
-    (query.includes("conta") || query.includes("gasto") || query.includes("despes"))
-  ) {
-    return {
-      title: "Maiores contas",
-      text: data.bills.length
-        ? "Estas são as contas de maior valor registradas neste mês."
-        : "Ainda não há contas registradas neste mês.",
-      chart: "topBills",
-    };
-  }
-
-  if (query.includes("compar") || query.includes("mes passado") || query.includes("mes anterior")) {
-    const incomeChange =
-      previousTotals.totalIncomes === 0
-        ? null
-        : ((totals.totalIncomes - previousTotals.totalIncomes) /
-            Math.abs(previousTotals.totalIncomes)) *
-          100;
-    const billChange =
-      previousTotals.totalBills === 0
-        ? null
-        : ((totals.totalBills - previousTotals.totalBills) / Math.abs(previousTotals.totalBills)) *
-          100;
-    const incomeText =
-      incomeChange === null
-        ? "não havia receitas registradas"
-        : `${incomeChange >= 0 ? "subiram" : "caíram"} ${Math.abs(Math.round(incomeChange))}%`;
-    const billText =
-      billChange === null
-        ? "não havia contas registradas"
-        : `${billChange >= 0 ? "subiram" : "caíram"} ${Math.abs(Math.round(billChange))}%`;
-    return {
-      title: "Comparação mensal",
-      text: `Em relação a ${monthLabel(previousKey)}, suas receitas ${incomeText} e suas contas ${billText}.`,
-      chart: "compare",
-    };
-  }
-
-  if (
-    query.includes("pendente") ||
-    query.includes("a pagar") ||
-    query.includes("nao pag") ||
-    query.includes("não pag")
-  ) {
-    const details = pendingBills.length
-      ? pendingBills
-          .slice()
-          .sort((a, b) => b.amount - a.amount)
-          .map((bill) => `${bill.description}: ${formatCurrency(bill.amount)}`)
-          .join(" • ")
-      : "Não há contas pendentes registradas neste mês.";
-    return {
-      title: "Contas pendentes",
-      text: details,
-      chart: pendingBills.length > 0 ? "topBills" : null,
-    };
-  }
-
-  if (query.includes("pag") && query.includes("conta")) {
-    return {
-      title: "Contas pagas",
-      text: paidBills.length
-        ? `${paidBills.length} de ${billCount} contas estão marcadas como pagas, totalizando ${formatCurrency(paidBills.reduce((sum, bill) => sum + bill.amount, 0))}.`
-        : "Nenhuma conta está marcada como paga neste mês.",
-      chart: null,
-    };
-  }
-
-  if (query.includes("receit") || query.includes("recebi") || query.includes("entrada")) {
-    return {
-      title: "Receitas do mês",
-      text: `Você registrou ${formatCurrency(totals.totalIncomes)} em receitas em ${monthLabel(monthKey)}, distribuídas em ${incomeCount} lançamento(s).`,
-      chart: "month",
-    };
-  }
-
-  if (query.includes("gastei") || query.includes("gast") || query.includes("despes")) {
-    const topBills = [...data.bills].sort((a, b) => b.amount - a.amount).slice(0, 3);
-    const details = topBills.length
-      ? topBills
-          .map((bill, index) => `${index + 1}. ${bill.description}: ${formatCurrency(bill.amount)}`)
-          .join(" • ")
-      : "Ainda não há contas registradas neste mês.";
-    return {
-      title: "Gastos do mês",
-      text: `Suas contas somam ${formatCurrency(totals.totalBills)} neste mês. ${details}`,
-      chart: "topBills",
-    };
-  }
-
-  if (query.includes("guardar") || query.includes("guardado") || query.includes("economiz")) {
-    return {
-      title: "Seu valor guardado",
-      text: `Neste mês, você registrou ${formatCurrency(totals.totalSaved)} como valor guardado em ${savingCount} lançamento(s). O saldo disponível, depois do valor guardado, está em ${formatCurrency(totals.availableBalance)}.`,
-      chart: "savings",
-    };
-  }
-
-  if (
-    query.includes("anal") ||
-    query.includes("como foi") ||
-    query.includes("minhas financ") ||
-    query.includes("resumo")
-  ) {
-    const status = totals.availableBalance >= 0 ? "positivo" : "negativo";
-    return {
-      title: "Análise do mês",
-      text: `Seu saldo disponível está ${status} em ${formatCurrency(totals.availableBalance)}. Você registrou ${formatCurrency(totals.totalIncomes)} em receitas, ${formatCurrency(totals.totalBills)} em contas e ${formatCurrency(totals.totalSaved)} guardados. Há ${pendingBills.length} conta(s) pendente(s) e ${paidBills.length} paga(s).`,
-      chart: "month",
-    };
-  }
-
-  if (query.includes("grafico") || query.includes("evolucao") || query.includes("mes")) {
-    return {
-      title: "Gráfico do mês",
-      text: `Em ${monthLabel(monthKey)}, você registrou ${formatCurrency(totals.totalIncomes)} em receitas, ${formatCurrency(totals.totalBills)} em contas e ${formatCurrency(totals.totalSaved)} guardados.`,
-      chart: "month",
-    };
-  }
-
-  if (query.includes("categoria")) {
-    return {
-      title: "Categorias financeiras",
-      text: "O FinMonth ainda não armazena categorias nos lançamentos. Para evitar inventar informações, a FinAI não pode determinar qual categoria consome mais dinheiro.",
-      chart: null,
-    };
-  }
-
-  if (query.includes("luz") || query.includes("energia")) {
-    const matches = data.bills.filter(
-      (bill) =>
-        normalize(bill.description).includes("luz") ||
-        normalize(bill.description).includes("energia"),
-    );
-    const total = matches.reduce((sum, bill) => sum + bill.amount, 0);
-    return {
-      title: "Conta de energia",
-      text: matches.length
-        ? `Encontrei ${matches.length} registro(s) relacionado(s) a luz/energia, totalizando ${formatCurrency(total)} neste mês.`
-        : "Não encontrei registros de luz ou energia nos dados deste mês.",
-      chart: matches.length > 1 ? "topBills" : null,
-    };
-  }
-
-  if (
-    query.includes("gasto") ||
-    query.includes("receb") ||
-    query.includes("financ") ||
-    query.includes("dinheiro") ||
-    query.includes("anal")
-  ) {
-    return {
-      title: "Dados insuficientes para esta pergunta",
-      text: "Tenho dados financeiros para analisar, mas não encontrei um contexto específico suficiente nessa pergunta. Tente indicar período, tipo de lançamento ou assunto. Não vou inventar informações que não estejam registradas.",
-      chart: null,
+      action: null,
     };
   }
 
   return {
-    title: "Posso analisar seus dados",
-    text: "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico e gráficos. Quando não houver dados suficientes, vou informar isso em vez de estimar ou inventar.",
+    title: "FinAI",
+    text: "Posso analisar receitas, contas, guardados, fluxo financeiro, gráficos ou preparar o cadastro de novas contas, receitas e guardados para você!",
     chart: null,
+    action: null,
   };
 }
 
@@ -486,266 +300,173 @@ function FinAiChart({
         { label: t("incomes"), value: monthTotals.totalIncomes },
         { label: t("bills"), value: monthTotals.totalBills },
         { label: t("savings"), value: monthTotals.totalSaved },
-        { label: t("monthBalance"), value: monthTotals.availableBalance },
+        { label: t("availableBalance"), value: monthTotals.availableBalance },
       ];
     if (mode === "incomeBreakdown")
-      return [...monthData.incomes]
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 6)
-        .map((income) => ({ label: income.description, value: income.amount }));
-    if (mode === "billStatus")
+      return monthData.incomes.map((inc) => ({ label: inc.description, value: inc.amount }));
+    if (mode === "billStatus") {
+      const paid = monthData.bills.filter((b) => b.paid).reduce((s, b) => s + b.amount, 0);
+      const pending = monthData.bills.filter((b) => !b.paid).reduce((s, b) => s + b.amount, 0);
       return [
-        { label: t("paidBills"), value: monthTotals.paidTotal },
-        { label: t("pendingBills"), value: monthTotals.pendingTotal },
-      ];
-    if (mode === "dailyFlow") {
-      const days = new Date(year, Number(monthKey.slice(5, 7)), 0).getDate();
-      return [
-        { label: `${t("incomes")}/dia`, value: monthTotals.totalIncomes / days },
-        { label: `${t("bills")}/dia`, value: monthTotals.totalBills / days },
-        { label: `${t("savings")}/dia`, value: monthTotals.totalSaved / days },
+        { label: t("paidBills"), value: paid },
+        { label: t("pendingBills"), value: pending },
       ];
     }
-    if (mode === "recurring") {
-      const recurring = monthData.bills.filter((bill) => bill.recurrent);
-      return recurring
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 6)
-        .map((bill) => ({ label: bill.description, value: bill.amount }));
-    }
-    if (mode === "balance")
-      return historyRows.map((row) => ({ label: row.label, value: row.saldo }));
-    if (mode === "savings")
-      return historyRows.map((row) => ({ label: row.label, value: row.guardado }));
-    if (mode === "history")
-      return historyRows.map((row) => ({
-        label: row.label,
-        [t("incomes")]: row.receitas,
-        [t("bills")]: row.despesas,
-        [t("savings")]: row.guardado,
+    if (mode === "year")
+      return annualRows.map((r) => ({
+        label: r.label,
+        [t("incomes")]: r.receitas,
+        [t("bills")]: r.contas,
+        [t("savings")]: r.guardado,
       }));
-    return annualRows.map((row) => ({
-      label: row.label,
-      [t("incomes")]: row.receitas,
-      [t("bills")]: row.despesas,
-      [t("savings")]: row.guardado,
-    }));
-  }, [annualRows, historyRows, language, mode, monthData.bills, monthTotals, previousTotals, t]);
+    if (mode === "history")
+      return historyRows.map((r) => ({
+        label: r.label,
+        [t("incomes")]: r.receitas,
+        [t("bills")]: r.contas,
+        [t("savings")]: r.guardado,
+      }));
+    return [];
+  }, [mode, monthTotals, previousTotals, monthData, annualRows, historyRows, t]);
 
-  const title =
+  const chartTitle =
     mode === "month"
-      ? monthLabel(monthKey)
+      ? t("monthAnalysis")
       : mode === "compare"
         ? t("monthlyComparisonTitle")
-        : mode === "history"
-          ? t("last6Months")
-          : mode === "balance"
-            ? t("balanceChart")
-            : mode === "savings"
-              ? t("savingsChart")
-              : mode === "topBills"
-                ? t("largestBills")
-                : mode === "cashflow"
-                  ? t("cashFlow")
-                  : mode === "incomeBreakdown"
-                    ? t("detailedIncome")
-                    : mode === "billStatus"
-                      ? t("paidBills")
-                      : mode === "dailyFlow"
-                        ? t("dailyAverage")
-                        : mode === "recurring"
-                          ? t("recurringBills")
-                          : `${t("history")} ${year}`;
+        : mode === "year"
+          ? t("annualChart")
+          : mode === "history"
+            ? t("last6Months")
+            : mode === "topBills"
+              ? t("largestBills")
+              : mode === "cashflow"
+                ? t("cashFlow")
+                : mode === "incomeBreakdown"
+                  ? t("detailedIncome")
+                  : mode === "billStatus"
+                    ? t("totalExpenses")
+                    : "";
 
   return (
-    <div className="mt-3 rounded-2xl border border-border/60 bg-background/30 p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <BarChart3 className="size-3.5 text-brand" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-mut">{title}</span>
-      </div>
-      <div className="h-44">
+    <div className="mt-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+      {chartTitle && (
+        <p className="mb-2 text-[10px] font-semibold text-foreground/80">{chartTitle}</p>
+      )}
+      <div className="h-44 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          {mode === "balance" || mode === "savings" ? (
-            <LineChart data={data}>
-              <CartesianGrid vertical={false} stroke="var(--border)" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  fontSize: 11,
-                }}
-                formatter={(value: number) => formatCurrency(value)}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                name={mode === "balance" ? t("monthBalance") : t("savings")}
-                stroke="var(--brand)"
-                strokeWidth={2.5}
-                dot={(props: any) => {
-                  const key = props.key ?? `dot-${props.cx}-${props.cy}`;
-                  return (
-                    <circle
-                      key={key}
-                      cx={props.cx}
-                      cy={props.cy}
-                      r={3}
-                      fill="var(--brand)"
-                    />
-                  );
-                }}
-              />
-            </LineChart>
-          ) : (
-            <BarChart data={data}>
-              <CartesianGrid vertical={false} stroke="var(--border)" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  fontSize: 11,
-                }}
-                formatter={(value: number) => formatCurrency(value)}
-              />
-              {mode === "compare" ? (
-                <>
-                  <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar
-                    dataKey="anterior"
-                    name={t("previous")}
-                    fill="var(--muted-foreground)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="atual"
-                    name={t("current")}
-                    fill="var(--brand)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </>
-              ) : mode === "year" || mode === "history" ? (
-                <>
-                  <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
-                  <Bar
-                    dataKey={t("incomes")}
-                    name={t("incomes")}
-                    fill="var(--pos)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey={t("bills")}
-                    name={t("bills")}
-                    fill="var(--neg)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey={t("savings")}
-                    name={t("savings")}
-                    fill="var(--econ)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </>
-              ) : (
+          <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+            <XAxis dataKey="label" tick={{ fontSize: 9 }} stroke="var(--muted-foreground)" />
+            <Tooltip
+              formatter={(val: unknown) => [formatCurrency(Number(val) || 0), ""]}
+              contentStyle={{
+                backgroundColor: "var(--popover)",
+                borderColor: "var(--border)",
+                borderRadius: "12px",
+                fontSize: "11px",
+              }}
+            />
+            {mode === "compare" ? (
+              <>
+                <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
                 <Bar
-                  dataKey="value"
-                  name={
-                    mode === "topBills" || mode === "incomeBreakdown" || mode === "recurring"
-                      ? t("amount")
-                      : mode === "billStatus"
-                        ? t("totalExpenses")
-                        : t("amount")
-                  }
-                  fill="var(--brand)"
-                  radius={[5, 5, 0, 0]}
+                  dataKey="anterior"
+                  name={t("previous")}
+                  fill="var(--muted-foreground)"
+                  radius={[4, 4, 0, 0]}
                 />
-              )}
-            </BarChart>
-          )}
+                <Bar
+                  dataKey="atual"
+                  name={t("current")}
+                  fill="var(--brand)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </>
+            ) : mode === "year" || mode === "history" ? (
+              <>
+                <Legend wrapperStyle={{ fontSize: 9, paddingTop: 5 }} />
+                <Bar
+                  dataKey={t("incomes")}
+                  name={t("incomes")}
+                  fill="var(--pos)"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey={t("bills")}
+                  name={t("bills")}
+                  fill="var(--neg)"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey={t("savings")}
+                  name={t("savings")}
+                  fill="var(--econ)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </>
+            ) : (
+              <Bar dataKey="value" name={t("amount")} fill="var(--brand)" radius={[5, 5, 0, 0]} />
+            )}
+          </BarChart>
         </ResponsiveContainer>
       </div>
-      {mode === "year" &&
-        annualTotals.totalIncomes + annualTotals.totalBills + annualTotals.totalSaved === 0 && (
-          <p className="mt-2 text-center text-[10px] text-mut">{t("noMonth")}</p>
-        )}
     </div>
   );
 }
 
-export function FinAi({ monthKey }: { monthKey: string }) {
+export function FinAi({
+  monthKey,
+  onClose,
+  isFloating = false,
+}: {
+  monthKey: string;
+  onClose?: () => void;
+  isFloating?: boolean;
+}) {
   const { language, t } = useLanguage();
-  const suggestions = [
-    t("analysisSuggestion"),
-    t("monthQuestion"),
-    t("spendingQuestion"),
-    t("savingQuestion"),
-    t("pendingQuestion"),
-  ];
   const state = useFinanceState();
-  const [prompt, setPrompt] = useState("");
-  const [reply, setReply] = useState<AiReply | null>(null);
-  const [quota, setQuota] = useState({ count: 0, remaining: DAILY_LIMIT, allowed: true });
-  const [quotaLoading, setQuotaLoading] = useState(true);
-  const [quotaError, setQuotaError] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   const year = Number(monthKey.slice(0, 4));
 
-  async function loadQuota() {
-    setQuotaLoading(true);
-    const { data, error } = await supabase.rpc("get_fin_ai_quota");
-    if (error) {
-      setQuotaError(true);
-      setQuotaLoading(false);
-      return;
-    }
-    const next = data as { count?: number; remaining?: number; allowed?: boolean };
-    setQuota({
-      count: Number(next.count ?? 0),
-      remaining: Number(next.remaining ?? DAILY_LIMIT),
-      allowed: next.allowed !== false,
-    });
-    setQuotaError(false);
-    setQuotaLoading(false);
-  }
+  // 4 sugestões solicitadas
+  const suggestions = [
+    t("analysisSuggestion"),
+    t("registerBillSuggestion"),
+    t("registerIncomeSuggestion"),
+    t("monthQuestion"),
+  ];
+
+  const [prompt, setPrompt] = useState("");
+  const [reply, setReply] = useState<AiReply | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [actionDone, setActionDone] = useState(false);
+
+  // Editable state for proposed actions
+  const [actionDesc, setActionDesc] = useState("");
+  const [actionAmount, setActionAmount] = useState("");
+  const [actionDay, setActionDay] = useState("5");
+  const [actionRecurrent, setActionRecurrent] = useState(true);
 
   useEffect(() => {
-    if (FIN_AI_QUOTA_ENABLED) void loadQuota();
-  }, []);
+    if (reply?.action) {
+      setActionDone(false);
+      setActionDesc(reply.action.data.description);
+      setActionAmount(String(reply.action.data.amount || ""));
+      if (reply.action.type === "create_bill") {
+        setActionDay(String(reply.action.data.dueDay || 5));
+        setActionRecurrent(reply.action.data.recurrent ?? true);
+      } else if (reply.action.type === "create_income") {
+        setActionDay(String(reply.action.data.day || 1));
+      }
+    }
+  }, [reply]);
 
   async function ask(question: string) {
     const value = question.trim();
-    if (!value || aiLoading || (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))) return;
-    if (FIN_AI_QUOTA_ENABLED) {
-      const { data, error } = await supabase.rpc("consume_fin_ai_quota");
-      if (error) {
-        setQuotaError(true);
-        return;
-      }
-      const next = data as { count?: number; remaining?: number; allowed?: boolean };
-      if (next.allowed === false) {
-        setQuota({ count: Number(next.count ?? DAILY_LIMIT), remaining: 0, allowed: false });
-        return;
-      }
-      setQuota({
-        count: Number(next.count ?? quota.count + 1),
-        remaining: Number(next.remaining ?? Math.max(DAILY_LIMIT - quota.count - 1, 0)),
-        allowed: true,
-      });
-    }
+    if (!value || aiLoading) return;
     setAiLoading(true);
+    setActionDone(false);
+
     try {
       const history = reply ? [{ role: "assistant", text: reply.text }] : [];
       const { data, error } = await supabase.functions.invoke("fin-ai", {
@@ -758,6 +479,7 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         title?: string;
         text?: string;
         chartMode?: ChartMode;
+        action?: FinAiAction | null;
         error?: string;
       };
 
@@ -767,17 +489,48 @@ export function FinAi({ monthKey }: { monthKey: string }) {
         title: result.title?.trim() || "FinAI",
         text: result.text?.trim() || t("financialDataInsufficient"),
         chart: result.chartMode ?? null,
+        action: result.action ?? null,
       });
       setPrompt("");
-    } catch (error) {
-      setReply({
-        title: "FinAI",
-        text: error instanceof Error ? error.message : t("operationFailed"),
-        chart: null,
-      });
+    } catch {
+      // Fallback local se edge function estiver indisponível ou offline
+      const fallback = buildFallbackReply(value, monthKey, year, state, t);
+      setReply(fallback);
+      setPrompt("");
     } finally {
       setAiLoading(false);
     }
+  }
+
+  function handleConfirmAction() {
+    if (!reply?.action || actionDone) return;
+    const numAmount = parseFloat(actionAmount.replace(",", ".")) || 0;
+    const finalDesc = actionDesc.trim() || t("item");
+
+    if (reply.action.type === "create_bill") {
+      const day = parseInt(actionDay, 10) || 5;
+      financeActions.addBill(monthKey, {
+        description: finalDesc,
+        amount: numAmount,
+        dueDay: Math.min(Math.max(day, 1), 31),
+        paid: false,
+        recurrent: actionRecurrent,
+      });
+    } else if (reply.action.type === "create_income") {
+      const day = parseInt(actionDay, 10) || 1;
+      financeActions.addIncome(monthKey, {
+        description: finalDesc,
+        amount: numAmount,
+        date: `${monthKey}-${String(Math.min(Math.max(day, 1), 31)).padStart(2, "0")}`,
+      });
+    } else if (reply.action.type === "create_saving") {
+      financeActions.addSaving(monthKey, {
+        description: finalDesc,
+        amount: numAmount,
+      });
+    }
+
+    setActionDone(true);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -786,103 +539,212 @@ export function FinAi({ monthKey }: { monthKey: string }) {
   }
 
   return (
-    <section className="space-y-4 pb-2">
-      <div>
-        <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-2xl bg-brand/10 text-brand">
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border/70 px-4 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="grid size-9 place-items-center rounded-2xl bg-brand/10 text-brand shadow-sm">
             <Sparkles className="size-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold">FinAI</h1>
-            <p className="mt-0.5 text-xs text-mut">{t("finaiSubtitle")}</p>
+            <h1 className="font-display text-base font-semibold leading-none">FinAI</h1>
+            <p className="mt-1 text-[11px] text-mut">{t("finaiSubtitle")}</p>
           </div>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("closeChat")}
+            className="grid size-8 place-items-center rounded-full text-mut transition-colors hover:bg-muted/50 hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
-      <section className="glass rounded-3xl p-4">
-        <p className="text-sm font-medium">{t("whatWant")}</p>
-        <p className="mt-1 text-xs leading-relaxed text-mut">{t("askMonth")}</p>
-        {aiLoading && (
-          <div className="mt-3 flex items-center gap-2 text-[10px] text-mut">
-            <span className="size-1.5 animate-pulse rounded-full bg-brand" />
-            {t("analyzing")}
-          </div>
-        )}
-        {FIN_AI_QUOTA_ENABLED && (
-          <>
-            <div className="mt-3 flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-[10px] text-mut">
-              <span>{t("dailyQueries")}</span>
-              <span className="font-semibold text-foreground">
-                {quotaLoading ? "…" : `${quota.count}/${DAILY_LIMIT}`}
-              </span>
-            </div>
-            {quotaError && <p className="mt-2 text-[10px] text-warn">{t("quotaError")}</p>}
-            {!quotaLoading && !quota.allowed && (
-              <p className="mt-2 text-[10px] text-warn">{t("quotaReached")}</p>
-            )}
-          </>
-        )}
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => void ask(suggestion)}
-              className="rounded-full border border-border/70 bg-muted/30 px-3 py-2 text-[10px] font-medium text-mut transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {reply && (
+      {/* Scrollable content area */}
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Intro banner */}
         <section className="glass rounded-3xl p-4">
-          <div className="flex items-start gap-3">
-            <div className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
-              <Sparkles className="size-4" />
+          <p className="text-sm font-semibold">{t("whatWant")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-mut">{t("askMonth")}</p>
+
+          {aiLoading && (
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-brand">
+              <span className="size-1.5 animate-pulse rounded-full bg-brand" />
+              {t("analyzing")}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="font-display text-sm font-semibold">{reply.title}</h2>
-                <span className="text-[9px] uppercase tracking-widest text-mut">FinAI</span>
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-mut">{reply.text}</p>
-              {reply.chart && (
-                <FinAiChart mode={reply.chart} monthKey={monthKey} year={year} state={state} />
-              )}
-            </div>
+          )}
+
+          {/* 4 Sugestões */}
+          <div className="mt-3.5 flex flex-wrap gap-2">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => void ask(suggestion)}
+                className="rounded-full border border-border/70 bg-muted/40 px-3 py-1.5 text-[11px] font-medium text-foreground/80 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+              >
+                {suggestion}
+              </button>
+            ))}
           </div>
         </section>
-      )}
 
-      <form onSubmit={submit} className="glass flex items-center gap-2 rounded-2xl p-2">
-        <input
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder={t("enterQuestion")}
-          className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-mut/70"
-          aria-label={t("askFinAi")}
-        />
-        <button
-          type="submit"
-          aria-label={t("sendQuestion")}
-          className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
-          disabled={
-            !prompt.trim() ||
-            aiLoading ||
-            (FIN_AI_QUOTA_ENABLED && (quotaLoading || !quota.allowed))
-          }
-        >
-          <Send className="size-4" />
-        </button>
-      </form>
+        {/* Reply card */}
+        {reply && (
+          <section className="glass rounded-3xl p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="grid size-8 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
+                <Sparkles className="size-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="font-display text-sm font-semibold">{reply.title}</h2>
+                  <span className="text-[9px] uppercase tracking-widest text-mut">FinAI</span>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
+                  {reply.text}
+                </p>
 
-      <div className="flex items-center justify-center gap-1.5 text-[9px] text-mut/70">
-        <ArrowUpRight className="size-3" />
-        {t("finaiHint")}
+                {/* Interactive Action Card (Opção A) */}
+                {reply.action && (
+                  <div className="mt-3 rounded-2xl border border-brand/30 bg-brand/5 p-3.5 shadow-sm">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-brand">
+                      <PlusCircle className="size-4" />
+                      <span>
+                        {reply.action.type === "create_bill"
+                          ? t("newBill")
+                          : reply.action.type === "create_income"
+                            ? t("newIncome")
+                            : t("newSaving")}
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5 space-y-2 text-xs">
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-mut">
+                          {t("description")}
+                        </label>
+                        <input
+                          type="text"
+                          value={actionDesc}
+                          disabled={actionDone}
+                          onChange={(e) => setActionDesc(e.target.value)}
+                          className="mt-0.5 w-full rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-brand"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-mut">
+                            {t("amount")}
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={actionAmount}
+                            disabled={actionDone}
+                            onChange={(e) => setActionAmount(e.target.value)}
+                            placeholder="0,00"
+                            className="mt-0.5 w-full rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-brand"
+                          />
+                        </div>
+
+                        {reply.action.type !== "create_saving" && (
+                          <div>
+                            <label className="text-[10px] uppercase tracking-wider text-mut">
+                              {reply.action.type === "create_bill" ? t("dueDate") : t("incomeDay")}
+                            </label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={31}
+                              value={actionDay}
+                              disabled={actionDone}
+                              onChange={(e) => setActionDay(e.target.value)}
+                              className="mt-0.5 w-full rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-brand"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {reply.action.type === "create_bill" && (
+                        <label className="flex items-center gap-2 pt-1 text-[11px] text-mut cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={actionRecurrent}
+                            disabled={actionDone}
+                            onChange={(e) => setActionRecurrent(e.target.checked)}
+                            className="rounded accent-brand"
+                          />
+                          <span>{t("recurringAccount")}</span>
+                        </label>
+                      )}
+                    </div>
+
+                    <div className="mt-3">
+                      {actionDone ? (
+                        <div className="flex items-center justify-center gap-1.5 rounded-xl bg-pos/15 py-2 text-xs font-semibold text-pos">
+                          <Check className="size-4" />
+                          <span>
+                            {reply.action.type === "create_bill"
+                              ? t("billCreatedSuccess")
+                              : reply.action.type === "create_income"
+                                ? t("incomeCreatedSuccess")
+                                : t("savingCreatedSuccess")}
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleConfirmAction}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand py-2 text-xs font-semibold text-background transition-opacity hover:opacity-90 active:scale-[0.98]"
+                        >
+                          <Check className="size-4" />
+                          <span>{t("confirmCreation")}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Chart if suggested */}
+                {reply.chart && (
+                  <FinAiChart mode={reply.chart} monthKey={monthKey} year={year} state={state} />
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
-    </section>
+
+      {/* Input form fixed at bottom of chat */}
+      <div className="border-t border-border/70 p-3 bg-background/90 backdrop-blur-md">
+        <form onSubmit={submit} className="glass flex items-center gap-2 rounded-2xl p-1.5">
+          <input
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder={t("enterQuestion")}
+            className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-mut/70"
+            aria-label={t("askFinAi")}
+          />
+          <button
+            type="submit"
+            aria-label={t("sendQuestion")}
+            disabled={!prompt.trim() || aiLoading}
+            className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand text-background transition-opacity disabled:opacity-40"
+          >
+            <Send className="size-4" />
+          </button>
+        </form>
+
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[9px] text-mut/70">
+          <ArrowUpRight className="size-3" />
+          <span>{t("finaiFootnote")}</span>
+        </div>
+      </div>
+    </div>
   );
 }

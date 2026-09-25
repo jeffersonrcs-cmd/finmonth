@@ -38,10 +38,10 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finai";
+type Screen = "inicio" | "contas" | "receitas" | "guardado";
 
 const navigation: {
-  id: Screen;
+  id: Screen | "finai";
   label: "home" | "bills" | "incomes" | "savings" | "finai";
   Icon: LucideIcon;
 }[] = [
@@ -55,6 +55,7 @@ const navigation: {
 function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
+  const [finAiOpen, setFinAiOpen] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsSection, setAccountSettingsSection] = useState<
     "menu" | "profile" | "notifications" | "language" | "version"
@@ -73,9 +74,13 @@ function Dashboard() {
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
 
-  const goTo = (screen: Screen) => {
-    setActiveScreen(screen);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleNavClick = (id: Screen | "finai") => {
+    if (id === "finai") {
+      setFinAiOpen(true);
+    } else {
+      setActiveScreen(id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   if (accountSettingsOpen) {
@@ -108,6 +113,21 @@ function Dashboard() {
           notifications={notifications}
           onClose={() => setNotificationsOpen(false)}
         />
+      )}
+
+      {/* Floating FinAI Window */}
+      {finAiOpen && (
+        <div
+          className="fixed inset-0 z-[90] bg-background/70 backdrop-blur-sm"
+          onClick={() => setFinAiOpen(false)}
+        >
+          <section
+            className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+1rem)] mx-auto flex h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FinAi monthKey={monthKey} isFloating onClose={() => setFinAiOpen(false)} />
+          </section>
+        </div>
       )}
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0">
@@ -153,11 +173,12 @@ function Dashboard() {
         {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
 
         {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
-
-        {activeScreen === "finai" && <FinAi monthKey={monthKey} />}
       </div>
 
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 px-5">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 px-5"
+      >
         <div className="mx-auto flex max-w-[440px] justify-end">
           <div className="flex flex-col items-end leading-none">
             <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">
@@ -176,12 +197,12 @@ function Dashboard() {
       >
         <div className="mx-auto grid max-w-[440px] grid-cols-5 gap-1 rounded-2xl bg-muted/30 p-1">
           {navigation.map(({ id, label, Icon }) => {
-            const active = activeScreen === id;
+            const active = id === "finai" ? finAiOpen : activeScreen === id;
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => goTo(id)}
+                onClick={() => handleNavClick(id)}
                 aria-current={active ? "page" : undefined}
                 className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-[9px] font-medium transition-colors ${active ? "bg-brand/10 text-brand" : "text-mut hover:bg-muted/50 hover:text-brand"}`}
               >

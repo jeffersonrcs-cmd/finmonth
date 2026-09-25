@@ -25,8 +25,14 @@ REGRAS OBRIGATÓRIAS:
 - Você pode analisar descrições reais dos lançamentos, como uma conta chamada "Luz" ou "Energia".
 - Responda no idioma solicitado pelo aplicativo, de forma clara, objetiva, amigável e útil.
 - Não dê aconselhamento financeiro baseado em informações externas ao FinMonth.
-- Não diga que executou uma ação no aplicativo; nesta versão você apenas analisa dados.
-- Os gráficos são renderizados pelo aplicativo. Escolha somente um chartMode permitido quando um gráfico realmente ajudar.
+- Quando o usuário solicitar ou demonstrar intenção de CADASTRAR/ADICIONAR/LANÇAR uma conta (despesa), receita ou valor guardado (ou quando você sugerir cadastrar um lançamento específico):
+  Preencha o campo "action" no JSON com o tipo e os dados identificados.
+  Os tipos permitidos de action são:
+  1) Para contas: { "type": "create_bill", "data": { "description": "nome da conta", "amount": 100.0, "dueDay": 10, "recurrent": true ou false, "paid": false } }
+  2) Para receitas: { "type": "create_income", "data": { "description": "descrição da receita", "amount": 2500.0, "day": 5 } }
+  3) Para guardado: { "type": "create_saving", "data": { "description": "descrição da reserva/guardado", "amount": 500.0 } }
+  Se o usuário não informou algum campo (por exemplo o dia ou o valor), use valores padrão coerentes (ex: dia 5 ou dia 1, valor 0 se não especificado) ou pergunte/preencha com o que foi fornecido para que ele possa revisar no card de confirmação.
+  No texto da resposta ("text"), explique amigavelmente que você preparou o lançamento e peça para ele confirmar no botão abaixo.
 
 MODOS DE GRÁFICO PERMITIDOS:
 null, month, compare, year, history, balance, savings, topBills, cashflow, incomeBreakdown, billStatus, dailyFlow, recurring.
@@ -35,7 +41,8 @@ RESPONDA EXCLUSIVAMENTE com JSON válido, sem markdown:
 {
   "title": "título curto",
   "text": "resposta para o usuário",
-  "chartMode": "um dos modos permitidos ou null"
+  "chartMode": "um dos modos permitidos ou null",
+  "action": null ou { "type": "create_bill" | "create_income" | "create_saving", "data": { ... } }
 }
 
 DADOS FINANCEIROS:
@@ -273,6 +280,50 @@ Deno.serve(async (req) => {
     });
   }
 
+  function sanitizeAction(action: unknown) {
+    if (!action || typeof action !== "object") return null;
+    const act = action as { type?: unknown; data?: Record<string, unknown> };
+    if (act.type === "create_bill" && act.data) {
+      return {
+        type: "create_bill",
+        data: {
+          description:
+            typeof act.data.description === "string" ? act.data.description.slice(0, 100) : "Conta",
+          amount: Math.abs(Number(act.data.amount) || 0),
+          dueDay: Math.min(Math.max(Number(act.data.dueDay) || 5, 1), 31),
+          recurrent: Boolean(act.data.recurrent),
+          paid: Boolean(act.data.paid),
+        },
+      };
+    }
+    if (act.type === "create_income" && act.data) {
+      return {
+        type: "create_income",
+        data: {
+          description:
+            typeof act.data.description === "string"
+              ? act.data.description.slice(0, 100)
+              : "Receita",
+          amount: Math.abs(Number(act.data.amount) || 0),
+          day: Math.min(Math.max(Number(act.data.day) || 1, 1), 31),
+        },
+      };
+    }
+    if (act.type === "create_saving" && act.data) {
+      return {
+        type: "create_saving",
+        data: {
+          description:
+            typeof act.data.description === "string"
+              ? act.data.description.slice(0, 100)
+              : "Guardado",
+          amount: Math.abs(Number(act.data.amount) || 0),
+        },
+      };
+    }
+    return null;
+  }
+
   return jsonResponse({
     title:
       typeof parsed.title === "string" && parsed.title.trim()
@@ -280,5 +331,6 @@ Deno.serve(async (req) => {
         : "Fin IA",
     text: parsed.text.trim().slice(0, 6000),
     chartMode: sanitizeChartMode(parsed.chartMode),
+    action: sanitizeAction(parsed.action),
   });
 });

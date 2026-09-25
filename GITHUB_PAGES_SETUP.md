@@ -20,6 +20,7 @@ Para o domínio ser exatamente **`finmonth.github.io`**, o GitHub exige que o no
 ### Opção 2: Com o seu usuário pessoal do GitHub (Ex: `jeffersonrcs.github.io/finmonth`)
 
 Se o seu usuário for, por exemplo, `jeffersonrcs`:
+
 1. Crie o repositório com o nome `finmonth` na sua conta.
 2. Em **Settings > Pages**, selecione **GitHub Actions**.
 3. Seu app ficará no ar em `https://jeffersonrcs.github.io/finmonth` (ou se você criar o repositório `jeffersonrcs.github.io`, o app ficará direto na raiz).
@@ -29,6 +30,7 @@ Se o seu usuário for, por exemplo, `jeffersonrcs`:
 ### Configuração no Supabase (Importante para Login e Confirmação de E-mail)
 
 Para o login e redefinição de senha funcionarem no novo domínio:
+
 1. Acesse o seu painel do **Supabase** do projeto.
 2. Vá em **Authentication > URL Configuration**.
 3. Em **Redirect URLs**, adicione:

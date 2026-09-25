@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  <g fill="none" stroke="url(#accent)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Stylized F / Chart bars combo -->
+    <path d="M140 120 v272" stroke-width="36" />
+    <path d="M140 140 h220 c20 0 32 16 28 34 -4 18 -18 26 -38 26 H150" />
+    <path d="M140 256 h140 c16 0 26 12 24 26 -2 14 -14 22 -30 22 H150" />
+    <!-- Rising financial node / trend -->
+    <circle cx="370" cy="360" r="26" fill="#38bdf8" stroke="none" />
+    <path d="M250 380 L350 360" stroke="#38bdf8" stroke-width="18" stroke-dasharray="6 6" />
+  </g>
+</svg>

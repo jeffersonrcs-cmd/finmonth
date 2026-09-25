@@ -1,3 +1,19 @@
+## v1.13.0 — PWA completo, sincronização offline com fila e notificações nativas
+
+- adicionado suporte completo a Progressive Web App (PWA) com `manifest.json`, ícones de alta resolução e Service Worker (`sw.js`);
+- implementada sincronização resiliente offline: alterações feitas sem conexão entram em fila e sincronizam automaticamente assim que a internet volta;
+- adicionado suporte a Notificações Nativas do dispositivo para contas vencidas e a vencer no dia;
+- adicionadas configurações e botão de teste de notificação do dispositivo em Perfil > Notificações;
+- adicionado botão para instalar o FinMonth na tela de início em Configurações > Versão;
+- suporte multilíngue (Português, Inglês e Espanhol) para todos os novos recursos de PWA e alertas nativos.
+
+## v1.12.15 — tratamento de sincronização JWT e correção de chaves nos gráficos
+
+- adicionado retry automático e tolerância a pequenos desvios de relógio do cliente (`PGRST303 — JWT issued at future`);
+- evitada a desconexão abrupta do usuário caso o Supabase reporte atraso de validação de token;
+- adicionada propriedade `key` única para elementos customizados `dot` e `activeDot` do componente `Line` (evitando avisos do React 19 / Recharts);
+- garantida a persistência segura local e em nuvem.
+
 ## v1.12.11 — sincronização da árvore de rotas
 
 - registrada a rota `/confirmar-email` na árvore gerada do TanStack Router;
@@ -134,6 +150,7 @@ Marco reconstruído a partir do histórico de desenvolvimento, reunindo a primei
 - melhorias de navegação e experiência.
 
 Principais commits de referência:
+
 - `303ef7a` — visão mensal dos gráficos;
 - `71be8e3` — visão anual;
 - `b9b74d7` — alternância mensal/anual;
@@ -153,6 +170,7 @@ Marco reconstruído a partir das funcionalidades posteriores:
 - marca d'água e identidade visual.
 
 Principais commits de referência:
+
 - `ab95e2d` — melhorias do login;
 - `022f7ca` — nova senha;
 - `33d250b` — fluxo de recuperação;

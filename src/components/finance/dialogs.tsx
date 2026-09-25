@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, type Bill, type Income, type Saving } from "@/lib/finance";
@@ -152,15 +158,23 @@ export function IncomeDialog({
           </SelectTrigger>
           <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
             {Array.from(
-              { length: daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1])) },
+              {
+                length: daysInMonth(Number(monthKey.split("-")[0]), Number(monthKey.split("-")[1])),
+              },
               (_, index) => {
                 const value = String(index + 1);
-                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">{t("day")} {value}</SelectItem>;
+                return (
+                  <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">
+                    {t("day")} {value}
+                  </SelectItem>
+                );
               },
             )}
           </SelectContent>
         </Select>
-        <p className="text-[10px] text-mut">{t("monthYear")}: {monthKey.split("-").reverse().join("/")}</p>
+        <p className="text-[10px] text-mut">
+          {t("monthYear")}: {monthKey.split("-").reverse().join("/")}
+        </p>
       </div>
     </FormDialog>
   );
@@ -235,7 +249,9 @@ export function BillDialog({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className={labelClass}>{t("amountCurrency").replace("{currency}", currency)}</Label>
+          <Label className={labelClass}>
+            {t("amountCurrency").replace("{currency}", currency)}
+          </Label>
           <Input
             className={fieldClass}
             inputMode="decimal"
@@ -253,7 +269,11 @@ export function BillDialog({
             <SelectContent className="max-h-64 rounded-xl border-border/60 bg-popover/95 p-1 shadow-xl backdrop-blur-xl">
               {Array.from({ length: maxDay }, (_, index) => {
                 const value = String(index + 1);
-                return <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">{t("day")} {value}</SelectItem>;
+                return (
+                  <SelectItem key={value} value={value} className="rounded-lg py-2.5 text-sm">
+                    {t("day")} {value}
+                  </SelectItem>
+                );
               })}
             </SelectContent>
           </Select>
@@ -301,15 +321,23 @@ export function ManageEntriesDialog({
             </p>
           ) : (
             items.map((item) => (
-              <div key={item.id} className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2.5">
+              <div
+                key={item.id}
+                className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2.5"
+              >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium">{item.description}</p>
-                  <p className="num text-xs font-semibold text-foreground">{formatCurrency(item.amount)}</p>
+                  <p className="num text-xs font-semibold text-foreground">
+                    {formatCurrency(item.amount)}
+                  </p>
                 </div>
                 <button
                   type="button"
                   aria-label={t("manageItem")}
-                  onClick={() => { setOpen(false); onEdit(item.id); }}
+                  onClick={() => {
+                    setOpen(false);
+                    onEdit(item.id);
+                  }}
                   className="grid size-7 place-items-center rounded-full text-mut transition-colors hover:text-brand"
                 >
                   <Pencil className="size-3.5" />

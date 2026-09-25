@@ -1,12 +1,7 @@
 import { Check } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
-import {
-  billStatus,
-  financeActions,
-  formatCurrency,
-  type Bill,
-} from "@/lib/finance";
+import { billStatus, financeActions, formatCurrency, type Bill } from "@/lib/finance";
 
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const { t } = useLanguage();
@@ -34,9 +29,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
 
       <div className="mb-5 space-y-2.5">
         {sorted.length === 0 && (
-          <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
-            {t("noBills")}
-          </p>
+          <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">{t("noBills")}</p>
         )}
         {sorted.map((bill) => {
           const status = billStatus(bill, monthKey);
@@ -82,7 +75,6 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
           );
         })}
       </div>
-
     </section>
   );
 }

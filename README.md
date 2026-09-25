@@ -8,11 +8,7 @@ Objetivo
 
 Permitir que o usuário organize suas finanças por mês, registrando receitas, contas a pagar e valores guardados, com cálculo automático de saldos e opção de reutilizar contas do mês anterior.
 
-
-
 ---
-
-
 
 Estrutura Principal
 
@@ -30,11 +26,7 @@ Resumo financeiro
 
 O usuário deve conseguir navegar entre todos os meses cadastrados.
 
-
-
 ---
-
-
 
 Receitas
 
@@ -46,8 +38,6 @@ Valor
 
 Data
 
-
-
 Funcionalidades:
 
 Adicionar receita
@@ -56,11 +46,7 @@ Editar receita
 
 Excluir receita
 
-
-
 ---
-
-
 
 Contas
 
@@ -76,8 +62,6 @@ Status (Paga ou Pendente)
 
 Recorrente (Sim ou Não)
 
-
-
 Funcionalidades:
 
 Adicionar conta
@@ -90,8 +74,6 @@ Marcar como paga
 
 Marcar como pendente
 
-
-
 Exibir visualmente:
 
 Contas pagas
@@ -100,11 +82,7 @@ Contas pendentes
 
 Contas vencidas
 
-
-
 ---
-
-
 
 Economia
 
@@ -116,8 +94,6 @@ Descrição
 
 Valor
 
-
-
 Funcionalidades:
 
 Adicionar valor guardado
@@ -126,11 +102,7 @@ Editar valor guardado
 
 Excluir valor guardado
 
-
-
 ---
-
-
 
 Cálculos Automáticos
 
@@ -156,11 +128,7 @@ Saldo Disponível = Saldo do Mês - Total Guardado
 
 Todos os cálculos devem ser atualizados automaticamente sempre que houver alteração nos dados.
 
-
-
 ---
-
-
 
 Dashboard
 
@@ -190,11 +158,7 @@ Azul para economia
 
 Amarelo para alertas de vencimento
 
-
-
 ---
-
-
 
 Copiar Contas do Mês Anterior
 
@@ -214,11 +178,9 @@ Permitir editar ou excluir qualquer conta copiada.
 
 Essa funcionalidade deve reduzir o trabalho de cadastro mensal.
 
-Opção de copiar receitas também 
+Opção de copiar receitas também
 
 ---
-
-
 
 Histórico
 
@@ -230,11 +192,7 @@ Consultar receitas, contas e economias antigas.
 
 Manter histórico permanente.
 
-
-
 ---
-
-
 
 Gráficos
 
@@ -246,11 +204,7 @@ Evolução do Saldo Mensal
 
 Total Guardado por Mês
 
-
-
 ---
-
-
 
 Interface
 
@@ -264,11 +218,7 @@ Layout simples e intuitivo.
 
 Navegação rápida entre meses.
 
-
-
 ---
-
-
 
 Armazenamento
 
@@ -276,11 +226,7 @@ Salvar todos os dados localmente ou em banco de dados persistente.
 
 Os dados não devem ser perdidos ao fechar o aplicativo.
 
-
-
 ---
-
-
 
 Tela Inicial
 

@@ -44,41 +44,63 @@ function Historico() {
   const state = useFinanceState();
   const analysisMonthKey = currentMonthKey();
   const rows = useHistoryRows(12);
-  const allKeys = monthKeysWithData(state).filter((key) => key <= analysisMonthKey).reverse();
-  const years = Array.from(new Set(allKeys.map((key) => Number(key.slice(0, 4))))).sort((a, b) => b - a);
+  const allKeys = monthKeysWithData(state)
+    .filter((key) => key <= analysisMonthKey)
+    .reverse();
+  const years = Array.from(new Set(allKeys.map((key) => Number(key.slice(0, 4))))).sort(
+    (a, b) => b - a,
+  );
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [historyRange, setHistoryRange] = useState<"3" | "6" | "12" | "older">("12");
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [chartRange, setChartRange] = useState<ChartRange>(6);
 
   const keys = useMemo(() => {
-    const yearKeys = selectedYear === "all" ? allKeys : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear);
+    const yearKeys =
+      selectedYear === "all"
+        ? allKeys
+        : allKeys.filter((key) => Number(key.slice(0, 4)) === selectedYear);
     if (historyRange === "older") return yearKeys.filter((_, index) => index >= 12);
     return yearKeys.slice(0, Number(historyRange));
   }, [allKeys, selectedYear, historyRange]);
 
   const latestKey = analysisMonthKey;
   const previousKey = previousMonthKey(analysisMonthKey);
-  const latestTotals = computeTotals(state.months[latestKey] ?? { incomes: [], bills: [], savings: [] }, latestKey);
-  const previousTotals = computeTotals(state.months[previousKey] ?? { incomes: [], bills: [], savings: [] }, previousKey);
+  const latestTotals = computeTotals(
+    state.months[latestKey] ?? { incomes: [], bills: [], savings: [] },
+    latestKey,
+  );
+  const previousTotals = computeTotals(
+    state.months[previousKey] ?? { incomes: [], bills: [], savings: [] },
+    previousKey,
+  );
 
   const changePercent = (current: number, previous: number) =>
     previous === 0 ? (current === 0 ? 0 : null) : ((current - previous) / Math.abs(previous)) * 100;
 
-  const incomeChange = latestTotals && previousTotals ? changePercent(latestTotals.totalIncomes, previousTotals.totalIncomes) : null;
-  const expenseChange = latestTotals && previousTotals ? changePercent(latestTotals.totalBills, previousTotals.totalBills) : null;
-  const balanceChange = latestTotals && previousTotals ? changePercent(latestTotals.availableBalance, previousTotals.availableBalance) : null;
+  const incomeChange =
+    latestTotals && previousTotals
+      ? changePercent(latestTotals.totalIncomes, previousTotals.totalIncomes)
+      : null;
+  const expenseChange =
+    latestTotals && previousTotals
+      ? changePercent(latestTotals.totalBills, previousTotals.totalBills)
+      : null;
+  const balanceChange =
+    latestTotals && previousTotals
+      ? changePercent(latestTotals.availableBalance, previousTotals.availableBalance)
+      : null;
 
   const changeLabel = (value: number | null) =>
     value === null ? "—" : `${value >= 0 ? "+" : ""}${Math.round(value)}%`;
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
-      <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
-      <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
+    <div className="relative min-h-screen w-full">
+      <div className="pointer-events-none fixed -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
+      <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
 
-      <div className="relative mx-auto max-w-[440px] px-4 pb-12 pt-5">
-        <header className="mb-5 flex items-center gap-3">
+      <div className="relative mx-auto max-w-[440px] px-4 pb-12 pt-0">
+        <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center gap-3 bg-background/85 px-4 py-3 shadow-sm backdrop-blur-xl transition-all border-b border-border/50">
           <Link
             to="/"
             aria-label={t("back")}
@@ -87,8 +109,12 @@ function Historico() {
             <ChevronLeft className="size-4" />
           </Link>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">{t("history")}</p>
-            <h1 className="font-display text-2xl font-bold leading-none">{t("financialEvolution")}</h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">
+              {t("history")}
+            </p>
+            <h1 className="font-display text-2xl font-bold leading-none">
+              {t("financialEvolution")}
+            </h1>
             <p className="mt-1 text-[11px] text-mut">{t("historicalDescription")}</p>
           </div>
         </header>
@@ -103,17 +129,23 @@ function Historico() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-2xl bg-brand/10 p-3">
                   <p className="text-[10px] text-mut">{t("currentBalance")}</p>
-                  <p className={`num mt-1 font-display text-xs font-semibold ${latestTotals.availableBalance >= 0 ? "text-pos" : "text-neg"}`}>
+                  <p
+                    className={`num mt-1 font-display text-xs font-semibold ${latestTotals.availableBalance >= 0 ? "text-pos" : "text-neg"}`}
+                  >
                     {formatCurrency(latestTotals.availableBalance, true)}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-pos/10 p-3">
                   <p className="text-[10px] text-mut">{t("totalReceived")}</p>
-                  <p className="num mt-1 font-display text-xs font-semibold text-pos">{formatCurrency(latestTotals.totalIncomes, true)}</p>
+                  <p className="num mt-1 font-display text-xs font-semibold text-pos">
+                    {formatCurrency(latestTotals.totalIncomes, true)}
+                  </p>
                 </div>
                 <div className="rounded-2xl bg-neg/10 p-3">
                   <p className="text-[10px] text-mut">{t("totalSpent")}</p>
-                  <p className="num mt-1 font-display text-xs font-semibold text-neg">{formatCurrency(latestTotals.totalBills, true)}</p>
+                  <p className="num mt-1 font-display text-xs font-semibold text-neg">
+                    {formatCurrency(latestTotals.totalBills, true)}
+                  </p>
                 </div>
               </div>
             </section>
@@ -123,18 +155,26 @@ function Historico() {
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="font-display text-sm font-semibold">{t("monthlyComparison")}</h2>
-                    <p className="mt-0.5 text-[10px] text-mut">{monthLabel(latestKey!)} · {t("vsPrevious")} · {monthLabel(previousKey!)}</p>
+                    <p className="mt-0.5 text-[10px] text-mut">
+                      {monthLabel(latestKey!)} · {t("vsPrevious")} · {monthLabel(previousKey!)}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     [t("incomes"), incomeChange, "text-pos"],
                     [t("bills"), expenseChange, "text-neg"],
-                    [t("monthBalance"), balanceChange, latestTotals.availableBalance >= 0 ? "text-pos" : "text-neg"],
+                    [
+                      t("monthBalance"),
+                      balanceChange,
+                      latestTotals.availableBalance >= 0 ? "text-pos" : "text-neg",
+                    ],
                   ].map(([label, value, tone]) => (
                     <div key={String(label)} className="rounded-2xl bg-muted/30 p-3">
                       <p className="text-[10px] text-mut">{String(label)}</p>
-                      <p className={`mt-1 font-display text-sm font-semibold ${String(tone)}`}>{changeLabel(value as number | null)}</p>
+                      <p className={`mt-1 font-display text-sm font-semibold ${String(tone)}`}>
+                        {changeLabel(value as number | null)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -156,8 +196,21 @@ function Historico() {
           </div>
 
           <div className="mb-3 grid grid-cols-4 gap-1.5">
-            {[["3", t("history3Months")], ["6", t("history6Months")], ["12", t("history12Months")], ["older", t("historyAbove12Months")]].map(([value, label]) => (
-              <button key={value} type="button" onClick={() => setHistoryRange(value as typeof historyRange)} className={`min-h-8 min-w-0 rounded-lg px-1.5 text-center text-[9px] font-semibold leading-tight transition-colors ${historyRange === value ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"}`} aria-pressed={historyRange === value}>{label}</button>
+            {[
+              ["3", t("history3Months")],
+              ["6", t("history6Months")],
+              ["12", t("history12Months")],
+              ["older", t("historyAbove12Months")],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHistoryRange(value as typeof historyRange)}
+                className={`min-h-8 min-w-0 rounded-lg px-1.5 text-center text-[9px] font-semibold leading-tight transition-colors ${historyRange === value ? "bg-brand text-background" : "bg-muted/40 text-mut hover:bg-muted/70"}`}
+                aria-pressed={historyRange === value}
+              >
+                {label}
+              </button>
             ))}
           </div>
 
@@ -185,7 +238,9 @@ function Historico() {
 
           <div className="space-y-2.5">
             {keys.length === 0 && (
-              <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">{t("noMonth")}</p>
+              <p className="glass-soft rounded-2xl p-4 text-center text-xs text-mut">
+                {t("noMonth")}
+              </p>
             )}
             {keys.map((key) => {
               const month = state.months[key]!;
@@ -204,39 +259,105 @@ function Historico() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-display text-sm font-semibold">{monthLabel(key)}</p>
-                      {expanded ? <ChevronUp className="size-4 text-mut" /> : <ChevronDown className="size-4 text-mut" />}
+                      {expanded ? (
+                        <ChevronUp className="size-4 text-mut" />
+                      ) : (
+                        <ChevronDown className="size-4 text-mut" />
+                      )}
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-                      {showIncome && <span className="text-mut">{t("incomes")} <span className="num block text-pos">{formatCurrency(totals.totalIncomes, true)}</span></span>}
-                      {showExpense && <span className="text-mut">{t("bills")} <span className="num block text-neg">{formatCurrency(totals.totalBills, true)}</span></span>}
-                      {showBalance && <span className="text-mut">{t("monthBalance")} <span className={`num block ${totals.availableBalance >= 0 ? "text-pos" : "text-neg"}`}>{formatCurrency(totals.availableBalance, true)}</span></span>}
+                      {showIncome && (
+                        <span className="text-mut">
+                          {t("incomes")}{" "}
+                          <span className="num block text-pos">
+                            {formatCurrency(totals.totalIncomes, true)}
+                          </span>
+                        </span>
+                      )}
+                      {showExpense && (
+                        <span className="text-mut">
+                          {t("bills")}{" "}
+                          <span className="num block text-neg">
+                            {formatCurrency(totals.totalBills, true)}
+                          </span>
+                        </span>
+                      )}
+                      {showBalance && (
+                        <span className="text-mut">
+                          {t("monthBalance")}{" "}
+                          <span
+                            className={`num block ${totals.availableBalance >= 0 ? "text-pos" : "text-neg"}`}
+                          >
+                            {formatCurrency(totals.availableBalance, true)}
+                          </span>
+                        </span>
+                      )}
                     </div>
                   </button>
                   {expanded && (
                     <div className="border-t border-border/60 px-4 pb-4 pt-3">
                       <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-mut">
-                        <span>{totals.paidCount} {t("paid").toLowerCase()}</span>
-                        <span>{totals.pendingCount} {t("pending").toLowerCase()}</span>
-                        {totals.overdueCount > 0 && <span>{totals.overdueCount} {t("overdue").toLowerCase()}</span>}
-                        <span>{totals.totalSaved ? `${t("savings")}: ${formatCurrency(totals.totalSaved, true)}` : ""}</span>
+                        <span>
+                          {totals.paidCount} {t("paid").toLowerCase()}
+                        </span>
+                        <span>
+                          {totals.pendingCount} {t("pending").toLowerCase()}
+                        </span>
+                        {totals.overdueCount > 0 && (
+                          <span>
+                            {totals.overdueCount} {t("overdue").toLowerCase()}
+                          </span>
+                        )}
+                        <span>
+                          {totals.totalSaved
+                            ? `${t("savings")}: ${formatCurrency(totals.totalSaved, true)}`
+                            : ""}
+                        </span>
                       </div>
                       <div className="space-y-2">
                         {month.incomes.length > 0 && (
                           <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-pos">{t("incomes")}</p>
-                            {month.incomes.map((item) => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="truncate">{item.description}</span><span className="num text-pos">{formatCurrency(item.amount, true)}</span></div>)}
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-pos">
+                              {t("incomes")}
+                            </p>
+                            {month.incomes.map((item) => (
+                              <div key={item.id} className="flex justify-between gap-3 text-xs">
+                                <span className="truncate">{item.description}</span>
+                                <span className="num text-pos">
+                                  {formatCurrency(item.amount, true)}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
                         {month.bills.length > 0 && (
                           <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-neg">{t("bills")}</p>
-                            {month.bills.map((item) => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="truncate">{item.description}</span><span className="num text-neg">{formatCurrency(item.amount, true)}</span></div>)}
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-neg">
+                              {t("bills")}
+                            </p>
+                            {month.bills.map((item) => (
+                              <div key={item.id} className="flex justify-between gap-3 text-xs">
+                                <span className="truncate">{item.description}</span>
+                                <span className="num text-neg">
+                                  {formatCurrency(item.amount, true)}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
                         {month.savings.length > 0 && (
                           <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-econ">{t("savings")}</p>
-                            {month.savings.map((item) => <div key={item.id} className="flex justify-between gap-3 text-xs"><span className="truncate">{item.description}</span><span className="num text-econ">{formatCurrency(item.amount, true)}</span></div>)}
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-econ">
+                              {t("savings")}
+                            </p>
+                            {month.savings.map((item) => (
+                              <div key={item.id} className="flex justify-between gap-3 text-xs">
+                                <span className="truncate">{item.description}</span>
+                                <span className="num text-econ">
+                                  {formatCurrency(item.amount, true)}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>

@@ -1,0 +1,6 @@
+{
+  "name": "FinMonth — Controle financeiro pessoal por mês",
+  "description": "Organize receitas, contas a pagar e valores guardados mês a mês, com saldos calculados automaticamente.",
+  "requestFramePermissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

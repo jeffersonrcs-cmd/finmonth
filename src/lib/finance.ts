@@ -48,9 +48,19 @@ const STORAGE_KEY = "finmonth.v1";
 
 const emptyMonth = (): MonthData => ({ incomes: [], bills: [], savings: [] });
 
-export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, leadDays: 1, dueToday: true, overdue: true };
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  enabled: true,
+  leadDays: 1,
+  dueToday: true,
+  overdue: true,
+};
 
-const initialState: FinanceState = { months: {}, theme: "dark", userName: "", notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES };
+const initialState: FinanceState = {
+  months: {},
+  theme: "dark",
+  userName: "",
+  notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
+};
 
 let state: FinanceState = initialState;
 let hydrated = false;
@@ -80,6 +90,12 @@ function hasFinanceData(value: FinanceState) {
 async function syncCloudNow() {
   if (!cloudUserId || !cloudReady || typeof window === "undefined") return;
 
+  // If user is currently offline, queue sync for when connection returns
+  if (!navigator.onLine) {
+    hasPendingOfflineSync = true;
+    return;
+  }
+
   const userId = cloudUserId;
   const months = Object.entries(state.months).map(([monthKey, data]) => ({
     user_id: userId,
@@ -87,24 +103,42 @@ async function syncCloudNow() {
     data,
   }));
 
-  const [{ error: profileError }, { error: monthsError }] = await Promise.all([
-    supabase.from("profiles").upsert({
-      id: userId,
-      full_name: state.userName,
-      theme: state.theme,
-      notifications_enabled: state.notificationPreferences.enabled,
-      notification_lead_days: state.notificationPreferences.leadDays,
-      notify_due_today: state.notificationPreferences.dueToday,
-      notify_overdue: state.notificationPreferences.overdue,
-    }),
-    months.length > 0
-      ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
-      : Promise.resolve({ error: null }),
-  ]);
+  try {
+    const [{ error: profileError }, { error: monthsError }] = await Promise.all([
+      supabase.from("profiles").upsert({
+        id: userId,
+        full_name: state.userName,
+        theme: state.theme,
+        notifications_enabled: state.notificationPreferences.enabled,
+        notification_lead_days: state.notificationPreferences.leadDays,
+        notify_due_today: state.notificationPreferences.dueToday,
+        notify_overdue: state.notificationPreferences.overdue,
+      }),
+      months.length > 0
+        ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
+        : Promise.resolve({ error: null }),
+    ]);
 
-  if (profileError || monthsError) {
-    console.error("Falha ao salvar dados financeiros no Supabase.", profileError ?? monthsError);
+    if (profileError || monthsError) {
+      console.error("Falha ao salvar dados financeiros no Supabase.", profileError ?? monthsError);
+      hasPendingOfflineSync = true;
+    } else {
+      hasPendingOfflineSync = false;
+    }
+  } catch (err) {
+    console.warn("Falha de conexão durante a sincronização em nuvem. Os dados serão reenviados assim que a conexão restabelecer.", err);
+    hasPendingOfflineSync = true;
   }
+}
+
+let hasPendingOfflineSync = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    if (hasPendingOfflineSync && cloudUserId && cloudReady) {
+      void syncCloudNow();
+    }
+  });
 }
 
 function scheduleCloudSync() {
@@ -119,22 +153,76 @@ export async function connectCloud(userId: string) {
   cloudUserId = userId;
   cloudReady = false;
 
-  const [{ data: rows, error: monthsError }, { data: profile, error: profileError }] = await Promise.all([
-    supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
-    supabase.from("profiles").select("full_name,theme,notifications_enabled,notification_lead_days,notify_due_today,notify_overdue").eq("id", userId).maybeSingle(),
-  ]);
+  const fetchCloudData = async () => {
+    return await Promise.all([
+      supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
+      supabase
+        .from("profiles")
+        .select(
+          "full_name,theme,notifications_enabled,notification_lead_days,notify_due_today,notify_overdue",
+        )
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+  };
+
+  let [{ data: rows, error: monthsError }, { data: profile, error: profileError }] =
+    await fetchCloudData();
+
+  // If PostgREST returns PGRST303 ("JWT issued at future") due to minor client/server clock skew,
+  // wait a short moment and retry once or attempt session refresh.
+  if (
+    (monthsError && (monthsError.code === "PGRST303" || monthsError.message?.includes("future"))) ||
+    (profileError && (profileError.code === "PGRST303" || profileError.message?.includes("future")))
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      await supabase.auth.refreshSession();
+    } catch {
+      /* ignore */
+    }
+    const retried = await fetchCloudData();
+    rows = retried[0].data;
+    monthsError = retried[0].error;
+    profile = retried[1].data;
+    profileError = retried[1].error;
+  }
+
+  // If clock skew error persists, keep local offline state without crashing the user session
+  if (
+    (monthsError && (monthsError.code === "PGRST303" || monthsError.message?.includes("future"))) ||
+    (profileError && (profileError.code === "PGRST303" || profileError.message?.includes("future")))
+  ) {
+    console.warn("Diferença de relógio detectada com o servidor (PGRST303). Mantendo dados locais.");
+    cloudReady = true;
+    return;
+  }
 
   if (monthsError) throw monthsError;
   if (profileError) throw profileError;
 
   const hasCloudData = (rows?.length ?? 0) > 0;
-  if (!hasCloudData && (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")) {
+  if (
+    !hasCloudData &&
+    (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")
+  ) {
     if (profile) {
       state = {
         ...state,
         userName: profile.full_name ?? state.userName,
         theme: profile.theme === "light" ? "light" : state.theme,
-        notificationPreferences: { enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled, leadDays: Math.min(Math.max(Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays), 0), 7), dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday, overdue: profile.notify_overdue ?? state.notificationPreferences.overdue },
+        notificationPreferences: {
+          enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled,
+          leadDays: Math.min(
+            Math.max(
+              Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays),
+              0,
+            ),
+            7,
+          ),
+          dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday,
+          overdue: profile.notify_overdue ?? state.notificationPreferences.overdue,
+        },
       };
     }
     persist();
@@ -145,12 +233,15 @@ export async function connectCloud(userId: string) {
   }
 
   state = {
-    months: Object.fromEntries(
-      (rows ?? []).map((row) => [row.month_key, row.data as MonthData]),
-    ),
+    months: Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data as MonthData])),
     theme: profile?.theme === "light" ? "light" : "dark",
     userName: profile?.full_name ?? "",
-    notificationPreferences: { enabled: profile?.notifications_enabled ?? true, leadDays: Math.min(Math.max(Number(profile?.notification_lead_days ?? 1), 0), 7), dueToday: profile?.notify_due_today ?? true, overdue: profile?.notify_overdue ?? true },
+    notificationPreferences: {
+      enabled: profile?.notifications_enabled ?? true,
+      leadDays: Math.min(Math.max(Number(profile?.notification_lead_days ?? 1), 0), 7),
+      dueToday: profile?.notify_due_today ?? true,
+      overdue: profile?.notify_overdue ?? true,
+    },
   };
   persist();
   emit();
@@ -182,7 +273,12 @@ export function hydrateStore() {
         months: parsed.months ?? {},
         theme: parsed.theme === "light" ? "light" : "dark",
         userName: typeof parsed.userName === "string" ? parsed.userName : "",
-        notificationPreferences: { enabled: parsed.notificationPreferences?.enabled ?? true, leadDays: Math.min(Math.max(Number(parsed.notificationPreferences?.leadDays ?? 1), 0), 7), dueToday: parsed.notificationPreferences?.dueToday ?? true, overdue: parsed.notificationPreferences?.overdue ?? true },
+        notificationPreferences: {
+          enabled: parsed.notificationPreferences?.enabled ?? true,
+          leadDays: Math.min(Math.max(Number(parsed.notificationPreferences?.leadDays ?? 1), 0), 7),
+          dueToday: parsed.notificationPreferences?.dueToday ?? true,
+          overdue: parsed.notificationPreferences?.overdue ?? true,
+        },
       };
     }
   } catch {
@@ -355,31 +451,60 @@ export function shiftMonthKey(key: string, delta: number) {
 
 export const previousMonthKey = (key: string) => shiftMonthKey(key, -1);
 
-export type BillNotification = { id: string; kind: "upcoming" | "today" | "overdue"; billId: string; monthKey: string; title: string; message: string };
+export type BillNotification = {
+  id: string;
+  kind: "upcoming" | "today" | "overdue";
+  billId: string;
+  monthKey: string;
+  title: string;
+  message: string;
+};
 
-export function getBillNotifications(financeState: FinanceState, now = new Date()): BillNotification[] {
+export function getBillNotifications(
+  financeState: FinanceState,
+  now = new Date(),
+): BillNotification[] {
   const preferences = financeState.notificationPreferences ?? DEFAULT_NOTIFICATION_PREFERENCES;
   if (!preferences.enabled) return [];
-  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
   const result: BillNotification[] = [];
   for (const [monthKey, data] of Object.entries(financeState.months)) {
     const { year, month } = parseMonthKey(monthKey);
     for (const bill of data.bills) {
       if (bill.paid) continue;
-      const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month))); due.setHours(0, 0, 0, 0);
+      const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month)));
+      due.setHours(0, 0, 0, 0);
       const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
       const lang = getCurrentLanguage();
       if (diffDays < 0 && preferences.overdue) {
         const days = Math.abs(diffDays);
         result.push({
-          id: `overdue:${monthKey}:${bill.id}`, kind: "overdue", billId: bill.id, monthKey,
+          id: `overdue:${monthKey}:${bill.id}`,
+          kind: "overdue",
+          billId: bill.id,
+          monthKey,
           title: `${bill.description} ${translate(lang, "overdue").toLowerCase()}`,
           message: `${translate(lang, "overdueBy")} ${days} ${translate(lang, days === 1 ? "day" : "days")}.`,
         });
       } else if (diffDays === 0 && preferences.dueToday) {
-        result.push({ id: `today:${monthKey}:${bill.id}`, kind: "today", billId: bill.id, monthKey, title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${translate(lang, "today")}`, message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.` });
+        result.push({
+          id: `today:${monthKey}:${bill.id}`,
+          kind: "today",
+          billId: bill.id,
+          monthKey,
+          title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${translate(lang, "today")}`,
+          message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.`,
+        });
       } else if (diffDays > 0 && diffDays <= preferences.leadDays) {
-        result.push({ id: `upcoming:${monthKey}:${bill.id}`, kind: "upcoming", billId: bill.id, monthKey, title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${diffDays} ${diffDays === 1 ? translate(lang, "day") : translate(lang, "days")}`, message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.` });
+        result.push({
+          id: `upcoming:${monthKey}:${bill.id}`,
+          kind: "upcoming",
+          billId: bill.id,
+          monthKey,
+          title: `${bill.description} ${translate(lang, "due").toLowerCase()} ${diffDays} ${diffDays === 1 ? translate(lang, "day") : translate(lang, "days")}`,
+          message: `${translate(lang, "amount")}: ${formatCurrency(bill.amount)}.`,
+        });
       }
     }
   }
@@ -390,13 +515,17 @@ export function getBillNotifications(financeState: FinanceState, now = new Date(
 export function billDueDateLabel(monthKey: string, dueDay: number) {
   const { year, month } = parseMonthKey(monthKey);
   const locale = getCurrentLanguage();
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))));
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(
+    new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))),
+  );
 }
 
 export function monthLabel(key: string, short = false) {
   const { year, month } = parseMonthKey(key);
   const locale = getCurrentLanguage();
-  const name = new Intl.DateTimeFormat(locale, { month: short ? "short" : "long" }).format(new Date(year, month - 1, 1));
+  const name = new Intl.DateTimeFormat(locale, { month: short ? "short" : "long" }).format(
+    new Date(year, month - 1, 1),
+  );
   return `${name} ${year}`;
 }
 

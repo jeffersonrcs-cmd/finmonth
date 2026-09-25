@@ -58,16 +58,18 @@ export function ResetPasswordScreen() {
           <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
             {message ? <Check className="size-6" /> : <KeyRound className="size-6" />}
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
-          <h1 className="mt-2 font-display text-2xl font-semibold">{t("newPassword")}</h1>
-          <p className="mt-2 text-sm text-mut">
-            {t("passwordRecovery")}
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">
+            FinMonth
           </p>
+          <h1 className="mt-2 font-display text-2xl font-semibold">{t("newPassword")}</h1>
+          <p className="mt-2 text-sm text-mut">{t("passwordRecovery")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5 shadow-xl">
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("newPassword")}</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut">
+              {t("newPassword")}
+            </Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
@@ -93,7 +95,9 @@ export function ResetPasswordScreen() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("confirmPassword")}</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut">
+              {t("confirmPassword")}
+            </Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
@@ -119,11 +123,15 @@ export function ResetPasswordScreen() {
           </div>
 
           {error && (
-            <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">{error}</p>
+            <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">
+              {error}
+            </p>
           )}
           {message && (
             <div className="space-y-3">
-              <p className="rounded-xl bg-brand/10 px-3 py-2 text-xs leading-relaxed text-brand">{message}</p>
+              <p className="rounded-xl bg-brand/10 px-3 py-2 text-xs leading-relaxed text-brand">
+                {message}
+              </p>
               <Button
                 type="button"
                 onClick={() => void navigate({ to: "/" })}

@@ -26,20 +26,29 @@ export function AuthScreen() {
     setError("");
 
     try {
+      const appOrigin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "https://finmonth.lovable.app";
+
       if (mode === "signup") {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             data: { full_name: name.trim() },
-            emailRedirectTo: "https://finmonth.lovable.app/confirmar-email",
+            emailRedirectTo: `${appOrigin}/confirmar-email`,
           },
         });
 
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          try { sessionStorage.setItem("finmonth:confirmation-email", email.trim()); } catch { /* ignore */ }
+          try {
+            sessionStorage.setItem("finmonth:confirmation-email", email.trim());
+          } catch {
+            /* ignore */
+          }
           void navigate({ to: "/confirmar-email" });
         } else {
           setMessage(t("accountCreated"));
@@ -71,8 +80,13 @@ export function AuthScreen() {
 
     setBusy(true);
     try {
+      const appOrigin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "https://finmonth.lovable.app";
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: "https://finmonth.lovable.app/redefinir-senha",
+        redirectTo: `${appOrigin}/redefinir-senha`,
       });
       if (resetError) throw resetError;
       setMessage(t("recoverySent"));
@@ -93,22 +107,19 @@ export function AuthScreen() {
           <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
             {mode === "login" ? <LogIn className="size-6" /> : <UserPlus className="size-6" />}
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">
+            FinMonth
+          </p>
           <h1 className="mt-2 font-display text-2xl font-semibold">
             {mode === "login" ? t("enterAccount") : t("createAccount")}
           </h1>
-          <p className="mt-2 text-sm text-mut">
-            {t("financialDataSaved")}
-          </p>
+          <p className="mt-2 text-sm text-mut">{t("financialDataSaved")}</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="glass space-y-4 rounded-3xl p-5 shadow-xl"
-        >
+        <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5 shadow-xl">
           {mode === "signup" && (
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("name")}</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-mut">{t("name")}</Label>
               <Input
                 className="glass-soft h-11 rounded-xl border-0 text-base"
                 value={name}
@@ -121,7 +132,7 @@ export function AuthScreen() {
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("email")}</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut">{t("email")}</Label>
             <Input
               className="glass-soft h-11 rounded-xl border-0 text-base"
               type="email"
@@ -134,7 +145,9 @@ export function AuthScreen() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-widest text-mut" >{t("password")}</Label>
+            <Label className="text-[10px] uppercase tracking-widest text-mut">
+              {t("password")}
+            </Label>
             <div className="relative">
               <Input
                 className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
@@ -158,10 +171,14 @@ export function AuthScreen() {
           </div>
 
           {error && (
-            <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">{error}</p>
+            <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">
+              {error}
+            </p>
           )}
           {message && (
-            <p className="rounded-xl bg-brand/10 px-3 py-2 text-xs leading-relaxed text-brand">{message}</p>
+            <p className="rounded-xl bg-brand/10 px-3 py-2 text-xs leading-relaxed text-brand">
+              {message}
+            </p>
           )}
 
           <Button

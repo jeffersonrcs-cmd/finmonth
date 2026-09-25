@@ -13,7 +13,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { computeTotals, currentMonthKey, formatCurrency, monthLabel, useFinanceState } from "@/lib/finance";
+import {
+  computeTotals,
+  currentMonthKey,
+  formatCurrency,
+  monthLabel,
+  useFinanceState,
+} from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
 export type ChartRange = 3 | 6 | 12;
@@ -70,9 +76,11 @@ function PeriodFilter({
             key={months}
             type="button"
             onClick={() => onChange(months as ChartRange)}
-            className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-all duration-200 ${selected
-              ? "bg-brand text-background shadow-sm"
-              : "text-foreground/75 hover:bg-muted/60 hover:text-foreground active:scale-[0.98]"}`}
+            className={`min-h-8 rounded-lg px-2.5 text-[10px] font-semibold transition-all duration-200 ${
+              selected
+                ? "bg-brand text-background shadow-sm"
+                : "text-foreground/75 hover:bg-muted/60 hover:text-foreground active:scale-[0.98]"
+            }`}
             aria-pressed={selected}
           >
             {months} {t("months")}
@@ -100,7 +108,9 @@ function ChartShell({
   return (
     <section className="glass mb-4 rounded-3xl p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="min-w-0 font-display text-sm font-semibold uppercase tracking-wider text-mut">{title}</h2>
+        <h2 className="min-w-0 font-display text-sm font-semibold uppercase tracking-wider text-mut">
+          {title}
+        </h2>
         <PeriodFilter value={range} onChange={onRangeChange} label={t("historyRange")} />
       </div>
       {rows.length === 0 ? (
@@ -159,7 +169,9 @@ function FinanceTooltip({
         {fields.map(({ key, label: fieldLabel }) => (
           <div key={String(key)} className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">{fieldLabel}</span>
-            <span className={`num font-semibold ${key === "saldo" ? (source.saldo >= 0 ? "text-pos" : "text-neg") : ""}`}>
+            <span
+              className={`num font-semibold ${key === "saldo" ? (source.saldo >= 0 ? "text-pos" : "text-neg") : ""}`}
+            >
               {formatCurrency(source[key] as number, true)}
             </span>
           </div>
@@ -176,8 +188,10 @@ function sliceRows(rows: Row[], range: ChartRange) {
 export function useAnnualTotals(year: number) {
   const state = useFinanceState();
   const currentKey = currentMonthKey();
-  const keys = Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`)
-    .filter((key) => key <= currentKey);
+  const keys = Array.from(
+    { length: 12 },
+    (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`,
+  ).filter((key) => key <= currentKey);
 
   return keys.reduce(
     (totals, key) => {
@@ -211,7 +225,12 @@ export function MonthlyOverview({
   comparison,
 }: {
   rows: Row[];
-  totals: { totalIncomes: number; totalBills: number; totalSaved: number; availableBalance: number };
+  totals: {
+    totalIncomes: number;
+    totalBills: number;
+    totalSaved: number;
+    availableBalance: number;
+  };
   period?: "monthly" | "annual";
   comparison?: { totalIncomes: number; totalBills: number; totalSaved: number } | undefined;
 }) {
@@ -241,37 +260,66 @@ export function MonthlyOverview({
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="font-display text-sm font-semibold">{t("overview")}</h2>
-            <p className="mt-0.5 text-[11px] text-mut">{period === "annual" ? t("selectedYearSummary") : t("selectedMonthSummary")}</p>
+            <p className="mt-0.5 text-[11px] text-mut">
+              {period === "annual" ? t("selectedYearSummary") : t("selectedMonthSummary")}
+            </p>
           </div>
-          <span className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}>
+          <span
+            className={`rounded-full px-2 py-1 text-[10px] font-medium ${balancePositive ? "bg-pos/10 text-pos" : "bg-neg/10 text-neg"}`}
+          >
             {balancePositive ? t("positiveBalance") : t("negativeBalance")}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-pos/10 p-3">
             <p className="text-[10px] text-mut">{t("incomes")}</p>
-            <p className="num mt-1 font-display text-sm font-semibold text-pos">{formatCurrency(totals.totalIncomes, true)}</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-pos">
+              {formatCurrency(totals.totalIncomes, true)}
+            </p>
           </div>
           <div className="rounded-2xl bg-neg/10 p-3">
             <p className="text-[10px] text-mut">{t("bills")}</p>
-            <p className="num mt-1 font-display text-sm font-semibold text-neg">{formatCurrency(totals.totalBills, true)}</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-neg">
+              {formatCurrency(totals.totalBills, true)}
+            </p>
           </div>
           <div className="rounded-2xl bg-econ/10 p-3">
             <p className="text-[10px] text-mut">{t("savings")}</p>
-            <p className="num mt-1 font-display text-sm font-semibold text-econ">{formatCurrency(totals.totalSaved, true)}</p>
+            <p className="num mt-1 font-display text-sm font-semibold text-econ">
+              {formatCurrency(totals.totalSaved, true)}
+            </p>
           </div>
           <div className="rounded-2xl bg-brand/10 p-3">
             <p className="text-[10px] text-mut">{t("monthBalance")}</p>
-            <p className={`num mt-1 font-display text-sm font-semibold ${balancePositive ? "text-brand" : "text-neg"}`}>{formatCurrency(totals.availableBalance, true)}</p>
+            <p
+              className={`num mt-1 font-display text-sm font-semibold ${balancePositive ? "text-brand" : "text-neg"}`}
+            >
+              {formatCurrency(totals.availableBalance, true)}
+            </p>
           </div>
         </div>
       </div>
 
-      <ChartShell title={period === "annual" ? t("annualComparison") : t("monthlyComparison")} rows={rows} range={12} onRangeChange={() => {}}>
+      <ChartShell
+        title={period === "annual" ? t("annualComparison") : t("monthlyComparison")}
+        rows={rows}
+        range={12}
+        onRangeChange={() => {}}
+      >
         <BarChart data={rows}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis {...axisProps} />
-          <Tooltip content={<FinanceTooltip fields={[{ key: "receitas", label: t("incomes") }, { key: "despesas", label: t("bills") }, { key: "guardado", label: t("savings") }]} />} />
+          <Tooltip
+            content={
+              <FinanceTooltip
+                fields={[
+                  { key: "receitas", label: t("incomes") },
+                  { key: "despesas", label: t("bills") },
+                  { key: "guardado", label: t("savings") },
+                ]}
+              />
+            }
+          />
           <Legend wrapperStyle={{ fontSize: 10, paddingTop: 6 }} />
           <Bar dataKey="receitas" name={t("incomes")} fill="var(--pos)" radius={[5, 5, 0, 0]} />
           <Bar dataKey="despesas" name={t("bills")} fill="var(--neg)" radius={[5, 5, 0, 0]} />
@@ -281,10 +329,14 @@ export function MonthlyOverview({
 
       <section className="glass rounded-3xl p-4">
         <div className="mb-3 flex items-center gap-2">
-          <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-brand">✦</span>
+          <span className="grid size-7 place-items-center rounded-full bg-brand/10 text-brand">
+            ✦
+          </span>
           <div>
             <h2 className="font-display text-sm font-semibold">{t("periodInsights")}</h2>
-            <p className="text-[10px] text-mut">{comparison ? t("previousYearComparison") : t("previousMonthComparison")}</p>
+            <p className="text-[10px] text-mut">
+              {comparison ? t("previousYearComparison") : t("previousMonthComparison")}
+            </p>
           </div>
         </div>
         <div className="space-y-2.5 text-xs">
@@ -294,7 +346,11 @@ export function MonthlyOverview({
           </div>
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
             <span className="text-mut">{t("bills")}</span>
-            <span className={`font-medium ${expenseChange !== null && expenseChange > 0 ? "text-neg" : "text-pos"}`}>{formatChange(expenseChange, t("new"))}</span>
+            <span
+              className={`font-medium ${expenseChange !== null && expenseChange > 0 ? "text-neg" : "text-pos"}`}
+            >
+              {formatChange(expenseChange, t("new"))}
+            </span>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/30 px-3 py-2.5">
             <span className="text-mut">{t("savings")}</span>
@@ -324,17 +380,33 @@ export function IncomeVsExpenseChart({
   ];
 
   return (
-    <ChartShell title={t("incomeExpense")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
-      <BarChart data={visibleRows} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
+    <ChartShell
+      title={t("incomeExpense")}
+      rows={visibleRows}
+      range={range}
+      onRangeChange={onRangeChange}
+    >
+      <BarChart
+        data={visibleRows}
+        margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+        barCategoryGap="22%"
+      >
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
         <YAxis {...yAxisProps} />
-        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ fill: "var(--muted)", opacity: 0.18 }} />
+        <Tooltip
+          content={<FinanceTooltip fields={fields} />}
+          cursor={{ fill: "var(--muted)", opacity: 0.18 }}
+        />
         <Bar dataKey="receitas" fill="var(--pos)" radius={[6, 6, 0, 0]} maxBarSize={18}>
-          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />)}
+          {visibleRows.map((row) => (
+            <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />
+          ))}
         </Bar>
         <Bar dataKey="despesas" fill="var(--neg)" radius={[6, 6, 0, 0]} maxBarSize={18}>
-          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />)}
+          {visibleRows.map((row) => (
+            <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.58} />
+          ))}
         </Bar>
       </BarChart>
     </ChartShell>
@@ -369,7 +441,12 @@ export function BalanceEvolutionChart({
   const zeroOffsetPercent = `${zeroOffset * 100}%`;
 
   return (
-    <ChartShell title={t("balanceEvolution")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
+    <ChartShell
+      title={t("balanceEvolution")}
+      rows={visibleRows}
+      range={range}
+      onRangeChange={onRangeChange}
+    >
       <LineChart data={visibleRows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="balance-line-gradient" x1="0" y1="0" x2="0" y2="1">
@@ -395,7 +472,10 @@ export function BalanceEvolutionChart({
           strokeDasharray="4 4"
           strokeWidth={1.2}
         />
-        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ stroke: "var(--brand)", strokeOpacity: 0.2 }} />
+        <Tooltip
+          content={<FinanceTooltip fields={fields} />}
+          cursor={{ stroke: "var(--brand)", strokeOpacity: 0.2 }}
+        />
         <Area
           type="monotone"
           dataKey="saldo"
@@ -413,8 +493,10 @@ export function BalanceEvolutionChart({
             const positive = row?.saldo >= 0;
             const active = row?.isCurrent;
             const tone = positive ? "var(--pos)" : "var(--neg)";
+            const key = props.key ?? `dot-${row?.key ?? props.cx ?? Math.random()}`;
             return (
               <circle
+                key={key}
                 cx={props.cx}
                 cy={props.cy}
                 r={active ? 5 : 3.2}
@@ -424,11 +506,12 @@ export function BalanceEvolutionChart({
               />
             );
           }}
-          activeDot={(props: any) => {
+          activeDot={(props: { cx?: number; cy?: number; payload?: Row; key?: string | number }) => {
             const row = props.payload as Row;
             const tone = row?.saldo >= 0 ? "var(--pos)" : "var(--neg)";
+            const key = props.key ?? `active-dot-${row?.key ?? props.cx ?? Math.random()}`;
             return (
-              <g>
+              <g key={key}>
                 <circle cx={props.cx} cy={props.cy} r={9} fill={tone} opacity={0.14} />
                 <circle
                   cx={props.cx}
@@ -464,14 +547,28 @@ export function SavingsChart({
   ];
 
   return (
-    <ChartShell title={t("savedPerMonth")} rows={visibleRows} range={range} onRangeChange={onRangeChange}>
-      <BarChart data={visibleRows} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barCategoryGap="28%">
+    <ChartShell
+      title={t("savedPerMonth")}
+      rows={visibleRows}
+      range={range}
+      onRangeChange={onRangeChange}
+    >
+      <BarChart
+        data={visibleRows}
+        margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+        barCategoryGap="28%"
+      >
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 4" />
         <XAxis {...axisProps} />
         <YAxis {...yAxisProps} />
-        <Tooltip content={<FinanceTooltip fields={fields} />} cursor={{ fill: "var(--muted)", opacity: 0.18 }} />
+        <Tooltip
+          content={<FinanceTooltip fields={fields} />}
+          cursor={{ fill: "var(--muted)", opacity: 0.18 }}
+        />
         <Bar dataKey="guardado" fill="var(--econ)" radius={[7, 7, 0, 0]} maxBarSize={24}>
-          {visibleRows.map((row) => <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.62} />)}
+          {visibleRows.map((row) => (
+            <Cell key={row.key} opacity={row.isCurrent ? 1 : 0.62} />
+          ))}
         </Bar>
       </BarChart>
     </ChartShell>

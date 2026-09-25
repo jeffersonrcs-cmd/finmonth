@@ -22,9 +22,11 @@ export function MonthNav({
   const displayName = userName.trim() || t("myAccount");
 
   return (
-    <header className="mb-5 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center justify-between gap-3 bg-background/85 px-4 py-3 shadow-sm backdrop-blur-xl transition-all border-b border-border/50">
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">{t("finance")}</p>
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">
+          {t("finance")}
+        </p>
         <button
           type="button"
           onClick={(event) => {
@@ -37,7 +39,6 @@ export function MonthNav({
           {displayName}
           <UserRound className="size-4 text-mut" />
         </button>
-
       </div>
 
       <div className="flex items-center gap-2">
@@ -47,7 +48,11 @@ export function MonthNav({
             onOpenNotifications();
             event.currentTarget.blur();
           }}
-          aria-label={notificationCount ? `${t("openNotifications")} (${notificationCount})` : t("openNotifications")}
+          aria-label={
+            notificationCount
+              ? `${t("openNotifications")} (${notificationCount})`
+              : t("openNotifications")
+          }
           className="relative grid size-9 place-items-center rounded-full border border-border bg-muted/40 text-mut outline-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none active:shadow-none [-webkit-tap-highlight-color:transparent]"
         >
           <Bell className="size-4" />
@@ -68,7 +73,9 @@ export function MonthNav({
         >
           <ChevronLeft className="size-4" />
         </button>
-        <div className="glass-soft num rounded-full px-3 py-1.5 text-xs font-medium">{monthLabel(monthKey, true)}</div>
+        <div className="glass-soft num rounded-full px-3 py-1.5 text-xs font-medium">
+          {monthLabel(monthKey, true)}
+        </div>
         <button
           type="button"
           onClick={(event) => {

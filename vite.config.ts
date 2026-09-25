@@ -13,19 +13,14 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
   vite: {
-    base: "/finmonth/",
     define: {
       __FINMONTH_VERSION__: JSON.stringify(packageJson.version),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
     },
   },
   tanstackStart: {
-    spa: {
-      enabled: true,
-      prerender: {
-        outputPath: "/index.html",
-        crawlLinks: false,
-      },
-    },
+    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+    // nitro/vite builds from this
+    server: { entry: "server" },
   },
 });

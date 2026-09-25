@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { connectCloud, disconnectCloud, hydrateStore, useFinanceState } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { checkAndSendDueAlerts } from "@/lib/notifications";
 import { AuthScreen } from "@/components/auth/AuthScreen";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -25,7 +26,9 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">{useLanguage().t("pageNotFound")}</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
+          {useLanguage().t("pageNotFound")}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {useLanguage().t("pageNotFoundDescription")}
         </p>
@@ -88,12 +91,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "FinMonth — Controle financeiro pessoal" },
       {
         name: "description",
         content: "Controle suas receitas, contas e economias mês a mês.",
       },
+      { name: "theme-color", content: "#0b0f19" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "FinMonth" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "finmonth-build", content: BUILD_ID },
@@ -104,7 +111,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.json" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -141,15 +150,18 @@ function RootComponent() {
   const [authenticated, setAuthenticated] = useState(false);
   const publicAuthRoutes = ["/confirmar-email", "/redefinir-senha"] as const;
   const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-  const isPublicAuthRoute = publicAuthRoutes.includes(currentPath as (typeof publicAuthRoutes)[number]);
+  const isPublicAuthRoute = publicAuthRoutes.includes(
+    currentPath as (typeof publicAuthRoutes)[number],
+  );
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const isRecoveryFlow = hashParams.get("type") === "recovery";
-    const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const isLocalHost =
+      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
     if (isRecoveryFlow && isLocalHost) {
-      const productionRecoveryUrl = new URL("https://" + ["finmonth", "lovable", "app"].join(".") + "/redefinir-senha");
+      const productionRecoveryUrl = new URL("https://finmonth.github.io/redefinir-senha");
       productionRecoveryUrl.hash = window.location.hash.replace(/^#/, "");
       window.location.replace(productionRecoveryUrl.toString());
       return;
@@ -179,31 +191,22 @@ function RootComponent() {
         await connectCloud(session.user.id);
         connectedUserId = session.user.id;
         if (active) setAuthenticated(true);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Não foi possível carregar os dados do usuário.", error);
-        if (active) setAuthenticated(false);
+        // If error is related to JWT clock skew or transient network, keep the user session
+        // instead of abruptly logging them out, allowing retry on next interaction
+        if (error?.code === "PGRST303" || error?.message?.includes("future")) {
+          connectedUserId = session.user.id;
+          if (active) setAuthenticated(true);
+        } else {
+          if (active) setAuthenticated(false);
+        }
       } finally {
         if (active) setAuthReady(true);
       }
     };
 
-    const getSessionWithTimeout = async () => {
-      const timeout = new Promise<null>((resolve) => {
-        window.setTimeout(() => resolve(null), 8_000);
-      });
-      const sessionRequest = supabase.auth.getSession().then(({ data }) => data.session);
-      const session = await Promise.race([sessionRequest, timeout]);
-      if (session) {
-        await applySession(session);
-        return;
-      }
-      if (active) {
-        setAuthenticated(false);
-        setAuthReady(true);
-      }
-    };
-
-    void getSessionWithTimeout();
+    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;
@@ -244,11 +247,7 @@ function RootComponent() {
         return;
       }
 
-      if (
-        event === "INITIAL_SESSION" ||
-        event === "SIGNED_IN" ||
-        event === "TOKEN_REFRESHED"
-      ) {
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         setTimeout(() => void applySession(session), 0);
       }
     });
@@ -289,8 +288,12 @@ function RootComponent() {
         });
         if (!response.ok) return;
         const html = await response.text();
-        const buildMatch = html.match(/<meta[^>]+name=["']finmonth-build["'][^>]+content=["']([^"']+)["']/i);
-        const versionMatch = html.match(/<meta[^>]+name=["']finmonth-version["'][^>]+content=["']([^"']+)["']/i);
+        const buildMatch = html.match(
+          /<meta[^>]+name=["']finmonth-build["'][^>]+content=["']([^"']+)["']/i,
+        );
+        const versionMatch = html.match(
+          /<meta[^>]+name=["']finmonth-version["'][^>]+content=["']([^"']+)["']/i,
+        );
         const newerBuildAvailable = Boolean(buildMatch?.[1] && buildMatch[1] !== BUILD_ID);
         const newerVersionAvailable = Boolean(versionMatch?.[1] && versionMatch[1] !== APP_VERSION);
         if (active && (newerBuildAvailable || newerVersionAvailable)) {
@@ -326,6 +329,41 @@ function RootComponent() {
   }, [theme]);
 
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const financeState = useFinanceState();
+
+  // Register PWA service worker
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          // Check for service worker updates
+          reg.onupdatefound = () => {
+            const installing = reg.installing;
+            if (installing) {
+              installing.onstatechange = () => {
+                if (installing.state === "installed" && navigator.serviceWorker.controller) {
+                  setUpdateAvailable(true);
+                }
+              };
+            }
+          };
+        })
+        .catch(() => {
+          /* ignore registration errors */
+        });
+    }
+  }, []);
+
+  // Check and trigger notifications if user has enabled alerts
+  useEffect(() => {
+    if (authenticated) {
+      const timer = setTimeout(() => {
+        void checkAndSendDueAlerts(financeState, t);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [authenticated, financeState.notificationPreferences.enabled]);
 
   useEffect(() => {
     const handleUpdate = () => setUpdateAvailable(true);

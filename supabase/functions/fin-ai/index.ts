@@ -49,18 +49,31 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function extractOutputText(interaction: any) {
-  for (const step of interaction?.steps ?? []) {
+type InteractionLike = {
+  steps?: Array<{
+    type?: string;
+    content?: Array<{ type?: string; text?: string }>;
+  }>;
+  output_text?: string;
+};
+
+function extractOutputText(interaction: unknown) {
+  const inter = interaction as InteractionLike;
+  for (const step of inter?.steps ?? []) {
     if (step?.type !== "model_output") continue;
     for (const content of step?.content ?? []) {
       if (content?.type === "text" && typeof content.text === "string") return content.text;
     }
   }
-  return typeof interaction?.output_text === "string" ? interaction.output_text : "";
+  return typeof inter?.output_text === "string" ? inter.output_text : "";
 }
 
 function parseModelJson(raw: string) {
-  const cleaned = raw.trim().replace(/^\`\`\`json\s*/i, "").replace(/^\`\`\`\s*/i, "").replace(/\s*\`\`\`$/i, "");
+  const cleaned = raw
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "");
   try {
     return JSON.parse(cleaned);
   } catch {
@@ -79,8 +92,18 @@ function parseModelJson(raw: string) {
 
 function sanitizeChartMode(value: unknown) {
   const allowed = new Set([
-    "month", "compare", "year", "history", "balance", "savings",
-    "topBills", "cashflow", "incomeBreakdown", "billStatus", "dailyFlow", "recurring",
+    "month",
+    "compare",
+    "year",
+    "history",
+    "balance",
+    "savings",
+    "topBills",
+    "cashflow",
+    "incomeBreakdown",
+    "billStatus",
+    "dailyFlow",
+    "recurring",
   ]);
   return typeof value === "string" && allowed.has(value) ? value : null;
 }
@@ -99,7 +122,8 @@ Deno.serve(async (req) => {
   if (!token) return jsonResponse({ error: "Sessão não autenticada." }, 401);
 
   const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
-  if (!publishableKeysRaw) return jsonResponse({ error: "Configuração do Supabase indisponível." }, 500);
+  if (!publishableKeysRaw)
+    return jsonResponse({ error: "Configuração do Supabase indisponível." }, 500);
 
   let publishableKey: string;
   try {
@@ -115,9 +139,15 @@ Deno.serve(async (req) => {
   });
 
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
-  if (userError || !userData.user) return jsonResponse({ error: "Sessão inválida ou expirada." }, 401);
+  if (userError || !userData.user)
+    return jsonResponse({ error: "Sessão inválida ou expirada." }, 401);
 
-  let body: { question?: string; monthKey?: string; history?: Array<{ role: string; text: string }>; language?: string };
+  let body: {
+    question?: string;
+    monthKey?: string;
+    history?: Array<{ role: string; text: string }>;
+    language?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -125,24 +155,57 @@ Deno.serve(async (req) => {
   }
 
   const question = typeof body.question === "string" ? body.question.trim() : "";
-  const language = body.language === "en-US" ? "en-US" : body.language === "es-ES" ? "es-ES" : "pt-BR";
-  const languageName = language === "en-US" ? "English" : language === "es-ES" ? "Spanish" : "Portuguese (Brazil)";
+  const language =
+    body.language === "en-US" ? "en-US" : body.language === "es-ES" ? "es-ES" : "pt-BR";
+  const languageName =
+    language === "en-US" ? "English" : language === "es-ES" ? "Spanish" : "Portuguese (Brazil)";
   const localized = {
-    invalidQuestion: language === "en-US" ? "Enter a question." : language === "es-ES" ? "Introduce una pregunta." : "Informe uma pergunta.",
-    financeError: language === "en-US" ? "Could not access your financial data." : language === "es-ES" ? "No se pudieron consultar tus datos financieros." : "Não foi possível consultar seus dados financeiros.",
-    geminiRate: language === "en-US" ? "Gemini reached its free limit right now. Try again later." : language === "es-ES" ? "Gemini alcanzó su límite gratuito en este momento. Inténtalo más tarde." : "O Gemini atingiu o limite gratuito neste momento. Tente novamente mais tarde.",
-    geminiError: language === "en-US" ? "Gemini could not process the question right now." : language === "es-ES" ? "Gemini no pudo procesar la pregunta ahora." : "O Gemini não conseguiu processar a pergunta agora.",
-    noResponse: language === "en-US" ? "I could not generate a response right now. Try again." : language === "es-ES" ? "No pude generar una respuesta ahora. Inténtalo de nuevo." : "Não consegui gerar uma resposta agora. Tente novamente.",
+    invalidQuestion:
+      language === "en-US"
+        ? "Enter a question."
+        : language === "es-ES"
+          ? "Introduce una pregunta."
+          : "Informe uma pergunta.",
+    financeError:
+      language === "en-US"
+        ? "Could not access your financial data."
+        : language === "es-ES"
+          ? "No se pudieron consultar tus datos financieros."
+          : "Não foi possível consultar seus dados financeiros.",
+    geminiRate:
+      language === "en-US"
+        ? "Gemini reached its free limit right now. Try again later."
+        : language === "es-ES"
+          ? "Gemini alcanzó su límite gratuito en este momento. Inténtalo más tarde."
+          : "O Gemini atingiu o limite gratuito neste momento. Tente novamente mais tarde.",
+    geminiError:
+      language === "en-US"
+        ? "Gemini could not process the question right now."
+        : language === "es-ES"
+          ? "Gemini no pudo procesar la pregunta ahora."
+          : "O Gemini não conseguiu processar a pergunta agora.",
+    noResponse:
+      language === "en-US"
+        ? "I could not generate a response right now. Try again."
+        : language === "es-ES"
+          ? "No pude generar una respuesta ahora. Inténtalo de nuevo."
+          : "Não consegui gerar uma resposta agora. Tente novamente.",
   };
   if (!question) return jsonResponse({ error: localized.invalidQuestion }, 400);
 
-  const monthKey = typeof body.monthKey === "string" && /^\d{4}-\d{2}$/.test(body.monthKey)
-    ? body.monthKey
-    : new Date().toISOString().slice(0, 7);
+  const monthKey =
+    typeof body.monthKey === "string" && /^\d{4}-\d{2}$/.test(body.monthKey)
+      ? body.monthKey
+      : new Date().toISOString().slice(0, 7);
 
   const history = Array.isArray(body.history)
     ? body.history
-        .filter((item) => item && (item.role === "user" || item.role === "assistant") && typeof item.text === "string")
+        .filter(
+          (item) =>
+            item &&
+            (item.role === "user" || item.role === "assistant") &&
+            typeof item.text === "string",
+        )
         .slice(-8)
         .map((item) => ({ role: item.role, text: item.text.slice(0, 3000) }))
     : [];
@@ -155,9 +218,7 @@ Deno.serve(async (req) => {
 
   if (financeError) return jsonResponse({ error: localized.financeError }, 500);
 
-  const financeData = Object.fromEntries(
-    (rows ?? []).map((row) => [row.month_key, row.data]),
-  );
+  const financeData = Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data]));
 
   const input = [
     `Idioma obrigatório da resposta: ${languageName}`,
@@ -213,7 +274,10 @@ Deno.serve(async (req) => {
   }
 
   return jsonResponse({
-    title: typeof parsed.title === "string" && parsed.title.trim() ? parsed.title.trim().slice(0, 120) : "Fin IA",
+    title:
+      typeof parsed.title === "string" && parsed.title.trim()
+        ? parsed.title.trim().slice(0, 120)
+        : "Fin IA",
     text: parsed.text.trim().slice(0, 6000),
     chartMode: sanitizeChartMode(parsed.chartMode),
   });

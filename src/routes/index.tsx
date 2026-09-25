@@ -8,7 +8,14 @@ import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
 import { FinAi } from "@/components/finance/FinAI";
-import { computeTotals, currentMonthKey, monthLabel, useMonthData, useFinanceState, getBillNotifications } from "@/lib/finance";
+import {
+  computeTotals,
+  currentMonthKey,
+  monthLabel,
+  useMonthData,
+  useFinanceState,
+  getBillNotifications,
+} from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -33,7 +40,11 @@ export const Route = createFileRoute("/")({
 
 type Screen = "inicio" | "contas" | "receitas" | "guardado" | "finai";
 
-const navigation: { id: Screen; label: "home" | "bills" | "incomes" | "savings" | "finai"; Icon: LucideIcon }[] = [
+const navigation: {
+  id: Screen;
+  label: "home" | "bills" | "incomes" | "savings" | "finai";
+  Icon: LucideIcon;
+}[] = [
   { id: "inicio", label: "home", Icon: Home },
   { id: "contas", label: "bills", Icon: ReceiptText },
   { id: "receitas", label: "incomes", Icon: WalletCards },
@@ -45,7 +56,9 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const [accountSettingsSection, setAccountSettingsSection] = useState<"menu" | "profile" | "notifications" | "language" | "version">("menu");
+  const [accountSettingsSection, setAccountSettingsSection] = useState<
+    "menu" | "profile" | "notifications" | "language" | "version"
+  >("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { t } = useLanguage();
   const financeState = useFinanceState();
@@ -54,7 +67,11 @@ function Dashboard() {
   const totals = computeTotals(data, monthKey);
   const selectedYear = Number(monthKey.slice(0, 4));
 
-  useEffect(() => { const open = () => setNotificationsOpen(true); window.addEventListener("finmonth:open-notifications", open); return () => window.removeEventListener("finmonth:open-notifications", open); }, []);
+  useEffect(() => {
+    const open = () => setNotificationsOpen(true);
+    window.addEventListener("finmonth:open-notifications", open);
+    return () => window.removeEventListener("finmonth:open-notifications", open);
+  }, []);
 
   const goTo = (screen: Screen) => {
     setActiveScreen(screen);
@@ -63,15 +80,17 @@ function Dashboard() {
 
   if (accountSettingsOpen) {
     return (
-      <div className="relative min-h-screen w-full overflow-x-hidden">
-        <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
-        <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
+      <div className="relative min-h-screen w-full">
+        <div className="pointer-events-none fixed -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
+        <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
         <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">
           <AccountSettings
             section={accountSettingsSection}
             onBack={() => setAccountSettingsOpen(false)}
             onOpenSection={(section) => setAccountSettingsSection(section)}
-            onSignOut={() => void import("@/lib/supabase").then(({ supabase }) => supabase.auth.signOut())}
+            onSignOut={() =>
+              void import("@/lib/supabase").then(({ supabase }) => supabase.auth.signOut())
+            }
           />
         </div>
       </div>
@@ -79,14 +98,19 @@ function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
-      <div className="pointer-events-none absolute -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
-      <div className="pointer-events-none absolute -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
-      <div className="pointer-events-none absolute bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
+    <div className="relative min-h-screen w-full">
+      <div className="pointer-events-none fixed -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
+      <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
+      <div className="pointer-events-none fixed bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
 
-      {notificationsOpen && <NotificationsPanel notifications={notifications} onClose={() => setNotificationsOpen(false)} />}
+      {notificationsOpen && (
+        <NotificationsPanel
+          notifications={notifications}
+          onClose={() => setNotificationsOpen(false)}
+        />
+      )}
 
-      <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-5">
+      <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0">
         <MonthNav
           monthKey={monthKey}
           onChange={setMonthKey}
@@ -113,7 +137,13 @@ function Dashboard() {
                 </span>
               )}
             </p>
-            <SummaryCards monthKey={monthKey} totals={totals} incomes={data.incomes} bills={data.bills} savings={data.savings} />
+            <SummaryCards
+              monthKey={monthKey}
+              totals={totals}
+              incomes={data.incomes}
+              bills={data.bills}
+              savings={data.savings}
+            />
             <BillsSection monthKey={monthKey} bills={data.bills} />
           </>
         )}
@@ -125,13 +155,9 @@ function Dashboard() {
         {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
 
         {activeScreen === "finai" && <FinAi monthKey={monthKey} />}
-
       </div>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-5"
-      >
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-5">
         <div className="mx-auto flex max-w-[440px] justify-end">
           <div className="flex flex-col items-end leading-none">
             <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">

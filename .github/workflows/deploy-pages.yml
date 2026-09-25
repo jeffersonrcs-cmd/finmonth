@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Corrigir escapes legados da i18n
+        run: python -c "from pathlib import Path; p=Path('src/lib/i18n.ts'); p.write_text(p.read_text().replace('\\\\n', '\\n'))"
+
       - name: Build
         run: npm run build
 

@@ -1,11 +1,11 @@
 // FinMonth Service Worker - Offline Cache & Push Notifications
-const CACHE_NAME = "finmonth-cache-v4";
+const CACHE_NAME = "finmonth-cache-v5";
 const OFFLINE_URLS = [
   "/",
   "/manifest.json",
   "/icon.svg",
   "/favicon.ico",
-  "/apple-touch-icon-finmonth-v2.png",
+  "/apple-touch-icon-finmonth-v3.png",
   "/apple-touch-icon.png",
   "/icon-192.png"
 ];

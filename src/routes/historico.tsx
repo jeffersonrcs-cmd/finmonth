@@ -109,9 +109,6 @@ function Historico() {
             <ChevronLeft className="size-4" />
           </Link>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">
-              {t("history")}
-            </p>
             <h1 className="font-display text-2xl font-bold leading-none">
               {t("financialEvolution")}
             </h1>

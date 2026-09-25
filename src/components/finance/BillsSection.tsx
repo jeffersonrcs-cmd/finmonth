@@ -5,7 +5,7 @@ import { billStatus, financeActions, formatCurrency, type Bill } from "@/lib/fin
 
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const { t } = useLanguage();
-  const sorted = [...bills].sort((a, b) => {
+  const sorted = bills.filter((bill) => billStatus(bill, monthKey) !== "paid").sort((a, b) => {
     const aPending = billStatus(a, monthKey) !== "paid";
     const bPending = billStatus(b, monthKey) !== "paid";
 
@@ -36,9 +36,9 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
           return (
             <div
               key={bill.id}
-              className={`glass-soft flex items-center gap-3 rounded-2xl p-3.5 ${
-                status === "paid" ? "opacity-60" : ""
-              } ${status === "overdue" ? "border-neg/25" : ""}`}
+              className={`flex items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-3.5 shadow-sm backdrop-blur-md ${
+                status === "overdue" ? "border-neg/25" : ""
+              }`}
             >
               <button
                 onClick={() => financeActions.toggleBillPaid(monthKey, bill.id)}

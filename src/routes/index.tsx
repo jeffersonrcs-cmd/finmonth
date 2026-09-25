@@ -83,7 +83,7 @@ function Dashboard() {
       <div className="relative min-h-screen w-full">
         <div className="pointer-events-none fixed -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
         <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
-        <div className="relative mx-auto max-w-[440px] px-4 pb-8 pt-5">
+        <div className="relative mx-auto max-w-[440px] px-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-[calc(env(safe-area-inset-top)+1rem)]">
           <AccountSettings
             section={accountSettingsSection}
             onBack={() => setAccountSettingsOpen(false)}

@@ -357,12 +357,11 @@ function RootComponent() {
 
   // Check and trigger notifications if user has enabled alerts
   useEffect(() => {
-    if (authenticated) {
-      const timer = setTimeout(() => {
-        void checkAndSendDueAlerts(financeState, t);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!authenticated) return undefined;
+    const timer = setTimeout(() => {
+      void checkAndSendDueAlerts(financeState, t);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, [authenticated, financeState.notificationPreferences.enabled]);
 
   useEffect(() => {

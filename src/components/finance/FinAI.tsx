@@ -578,13 +578,13 @@ export function FinAi({
           )}
 
           {/* 4 Sugestões */}
-          <div className="mt-3.5 flex flex-wrap gap-2">
+          <div className="mt-3.5 grid grid-cols-2 gap-2">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
                 onClick={() => void ask(suggestion)}
-                className="rounded-full border border-border/70 bg-muted/40 px-3 py-1.5 text-[11px] font-medium text-foreground/80 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                className="min-h-9 rounded-xl border border-border/70 bg-muted/40 px-2.5 py-1.5 text-[10px] font-medium leading-tight text-foreground/80 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
               >
                 {suggestion}
               </button>

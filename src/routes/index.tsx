@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Home, PiggyBank, ReceiptText, Settings, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
 import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
@@ -89,7 +89,7 @@ function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleContentTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+  const handleContentTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     const target = event.target;
     if (target instanceof HTMLElement && target.closest("button,a,input,textarea,select,[role=\"button\"]")) {
       touchStartRef.current = null;
@@ -99,7 +99,7 @@ function Dashboard() {
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
   };
 
-  const handleContentTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+  const handleContentTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
     if (!start) return;
@@ -167,10 +167,6 @@ function Dashboard() {
         <MonthNav
           monthKey={monthKey}
           onChange={setMonthKey}
-          onOpenVersion={() => {
-            setAccountSettingsSection("version");
-            setAccountSettingsOpen(true);
-          }}
           onOpenNotifications={() => {
             setNotificationsOpen(true);
           }}

@@ -157,7 +157,7 @@ function Dashboard() {
         {activeScreen === "finai" && <FinAi monthKey={monthKey} />}
       </div>
 
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-24 z-10 px-5">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 px-5">
         <div className="mx-auto flex max-w-[440px] justify-end">
           <div className="flex flex-col items-end leading-none">
             <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">

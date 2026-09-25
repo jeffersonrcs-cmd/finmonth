@@ -19,14 +19,12 @@ export function MonthNav({
   const financeState = useFinanceState();
   const { userName } = financeState;
   const notificationCount = getBillNotifications(financeState).length;
-  const displayName = userName.trim() || t("myAccount");
+  const trimmedUserName = userName.trim();
+  const displayName = trimmedUserName ? trimmedUserName.split(/\s+/)[0] : t("myAccount");
 
   return (
     <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-border/50 bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.875rem)] shadow-sm transition-all">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/70">
-          {t("finance")}
-        </p>
         <button
           type="button"
           onClick={(event) => {

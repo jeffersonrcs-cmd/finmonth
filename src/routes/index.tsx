@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Home, PiggyBank, ReceiptText, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Home, PiggyBank, ReceiptText, Settings, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
 import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
@@ -15,6 +15,7 @@ import {
   useMonthData,
   useFinanceState,
   getBillNotifications,
+  shiftMonthKey,
 } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
@@ -40,16 +41,18 @@ export const Route = createFileRoute("/")({
 
 type Screen = "inicio" | "contas" | "receitas" | "guardado";
 
+type NavigationId = Screen | "settings";
+
 const navigation: {
-  id: Screen | "finai";
-  label: "home" | "bills" | "incomes" | "savings" | "finai";
+  id: NavigationId;
+  label: "home" | "bills" | "incomes" | "savings" | "settings";
   Icon: LucideIcon;
 }[] = [
   { id: "inicio", label: "home", Icon: Home },
   { id: "contas", label: "bills", Icon: ReceiptText },
   { id: "receitas", label: "incomes", Icon: WalletCards },
   { id: "guardado", label: "savings", Icon: PiggyBank },
-  { id: "finai", label: "finai", Icon: Sparkles },
+  { id: "settings", label: "settings", Icon: Settings },
 ];
 
 function Dashboard() {
@@ -61,6 +64,7 @@ function Dashboard() {
     "menu" | "profile" | "notifications" | "language" | "version"
   >("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const { t } = useLanguage();
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
@@ -74,13 +78,38 @@ function Dashboard() {
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
 
-  const handleNavClick = (id: Screen | "finai") => {
-    if (id === "finai") {
-      setFinAiOpen(true);
-    } else {
-      setActiveScreen(id);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleNavClick = (id: NavigationId) => {
+    if (id === "settings") {
+      setAccountSettingsSection("menu");
+      setAccountSettingsOpen(true);
+      return;
     }
+
+    setActiveScreen(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleContentTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("button,a,input,textarea,select,[role=\"button\"]")) {
+      touchStartRef.current = null;
+      return;
+    }
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleContentTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    setMonthKey((current) => shiftMonthKey(current, deltaX < 0 ? 1 : -1));
   };
 
   if (accountSettingsOpen) {
@@ -130,14 +159,14 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0">
+      <div
+        className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0"
+        onTouchStart={handleContentTouchStart}
+        onTouchEnd={handleContentTouchEnd}
+      >
         <MonthNav
           monthKey={monthKey}
           onChange={setMonthKey}
-          onOpenSettings={() => {
-            setAccountSettingsSection("menu");
-            setAccountSettingsOpen(true);
-          }}
           onOpenVersion={() => {
             setAccountSettingsSection("version");
             setAccountSettingsOpen(true);
@@ -179,8 +208,8 @@ function Dashboard() {
         aria-hidden="true"
         className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 px-5"
       >
-        <div className="mx-auto flex max-w-[440px] justify-end">
-          <div className="flex flex-col items-end leading-none">
+        <div className="mx-auto flex max-w-[440px] justify-start">
+          <div className="flex flex-col items-start leading-none">
             <span className="select-none text-[10px] font-semibold uppercase tracking-[0.28em] text-mut/30">
               FinMonth
             </span>
@@ -197,7 +226,7 @@ function Dashboard() {
       >
         <div className="mx-auto grid max-w-[440px] grid-cols-5 gap-1 rounded-2xl bg-muted/30 p-1">
           {navigation.map(({ id, label, Icon }) => {
-            const active = id === "finai" ? finAiOpen : activeScreen === id;
+            const active = id === "settings" ? accountSettingsOpen : activeScreen === id;
             return (
               <button
                 key={id}
@@ -213,6 +242,15 @@ function Dashboard() {
           })}
         </div>
       </nav>
+
+      <button
+        type="button"
+        onClick={() => setFinAiOpen(true)}
+        aria-label={t("finai")}
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-[max(1.25rem,calc((100vw-440px)/2+1.25rem))] z-40 grid size-14 place-items-center rounded-full border border-brand/30 bg-brand text-background shadow-lg shadow-brand/20 transition-transform hover:scale-105 active:scale-95"
+      >
+        <Sparkles className="size-6" />
+      </button>
     </div>
   );
 }

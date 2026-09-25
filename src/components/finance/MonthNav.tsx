@@ -22,9 +22,9 @@ export function MonthNav({
   const displayName = userName.trim() || t("myAccount");
 
   return (
-    <header className="sticky top-[env(safe-area-inset-top)] z-40 -mx-4 mt-[env(safe-area-inset-top)] mb-4 flex items-center justify-between gap-3 border-b border-border/50 bg-background/95 px-4 pb-3 pt-4 shadow-sm transition-all">
+    <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-border/50 bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] shadow-sm transition-all">
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-mut">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/70">
           {t("finance")}
         </p>
         <button

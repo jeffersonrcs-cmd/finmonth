@@ -377,6 +377,26 @@ export function AccountSettings({
             </p>
           </div>
 
+          <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3">
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
+              {t("recentUpdates")}
+            </p>
+            <div className="mt-2.5 space-y-2.5">
+              <div className="flex gap-2.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateSwipe")}</p>
+              </div>
+              <div className="flex gap-2.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateFinAi")}</p>
+              </div>
+              <div className="flex gap-2.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateSettings")}</p>
+              </div>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={reloadLatestVersion}

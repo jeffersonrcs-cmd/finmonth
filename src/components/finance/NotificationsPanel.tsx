@@ -33,7 +33,7 @@ export function NotificationsPanel({
   return (
     <div className="fixed inset-0 z-[90] bg-background/70 backdrop-blur-sm" onClick={onClose}>
       <section
-        className="absolute inset-x-3 top-3 mx-auto max-w-[440px] overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
+        className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+1rem)] mx-auto max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] max-w-[440px] overflow-y-auto rounded-3xl border border-border bg-popover shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {selectedNotification && selectedBill ? (

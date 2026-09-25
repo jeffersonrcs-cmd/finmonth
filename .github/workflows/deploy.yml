@@ -34,7 +34,9 @@ jobs:
       - name: Build FinMonth App
         run: |
           npm run build
-          cp -r public/* .output/public/
+          # Copia apenas os arquivos estáticos do public/; as páginas HTML
+          # precisam permanecer sendo as geradas pelo build do TanStack Start.
+          rsync -a --exclude='*.html' public/ .output/public/
           touch .output/public/.nojekyll
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://nidnqrosqefnjlmfgein.supabase.co' }}

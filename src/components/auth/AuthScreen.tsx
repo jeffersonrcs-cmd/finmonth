@@ -139,7 +139,7 @@ export function AuthScreen() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="voce@email.com"
-              autoComplete="email"
+              autoComplete={mode === "login" ? "username" : "email"}
               required
             />
           </div>

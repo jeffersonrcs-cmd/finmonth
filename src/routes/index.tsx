@@ -64,7 +64,12 @@ function Dashboard() {
     "menu" | "profile" | "notifications" | "language" | "version"
   >("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [monthTransition, setMonthTransition] = useState({
+    id: 0,
+    direction: "next" as "next" | "previous",
+  });
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchSwipeRef = useRef(false);
   const { t } = useLanguage();
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
@@ -89,27 +94,58 @@ function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleMonthChange = (nextMonthKey: string) => {
+    const direction = nextMonthKey > monthKey ? "next" : "previous";
+    setMonthTransition((current) => ({
+      id: current.id + 1,
+      direction,
+    }));
+    setMonthKey(nextMonthKey);
+  };
+
   const handleContentTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     const target = event.target;
     if (target instanceof HTMLElement && target.closest("button,a,input,textarea,select,[role=\"button\"]")) {
       touchStartRef.current = null;
+      touchSwipeRef.current = false;
       return;
     }
-    const touch = event.changedTouches[0];
+
+    const touch = event.touches[0];
+    if (!touch) return;
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    touchSwipeRef.current = false;
+  };
+
+  const handleContentTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const touch = event.touches[0];
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) >= 18 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+      touchSwipeRef.current = true;
+      event.preventDefault();
+    }
   };
 
   const handleContentTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
+    const wasHorizontal = touchSwipeRef.current;
     touchStartRef.current = null;
+    touchSwipeRef.current = false;
     if (!start) return;
 
     const touch = event.changedTouches[0];
+    if (!touch) return;
+
     const deltaX = touch.clientX - start.x;
     const deltaY = touch.clientY - start.y;
+    if (!wasHorizontal && (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2)) return;
     if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
 
-    setMonthKey((current) => shiftMonthKey(current, deltaX < 0 ? 1 : -1));
+    handleMonthChange(shiftMonthKey(monthKey, deltaX < 0 ? 1 : -1));
   };
 
   if (accountSettingsOpen) {
@@ -161,18 +197,28 @@ function Dashboard() {
 
       <div
         className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0"
+        style={{ touchAction: "pan-y" }}
         onTouchStart={handleContentTouchStart}
+        onTouchMove={handleContentTouchMove}
         onTouchEnd={handleContentTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+          touchSwipeRef.current = false;
+        }}
       >
         <MonthNav
           monthKey={monthKey}
-          onChange={setMonthKey}
+          onChange={handleMonthChange}
           onOpenNotifications={() => {
             setNotificationsOpen(true);
           }}
         />
 
-        {activeScreen === "inicio" && (
+        <div
+          key={monthTransition.id}
+          className={monthTransition.direction === "next" ? "month-slide-next" : "month-slide-previous"}
+        >
+          {activeScreen === "inicio" && (
           <>
             <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-mut">
               {monthLabel(monthKey)}
@@ -191,13 +237,14 @@ function Dashboard() {
             />
             <BillsSection monthKey={monthKey} bills={data.bills} />
           </>
-        )}
+          )}
 
-        {activeScreen === "contas" && <AccountsList monthKey={monthKey} bills={data.bills} />}
+          {activeScreen === "contas" && <AccountsList monthKey={monthKey} bills={data.bills} />}
 
-        {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
+          {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
 
-        {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
+          {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
+        </div>
       </div>
 
       <div

@@ -100,7 +100,7 @@ function Historico() {
       <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-12 pt-0">
-        <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center gap-3 bg-background/85 px-4 py-3 shadow-sm backdrop-blur-xl transition-all border-b border-border/50">
+        <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-center gap-3 border-b border-border/50 bg-background px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.875rem)] shadow-sm transition-all">
           <Link
             to="/"
             aria-label={t("back")}

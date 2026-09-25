@@ -187,7 +187,23 @@ function RootComponent() {
       }
     };
 
-    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
+    const getSessionWithTimeout = async () => {
+      const timeout = new Promise<null>((resolve) => {
+        window.setTimeout(() => resolve(null), 8_000);
+      });
+      const sessionRequest = supabase.auth.getSession().then(({ data }) => data.session);
+      const session = await Promise.race([sessionRequest, timeout]);
+      if (session) {
+        await applySession(session);
+        return;
+      }
+      if (active) {
+        setAuthenticated(false);
+        setAuthReady(true);
+      }
+    };
+
+    void getSessionWithTimeout();
 
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;

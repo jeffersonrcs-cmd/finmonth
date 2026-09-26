@@ -72,7 +72,7 @@ export function BillDetailScreen({
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-mut">{t("amount")}</p>
-                  <p className={"num mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl " + (status === "overdue" ? "text-neg" : "text-warn")}>
+                  <p className={"num mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl " + (status === "paid" ? "text-pos" : status === "overdue" ? "text-neg" : "text-warn")}>
                     {formatCurrency(bill.amount)}
                   </p>
                 </div>

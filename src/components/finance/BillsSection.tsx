@@ -128,6 +128,7 @@ export function BillDetailScreen({
             />
           </div>
         </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -7,7 +7,7 @@ import { BillDialog, ConfirmDeleteDialog } from "./dialogs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
-function BillDetailScreen({
+export function BillDetailScreen({
   bill,
   monthKey,
   onClose,

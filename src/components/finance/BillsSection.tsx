@@ -37,7 +37,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
             <div
               key={bill.id}
               className={`flex items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-3.5 shadow-sm backdrop-blur-md ${
-                status === "overdue" ? "border-neg/25" : ""
+                status === "overdue" ? "border-neg/25" : status === "pending" ? "border-warn/30 bg-warn/5" : ""
               }`}
             >
               <button
@@ -55,7 +55,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
               </button>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{bill.description}</p>
-                <p className={`text-[11px] ${status === "overdue" ? "text-neg" : "text-mut"}`}>
+                <p className={`text-[11px] ${status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : "text-mut"}`}>
                   {status === "paid"
                     ? `${t("paid")} · ${t("day")} ${bill.dueDay}`
                     : status === "overdue"
@@ -66,7 +66,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
               </div>
               <span
                 className={`num font-display text-sm font-semibold ${
-                  status === "overdue" ? "text-neg" : status === "paid" ? "text-pos" : ""
+                  status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : status === "paid" ? "text-pos" : ""
                 }`}
               >
                 {formatCurrency(bill.amount)}

@@ -110,8 +110,6 @@ export function ConfirmDeleteDialog({
     </Dialog>
   );
 }
-const labelClass = "text-[10px] uppercase tracking-widest text-mut";
-
 export function IncomeDialog({
   trigger,
   monthKey,

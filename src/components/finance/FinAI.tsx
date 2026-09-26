@@ -479,10 +479,14 @@ export function FinAi({
     setAiLoading(true);
     setActionDone(false);
 
+    const contextualValue = entryType
+      ? `Cadastre uma ${entryType === "bill" ? "conta" : entryType === "income" ? "receita" : "valor guardado"} com estas informações: ${value}`
+      : value;
+
     try {
       const history = reply ? [{ role: "assistant", text: reply.text }] : [];
       const { data, error } = await supabase.functions.invoke("fin-ai", {
-        body: { question: value, monthKey, history, language },
+        body: { question: contextualValue, monthKey, history, language },
       });
 
       if (error) throw new Error(error.message || t("operationFailed"));
@@ -506,7 +510,7 @@ export function FinAi({
       setPrompt("");
     } catch {
       // Fallback local se edge function estiver indisponível ou offline
-      const fallback = buildFallbackReply(value, monthKey, year, state, t);
+      const fallback = buildFallbackReply(contextualValue, monthKey, year, state, t);
       setReply(fallback);
       setPrompt("");
     } finally {

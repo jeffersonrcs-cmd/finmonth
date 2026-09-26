@@ -302,7 +302,7 @@ function Dashboard() {
       {finAiOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[90] bg-background/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-background/70 p-3 backdrop-blur-sm"
             onClick={() => setFinAiOpen(false)}
           >
             <section

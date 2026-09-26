@@ -337,6 +337,7 @@ function Dashboard() {
                   ? "relative w-full max-w-[400px] shrink-0"
                   : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
               }`}
+              style={finAiEntryType ? { height: Math.min(380, Math.max(0, finAiViewport.height - 24)) } : undefined}
               onClick={(e) => e.stopPropagation()}
             >
               <FinAi

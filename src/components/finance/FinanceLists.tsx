@@ -93,7 +93,8 @@ function BillDetailScreen({
 
 export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const { t } = useLanguage();
-  const [copied, setCopied] = useState(false);\n  const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
   const sorted = [...bills].sort((a, b) => {
     const ap = billStatus(a, monthKey) !== "paid";
     const bp = billStatus(b, monthKey) !== "paid";
@@ -109,7 +110,10 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
         bill={selectedBill}
         monthKey={monthKey}
         onBack={() => setSelectedBillId(null)}
-        onDelete={() => {\n          financeActions.removeBill(monthKey, selectedBill.id);\n          setSelectedBillId(null);\n        }}
+        onDelete={() => {
+          financeActions.removeBill(monthKey, selectedBill.id);
+          setSelectedBillId(null);
+        }}
       />
     );
   }
@@ -160,7 +164,16 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
           return (
             <div
               key={bill.id}
-              className={`glass-soft flex cursor-pointer items-center gap-3 rounded-2xl p-3.5 ${status === "paid" ? "opacity-60" : ""}`}\n              role="button"\n              tabIndex={0}\n              onClick={() => setSelectedBillId(bill.id)}\n              onKeyDown={(event) => {\n                if (event.key === "Enter" || event.key === " ") {\n                  event.preventDefault();\n                  setSelectedBillId(bill.id);\n                }\n              }}
+              className={`glass-soft flex cursor-pointer items-center gap-3 rounded-2xl p-3.5 ${status === "paid" ? "opacity-60" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedBillId(bill.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedBillId(bill.id);
+                }
+              }}
             >
               <button
                 type="button"

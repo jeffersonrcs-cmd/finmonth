@@ -9,6 +9,7 @@ import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
 import { FinAi, type FinAiEntryType } from "@/components/finance/FinAI";
 import {
+  billStatus,
   computeTotals,
   currentMonthKey,
   monthLabel,
@@ -104,6 +105,8 @@ function Dashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [swipeX, setSwipeX] = useState(0);
   const [swipePhase, setSwipePhase] = useState<"idle" | "dragging" | "settling">("idle");
+  const [currentContentHeight, setCurrentContentHeight] = useState<number | null>(null);
+  const currentContentRef = useRef<HTMLDivElement | null>(null);
   const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const swipeWidthRef = useRef(0);
   const swipeTargetRef = useRef<"next" | "previous" | null>(null);
@@ -111,7 +114,21 @@ function Dashboard() {
   const swipeActiveRef = useRef(false);
   const { t } = useLanguage();
   const financeState = useFinanceState();
+  const currentMonthData = useMonthData(monthKey);
+  const hasPendingBills = currentMonthData.bills.some((bill) => billStatus(bill, monthKey) !== "paid");
   const notifications = getBillNotifications(financeState);
+  useEffect(() => {
+    const element = currentContentRef.current;
+    if (!element) return;
+
+    const syncHeight = () => setCurrentContentHeight(element.getBoundingClientRect().height);
+    syncHeight();
+
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [monthKey, activeScreen]);
+
   useEffect(() => {
     const open = () => setNotificationsOpen(true);
     window.addEventListener("finmonth:open-notifications", open);
@@ -286,7 +303,7 @@ function Dashboard() {
     <div
       className="relative min-h-screen w-full"
       style={{
-        touchAction: "pan-y",
+        touchAction: activeScreen === "inicio" && !hasPendingBills ? "none" : "pan-y",
         overscrollBehaviorY: activeScreen === "inicio" ? "none" : "auto",
       }}
       onPointerDown={handleSwipeStart}
@@ -364,6 +381,7 @@ function Dashboard() {
             if (element) swipeWidthRef.current = element.clientWidth;
           }}
           className="overflow-hidden"
+          style={currentContentHeight !== null ? { height: currentContentHeight } : undefined}
         >
           <div
             className="flex w-[300%]"
@@ -378,7 +396,7 @@ function Dashboard() {
             <div className="w-1/3 shrink-0 px-0">
               <MonthContent monthKey={shiftMonthKey(monthKey, -1)} activeScreen={activeScreen} onOpenFinAi={handleOpenFinAi} />
             </div>
-            <div className="w-1/3 shrink-0 px-0">
+            <div ref={currentContentRef} className="w-1/3 shrink-0 self-start px-0">
               <MonthContent monthKey={monthKey} activeScreen={activeScreen} onOpenFinAi={handleOpenFinAi} />
             </div>
             <div className="w-1/3 shrink-0 px-0">

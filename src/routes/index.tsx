@@ -286,8 +286,8 @@ function Dashboard() {
     <div
       className="relative min-h-screen w-full"
       style={{
-        touchAction: "pan-y",
-        overscrollBehaviorY: "none",
+        touchAction: activeScreen === "inicio" ? "pan-x" : "pan-y",
+        overscrollBehaviorY: activeScreen === "inicio" ? "none" : "auto",
       }}
       onPointerDown={handleSwipeStart}
       onPointerMove={handleSwipeMove}
@@ -321,7 +321,7 @@ function Dashboard() {
               finAiEntryType && finAiViewport
                 ? {
                     top: Math.max(
-                      12,
+                      0,
                       Math.min(
                         100,
                         finAiViewport.offsetTop +

@@ -73,7 +73,7 @@ export function SummaryCards({
               }}
               className="relative -top-0.5 grid size-3 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
             >
-              <Info className="size-2.5" strokeWidth={2.4} />
+              <Info className="size-2" strokeWidth={2.5} />
             </button>
             {openInfo === "future" && (
               <div className="absolute right-0 top-full z-20 mt-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">

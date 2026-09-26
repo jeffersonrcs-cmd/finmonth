@@ -48,7 +48,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                     ? "border-pos/40 bg-pos/20 text-pos"
                     : status === "overdue"
                       ? "border-neg/30 bg-neg/5 hover:border-pos/50 hover:bg-pos/10"
-                      : "border-border hover:border-pos/50 hover:bg-pos/10"
+                      : status === "pending"\n                        ? "border-warn/40 bg-warn/10 text-warn hover:border-pos/50 hover:bg-pos/10"\n                        : "border-border hover:border-pos/50 hover:bg-pos/10"
                 }`}
               >
                 {status === "paid" && <Check className="size-3" />}

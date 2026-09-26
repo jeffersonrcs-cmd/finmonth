@@ -79,11 +79,11 @@ function BillDetailScreen({
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-muted/30 px-3 py-2.5">
             <span className="text-xs">{t("recurringAccount")}</span>
-            <span className="text-xs font-medium">{bill.recurrent ? t("yes") : t("no")}</span>
+            <span className="text-xs font-medium">{bill.recurrent ? t("recurring") : "—"}</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-muted/30 px-3 py-2.5">
             <span className="text-xs">{t("paidAccount")}</span>
-            <span className="text-xs font-medium">{bill.paid ? t("yes") : t("no")}</span>
+            <span className="text-xs font-medium">{bill.paid ? t("paid") : t("pending")}</span>
           </div>
         </div>
       </article>

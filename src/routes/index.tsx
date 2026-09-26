@@ -125,21 +125,14 @@ function Dashboard() {
     }
 
     const viewport = window.visualViewport;
-    const syncViewport = () => {
-      setFinAiViewport({
-        height: viewport.height,
-        offsetTop: viewport.offsetTop,
-      });
-    };
 
-    syncViewport();
-    viewport.addEventListener("resize", syncViewport);
-    viewport.addEventListener("scroll", syncViewport);
-
-    return () => {
-      viewport.removeEventListener("resize", syncViewport);
-      viewport.removeEventListener("scroll", syncViewport);
-    };
+    // Capture the modal geometry once, before the iPhone keyboard opens.
+    // Do not react to visualViewport resize/scroll events while typing:
+    // the keyboard must not move or compress the floating FinAI window.
+    setFinAiViewport({
+      height: viewport.height,
+      offsetTop: viewport.offsetTop,
+    });
   }, [finAiOpen, finAiEntryType]);
 
   const handleOpenFinAi = (entryType?: FinAiEntryType) => {

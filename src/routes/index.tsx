@@ -332,8 +332,8 @@ function Dashboard() {
             onClick={() => setFinAiOpen(false)}
           >
             <section
-              className="relative mx-auto flex w-full max-w-[400px] shrink-0 flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
-              style={{ height: Math.min(380, Math.max(0, finAiViewport.height - 24)) }}
+              className="relative mx-auto flex min-h-[380px] w-full max-w-[400px] shrink-0 flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
+              style={{ maxHeight: Math.max(380, finAiViewport.height - 24) }}
               onClick={(e) => e.stopPropagation()}
             >
               <FinAi

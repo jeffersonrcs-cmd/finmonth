@@ -259,7 +259,7 @@ export function BillDialog({
     setDueDay(String(Math.min(Math.max(Number(initial?.dueDay) || 5, 1), maxDay)));
     setPaid(initial?.paid ?? false);
     setRecurrent(initial?.recurrent ?? true);
-  }, [dialogOpen, initial]);
+  }, [dialogOpen, initial, monthKey]);
 
   const parts = monthKey.split("-");
   const maxDay = daysInMonth(Number(parts[0] ?? 0), Number(parts[1] ?? 1));

@@ -96,6 +96,7 @@ function Dashboard() {
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [finAiOpen, setFinAiOpen] = useState(false);
   const [finAiEntryType, setFinAiEntryType] = useState<FinAiEntryType | undefined>(undefined);
+  const [finAiViewport, setFinAiViewport] = useState<{ height: number; offsetTop: number } | null>(null);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsSection, setAccountSettingsSection] = useState<
     "menu" | "profile" | "notifications" | "language" | "version"
@@ -116,6 +117,30 @@ function Dashboard() {
     window.addEventListener("finmonth:open-notifications", open);
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
+
+  useEffect(() => {
+    if (!finAiOpen || !finAiEntryType || !window.visualViewport) {
+      setFinAiViewport(null);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const syncViewport = () => {
+      setFinAiViewport({
+        height: viewport.height,
+        offsetTop: viewport.offsetTop,
+      });
+    };
+
+    syncViewport();
+    viewport.addEventListener("resize", syncViewport);
+    viewport.addEventListener("scroll", syncViewport);
+
+    return () => {
+      viewport.removeEventListener("resize", syncViewport);
+      viewport.removeEventListener("scroll", syncViewport);
+    };
+  }, [finAiOpen, finAiEntryType]);
 
   const handleOpenFinAi = (entryType?: FinAiEntryType) => {
     setFinAiEntryType(entryType);
@@ -284,11 +309,23 @@ function Dashboard() {
           onClick={() => setFinAiOpen(false)}
         >
           <section
-            className={`absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
+            className={`mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
               finAiEntryType
-                ? "h-auto max-h-[min(440px,calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem))] max-w-[400px]"
-                : "h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
+                ? "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] max-w-[400px]"
+                : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
             }`}
+            style={
+              finAiEntryType && finAiViewport
+                ? {
+                    top: Math.max(finAiViewport.offsetTop + 12, 12),
+                    height: Math.max(
+                      240,
+                      Math.min(440, finAiViewport.height - finAiViewport.offsetTop - 24),
+                    ),
+                    bottom: "auto",
+                  }
+                : undefined
+            }
             onClick={(e) => e.stopPropagation()}
           >
             <FinAi

@@ -81,6 +81,87 @@ function persist() {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidIncome(value: unknown): value is Income {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.description === "string" &&
+    Number.isFinite(value.amount) &&
+    typeof value.date === "string" &&
+    /^\\d{4}-\\d{2}-\\d{2}$/.test(value.date)
+  );
+}
+
+function isValidBill(value: unknown): value is Bill {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.description === "string" &&
+    Number.isFinite(value.amount) &&
+    Number.isInteger(value.dueDay) &&
+    value.dueDay >= 1 &&
+    value.dueDay <= 31 &&
+    typeof value.paid === "boolean" &&
+    typeof value.recurrent === "boolean"
+  );
+}
+
+function isValidSaving(value: unknown): value is Saving {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.description === "string" &&
+    Number.isFinite(value.amount)
+  );
+}
+
+function sanitizeFinanceState(value: unknown): FinanceState | null {
+  if (!isRecord(value) || !isRecord(value.months)) return null;
+
+  const months: Record<string, MonthData> = {};
+  for (const [monthKey, rawMonth] of Object.entries(value.months)) {
+    if (!/^\\d{4}-\\d{2}$/.test(monthKey) || !isRecord(rawMonth)) continue;
+    const incomes = Array.isArray(rawMonth.incomes)
+      ? rawMonth.incomes.filter(isValidIncome)
+      : [];
+    const bills = Array.isArray(rawMonth.bills) ? rawMonth.bills.filter(isValidBill) : [];
+    const savings = Array.isArray(rawMonth.savings) ? rawMonth.savings.filter(isValidSaving) : [];
+    months[monthKey] = { incomes, bills, savings };
+  }
+
+  const rawPreferences = isRecord(value.notificationPreferences)
+    ? value.notificationPreferences
+    : {};
+  const leadDays = Number(rawPreferences.leadDays ?? DEFAULT_NOTIFICATION_PREFERENCES.leadDays);
+
+  return {
+    months,
+    theme: value.theme === "light" ? "light" : "dark",
+    userName: typeof value.userName === "string" ? value.userName : "",
+    notificationPreferences: {
+      enabled:
+        typeof rawPreferences.enabled === "boolean"
+          ? rawPreferences.enabled
+          : DEFAULT_NOTIFICATION_PREFERENCES.enabled,
+      leadDays: Number.isFinite(leadDays)
+        ? Math.min(Math.max(leadDays, 0), 7)
+        : DEFAULT_NOTIFICATION_PREFERENCES.leadDays,
+      dueToday:
+        typeof rawPreferences.dueToday === "boolean"
+          ? rawPreferences.dueToday
+          : DEFAULT_NOTIFICATION_PREFERENCES.dueToday,
+      overdue:
+        typeof rawPreferences.overdue === "boolean"
+          ? rawPreferences.overdue
+          : DEFAULT_NOTIFICATION_PREFERENCES.overdue,
+    },
+  };
+}
+
 function hasFinanceData(value: FinanceState) {
   return Object.values(value.months).some(
     (month) => month.incomes.length > 0 || month.bills.length > 0 || month.savings.length > 0,
@@ -278,18 +359,11 @@ export function hydrateStore() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as FinanceState;
-      state = {
-        months: parsed.months ?? {},
-        theme: parsed.theme === "light" ? "light" : "dark",
-        userName: typeof parsed.userName === "string" ? parsed.userName : "",
-        notificationPreferences: {
-          enabled: parsed.notificationPreferences?.enabled ?? true,
-          leadDays: Math.min(Math.max(Number(parsed.notificationPreferences?.leadDays ?? 1), 0), 7),
-          dueToday: parsed.notificationPreferences?.dueToday ?? true,
-          overdue: parsed.notificationPreferences?.overdue ?? true,
-        },
-      };
+      const parsed = JSON.parse(raw);
+      const sanitized = sanitizeFinanceState(parsed);
+      if (sanitized) {
+        state = sanitized;
+      }
     }
   } catch {
     /* ignore */

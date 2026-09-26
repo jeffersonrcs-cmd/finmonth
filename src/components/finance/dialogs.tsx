@@ -41,7 +41,22 @@ type Shell = {
 function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell) {
   const { t, currency } = useLanguage();
   return (
-    <Dialog open={open} onOpenChange={setOpen} onOpenAutoFocus={(event) => event.preventDefault()}>
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+      onOpenAutoFocus={(event) => {
+        event.preventDefault();
+        queueMicrotask(() => {
+          const activeElement = document.activeElement;
+          if (activeElement instanceof HTMLElement) activeElement.blur();
+        });
+      }}
+      onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        const activeElement = document.activeElement;
+        if (activeElement instanceof HTMLElement) activeElement.blur();
+      }}
+    >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-[340px] rounded-3xl border-border/70 bg-popover shadow-xl">
         <DialogHeader>

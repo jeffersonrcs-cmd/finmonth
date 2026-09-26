@@ -318,9 +318,9 @@ function Dashboard() {
               finAiEntryType && finAiViewport
                 ? {
                     top: Math.max(finAiViewport.offsetTop + 12, 12),
-                    height: Math.max(
-                      240,
-                      Math.min(440, finAiViewport.height - finAiViewport.offsetTop - 24),
+                    height: Math.min(
+                      410,
+                      finAiViewport.height - finAiViewport.offsetTop - 24,
                     ),
                     bottom: "auto",
                   }

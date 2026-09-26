@@ -308,7 +308,7 @@ function Dashboard() {
             <section
               className={`mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
                 finAiEntryType
-                  ? "fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] h-[380px] max-w-[400px]"
+                  ? "relative h-[380px] w-full max-w-[400px] shrink-0"
                   : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
               }`}
               onClick={(e) => e.stopPropagation()}

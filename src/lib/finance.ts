@@ -478,10 +478,18 @@ export const financeActions = {
     const prev = state.months[previousMonthKey(monthKey)];
     if (!prev) return 0;
     const existing = new Set(
-      (state.months[monthKey]?.bills ?? []).map((b) => b.description.trim().toLowerCase()),
+      (state.months[monthKey]?.bills ?? []).map((b) =>
+        [b.description.trim().toLowerCase(), b.amount, b.dueDay].join("|"),
+      ),
     );
     const copied = prev.bills
-      .filter((b) => b.recurrent && !existing.has(b.description.trim().toLowerCase()))
+      .filter(
+        (b) =>
+          b.recurrent &&
+          !existing.has(
+            [b.description.trim().toLowerCase(), b.amount, b.dueDay].join("|"),
+          ),
+      )
       .map((b) => ({ ...b, id: uid(), paid: false }));
     if (copied.length === 0) return 0;
     updateMonth(monthKey, (m) => ({ ...m, bills: [...m.bills, ...copied] }));
@@ -491,19 +499,25 @@ export const financeActions = {
   copyIncomesFromPrevious(monthKey: string) {
     const prev = state.months[previousMonthKey(monthKey)];
     if (!prev) return 0;
-    const existing = new Set(
-      (state.months[monthKey]?.incomes ?? []).map((i) => i.description.trim().toLowerCase()),
-    );
     const { year, month } = parseMonthKey(monthKey);
+    const existing = new Set(
+      (state.months[monthKey]?.incomes ?? []).map((i) => {
+        const day = Number(i.date.split("-")[2] ?? 1);
+        return [i.description.trim().toLowerCase(), i.amount, day].join("|");
+      }),
+    );
     const copied = prev.incomes
-      .filter((i) => !existing.has(i.description.trim().toLowerCase()))
+      .filter((i) => {
+        const day = Number(i.date.split("-")[2] ?? 1);
+        return !existing.has([i.description.trim().toLowerCase(), i.amount, day].join("|"));
+      })
       .map((i) => {
         const day = Number(i.date.split("-")[2] ?? 1);
         const safeDay = Math.min(day, daysInMonth(year, month));
         return {
           ...i,
           id: uid(),
-          date: `${monthKey}-${String(safeDay).padStart(2, "0")}`,
+          date: monthKey + "-" + String(safeDay).padStart(2, "0"),
         };
       });
     if (copied.length === 0) return 0;

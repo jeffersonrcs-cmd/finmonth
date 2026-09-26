@@ -128,7 +128,7 @@ function Dashboard() {
     const observer = new ResizeObserver(syncHeight);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [monthKey, activeScreen]);
+  }, [monthKey, activeScreen, accountSettingsOpen]);
 
   useEffect(() => {
     if (!finAiOpen) return;

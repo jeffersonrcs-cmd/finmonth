@@ -284,7 +284,11 @@ function Dashboard() {
           onClick={() => setFinAiOpen(false)}
         >
           <section
-            className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+1rem)] mx-auto flex h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
+            className={`absolute inset-x-3 top-1/2 mx-auto flex max-w-[440px] -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
+              finAiEntryType
+                ? "h-[min(360px,calc(100dvh-2rem))] max-w-[380px]"
+                : "h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)]"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <FinAi

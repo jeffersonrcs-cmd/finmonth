@@ -115,6 +115,13 @@ function Dashboard() {
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
 
+  const handleMonthChange = (nextMonthKey: string) => {
+    setMonthKey(nextMonthKey);
+    setSwipeX(0);
+    setSwipePhase("idle");
+    swipeTargetRef.current = null;
+  };
+
   const handleNavClick = (id: NavigationId) => {
     if (id === "settings") {
       setAccountSettingsSection("menu");

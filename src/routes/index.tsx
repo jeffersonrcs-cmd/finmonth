@@ -55,6 +55,41 @@ const navigation: {
   { id: "settings", label: "settings", Icon: Settings },
 ];
 
+function MonthContent({ monthKey, activeScreen }: { monthKey: string; activeScreen: Screen }) {
+  const { t } = useLanguage();
+  const data = useMonthData(monthKey);
+  const totals = computeTotals(data, monthKey);
+
+  return (
+    <>
+      {activeScreen === "inicio" && (
+        <>
+          <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-mut">
+            {monthLabel(monthKey)}
+            {totals.overdueCount > 0 && (
+              <span className="ml-2 rounded-full bg-warn/15 px-2 py-0.5 text-warn">
+                {totals.overdueCount} vencida(s)
+              </span>
+            )}
+          </p>
+          <SummaryCards
+            monthKey={monthKey}
+            totals={totals}
+            incomes={data.incomes}
+            bills={data.bills}
+            savings={data.savings}
+          />
+          <BillsSection monthKey={monthKey} bills={data.bills} />
+        </>
+      )}
+
+      {activeScreen === "contas" && <AccountsList monthKey={monthKey} bills={data.bills} />}
+      {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
+      {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
+    </>
+  );
+}
+
 function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
@@ -64,19 +99,16 @@ function Dashboard() {
     "menu" | "profile" | "notifications" | "language" | "version"
   >("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [monthTransition, setMonthTransition] = useState({
-    id: 0,
-    direction: "next" as "next" | "previous",
-  });
+  const [swipeX, setSwipeX] = useState(0);
+  const [swipePhase, setSwipePhase] = useState<"idle" | "dragging" | "settling">("idle");
   const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const swipeWidthRef = useRef(0);
+  const swipeTargetRef = useRef<"next" | "previous" | null>(null);
+  const swipeResetTimerRef = useRef<number | null>(null);
   const swipeActiveRef = useRef(false);
   const { t } = useLanguage();
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
-  const data = useMonthData(monthKey);
-  const totals = computeTotals(data, monthKey);
-  const selectedYear = Number(monthKey.slice(0, 4));
-
   useEffect(() => {
     const open = () => setNotificationsOpen(true);
     window.addEventListener("finmonth:open-notifications", open);
@@ -94,23 +126,24 @@ function Dashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleMonthChange = (nextMonthKey: string) => {
-    const direction = nextMonthKey > monthKey ? "next" : "previous";
-    setMonthTransition((current) => ({
-      id: current.id + 1,
-      direction,
-    }));
-    setMonthKey(nextMonthKey);
-  };
-
   const handleSwipeStart = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    if (swipeResetTimerRef.current !== null) {
+      window.clearTimeout(swipeResetTimerRef.current);
+      swipeResetTimerRef.current = null;
+    }
+
+    swipeWidthRef.current = event.currentTarget.clientWidth;
     swipeStartRef.current = {
       x: event.clientX,
       y: event.clientY,
       pointerId: event.pointerId,
     };
     swipeActiveRef.current = false;
+    swipeTargetRef.current = null;
+    setSwipePhase("dragging");
+    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handleSwipeMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -119,29 +152,76 @@ function Dashboard() {
 
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
-    if (Math.abs(deltaX) >= 16 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+
+    if (!swipeActiveRef.current) {
+      if (Math.abs(deltaX) < 12 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.1) return;
       swipeActiveRef.current = true;
+    }
+
+    if (swipeActiveRef.current) {
       event.preventDefault();
+      const width = swipeWidthRef.current;
+      if (!width) return;
+
+      const boundedDelta = Math.max(-width, Math.min(width, deltaX));
+      setSwipeX(boundedDelta);
     }
   };
 
-  const handleSwipeEnd = (event: PointerEvent<HTMLDivElement>) => {
+  const finishSwipe = (event: PointerEvent<HTMLDivElement>, cancelled = false) => {
     const start = swipeStartRef.current;
-    const wasHorizontal = swipeActiveRef.current;
-    swipeStartRef.current = null;
-    swipeActiveRef.current = false;
     if (!start || start.pointerId !== event.pointerId) return;
 
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
-    if (!wasHorizontal || Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    const width = swipeWidthRef.current;
+    const wasHorizontal = swipeActiveRef.current;
+    const threshold = Math.max(64, width * 0.2);
+    const shouldChange =
+      !cancelled &&
+      wasHorizontal &&
+      width > 0 &&
+      Math.abs(deltaX) >= threshold &&
+      Math.abs(deltaX) > Math.abs(deltaY) * 1.1;
 
-    handleMonthChange(shiftMonthKey(monthKey, deltaX < 0 ? 1 : -1));
-  };
-
-  const handleSwipeCancel = () => {
     swipeStartRef.current = null;
     swipeActiveRef.current = false;
+
+    if (!shouldChange) {
+      swipeTargetRef.current = null;
+      setSwipePhase("settling");
+      setSwipeX(0);
+      swipeResetTimerRef.current = window.setTimeout(() => {
+        setSwipePhase("idle");
+        swipeResetTimerRef.current = null;
+      }, 220);
+      return;
+    }
+
+    const direction = deltaX < 0 ? "next" : "previous";
+    swipeTargetRef.current = direction;
+    setSwipePhase("settling");
+    setSwipeX(deltaX < 0 ? -width : width);
+
+    swipeResetTimerRef.current = window.setTimeout(() => {
+      setMonthKey((currentMonth) =>
+        shiftMonthKey(currentMonth, direction === "next" ? 1 : -1),
+      );
+      setSwipeX(0);
+      setSwipePhase("idle");
+      swipeTargetRef.current = null;
+      swipeResetTimerRef.current = null;
+    }, 220);
+  };
+
+  const handleSwipeEnd = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    finishSwipe(event);
+  };
+
+  const handleSwipeCancel = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    finishSwipe(event, true);
   };
 
   if (accountSettingsOpen) {
@@ -208,35 +288,31 @@ function Dashboard() {
         />
 
         <div
-          key={monthTransition.id}
-          className={monthTransition.direction === "next" ? "month-slide-next" : "month-slide-previous"}
+          ref={(element) => {
+            if (element) swipeWidthRef.current = element.clientWidth;
+          }}
+          className="overflow-hidden"
         >
-          {activeScreen === "inicio" && (
-          <>
-            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-mut">
-              {monthLabel(monthKey)}
-              {totals.overdueCount > 0 && (
-                <span className="ml-2 rounded-full bg-warn/15 px-2 py-0.5 text-warn">
-                  {totals.overdueCount} vencida(s)
-                </span>
-              )}
-            </p>
-            <SummaryCards
-              monthKey={monthKey}
-              totals={totals}
-              incomes={data.incomes}
-              bills={data.bills}
-              savings={data.savings}
-            />
-            <BillsSection monthKey={monthKey} bills={data.bills} />
-          </>
-          )}
-
-          {activeScreen === "contas" && <AccountsList monthKey={monthKey} bills={data.bills} />}
-
-          {activeScreen === "receitas" && <IncomeList monthKey={monthKey} incomes={data.incomes} />}
-
-          {activeScreen === "guardado" && <SavingsList monthKey={monthKey} savings={data.savings} />}
+          <div
+            className="flex w-[300%]"
+            style={{
+              transform: `translate3d(calc(-33.333333% + ${swipeX}px), 0, 0)`,
+              transition:
+                swipePhase === "settling"
+                  ? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"
+                  : "none",
+            }}
+          >
+            <div className="w-1/3 shrink-0 px-0">
+              <MonthContent monthKey={shiftMonthKey(monthKey, -1)} activeScreen={activeScreen} />
+            </div>
+            <div className="w-1/3 shrink-0 px-0">
+              <MonthContent monthKey={monthKey} activeScreen={activeScreen} />
+            </div>
+            <div className="w-1/3 shrink-0 px-0">
+              <MonthContent monthKey={shiftMonthKey(monthKey, 1)} activeScreen={activeScreen} />
+            </div>
+          </div>
         </div>
       </div>
 

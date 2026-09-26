@@ -111,7 +111,7 @@ export function AccountSettings({
       const { error: deleteError } = await supabase.rpc("delete_current_user");
       if (deleteError) throw deleteError;
 
-      disconnectCloud();
+      disconnectCloud({ clearLocalData: true });
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
     } catch (err) {

@@ -39,6 +39,7 @@ export function SummaryCards({
         >
           {formatCurrency(totals.availableBalance)}
         </p>
+        <p className="mt-1 text-[10px] leading-relaxed text-mut">{t("availableBalanceHint")}</p>
         <div className="ml-auto mt-2 flex w-fit items-baseline justify-end gap-2 rounded-xl border border-border/50 bg-background/25 px-3 py-2">
           <span className="text-[10px] text-mut">{t("futureBalance")}</span>
           <span
@@ -47,6 +48,7 @@ export function SummaryCards({
             {formatCurrency(totals.futureBalance)}
           </span>
         </div>
+        <p className="mt-1 text-right text-[10px] leading-relaxed text-mut">{t("futureBalanceHint")}</p>
       </section>
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">

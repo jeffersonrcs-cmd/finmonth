@@ -1,13 +1,11 @@
 import { Info, Plus } from "lucide-react";
 import {
-  financeActions,
   formatCurrency,
   type Bill,
   type Income,
   type MonthTotals,
   type Saving,
 } from "@/lib/finance";
-import { BillDialog, IncomeDialog, SavingDialog } from "./dialogs";
 import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
 
@@ -20,8 +18,10 @@ export function SummaryCards({
   incomes: Income[];
   bills: Bill[];
   savings: Saving[];
+  onOpenFinAi: (entryType: "bill" | "income" | "saving") => void;
 }) {
   const { t } = useLanguage();
+  const { onOpenFinAi } = arguments[0] as { onOpenFinAi: (entryType: "bill" | "income" | "saving") => void };
   const positive = totals.availableBalance >= 0;
   const [openInfo, setOpenInfo] = useState<"available" | "future" | null>(null);
 

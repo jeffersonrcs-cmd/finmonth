@@ -189,7 +189,8 @@ export function IncomeDialog({
         const [year = 0, month = 1] = monthKey.split("-").map(Number);
         const maxDay = daysInMonth(year, month);
         const selectedDay = Math.min(Math.max(Number(day) || 1, 1), maxDay);
-        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
+        const parsedAmount = parseAmount(amount);
+        if (!description.trim() || parsedAmount === null) return false;
         onSave({
           description: description.trim(),
           amount: parsedAmount,
@@ -294,7 +295,8 @@ export function BillDialog({
       setOpen={setDialogOpen}
       onSubmit={() => {
         const day = Math.min(Math.max(Number(dueDay) || 1, 1), maxDay);
-        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
+        const parsedAmount = parseAmount(amount);
+        if (!description.trim() || parsedAmount === null) return false;
         onSave({
           description: description.trim(),
           amount: parsedAmount,
@@ -459,7 +461,8 @@ export function SavingDialog({
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
-        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
+        const parsedAmount = parseAmount(amount);
+        if (!description.trim() || parsedAmount === null) return false;
         onSave({ description: description.trim(), amount: parsedAmount });
         return true;
       }}

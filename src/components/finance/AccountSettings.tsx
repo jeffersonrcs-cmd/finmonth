@@ -6,6 +6,7 @@ import {
   Eye,
   EyeOff,
   Info,
+  History,
   Languages,
   LogOut,
   Moon,
@@ -45,6 +46,7 @@ import {
   type LanguageCode,
 } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { getVersionHistory } from "@/lib/versionHistory";
 
 export function AccountSettings({
   onBack,
@@ -73,6 +75,7 @@ export function AccountSettings({
   const [pushTestMessage, setPushTestMessage] = useState("");
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -376,6 +379,43 @@ export function AccountSettings({
               })}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowVersionHistory((value) => !value)}
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3 text-left transition-colors hover:border-brand/30"
+          >
+            <span className="flex items-center gap-2.5">
+              <History className="size-4 text-brand" />
+              <span>
+                <span className="block text-xs font-semibold">{t("versionHistory")}</span>
+                <span className="mt-0.5 block text-[10px] leading-relaxed text-mut">
+                  {t("versionHistoryDescription")}
+                </span>
+              </span>
+            </span>
+            <span className="text-[10px] font-semibold text-brand">
+              {showVersionHistory ? "−" : "+"}
+            </span>
+          </button>
+
+          {showVersionHistory && (
+            <div className="space-y-2.5 rounded-2xl border border-border/60 bg-muted/20 p-3.5">
+              {getVersionHistory(language).map((entry) => (
+                <article key={entry.version} className="rounded-2xl border border-border/50 bg-background/30 px-3 py-3">
+                  <p className="font-display text-sm font-semibold">v{entry.version}</p>
+                  <ul className="mt-1.5 space-y-1.5">
+                    {entry.changes.map((change) => (
+                      <li key={change} className="flex gap-2 text-[11px] leading-relaxed text-foreground/90">
+                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+                        <span>{change}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          )}
 
           <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3">
             <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">

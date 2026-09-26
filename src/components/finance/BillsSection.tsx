@@ -96,23 +96,6 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
   const selectedBill = selectedBillId ? bills.find((bill) => bill.id === selectedBillId) : undefined;
 
-  if (selectedBill) {
-    return (
-      <>
-        <BillDetailScreen
-          bill={selectedBill}
-          monthKey={monthKey}
-          onClose={() => setSelectedBillId(null)}
-          onDelete={() => {
-            financeActions.removeBill(monthKey, selectedBill.id);
-            setSelectedBillId(null);
-          }}
-        />
-        {renderBillsList()}
-      </>
-    );
-  }
-
   const sorted = bills.filter((bill) => billStatus(bill, monthKey) !== "paid").sort((a, b) => {
     const aPending = billStatus(a, monthKey) !== "paid";
     const bPending = billStatus(b, monthKey) !== "paid";
@@ -121,7 +104,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
     return a.dueDay - b.dueDay;
   });
 
-  const renderBillsList = () => (return (
+  const renderBillsList = () => (
     <section className="mb-8">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wider text-mut">
@@ -199,6 +182,23 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
       </div>
     </section>
   );
+
+  if (selectedBill) {
+    return (
+      <>
+        <BillDetailScreen
+          bill={selectedBill}
+          monthKey={monthKey}
+          onClose={() => setSelectedBillId(null)}
+          onDelete={() => {
+            financeActions.removeBill(monthKey, selectedBill.id);
+            setSelectedBillId(null);
+          }}
+        />
+        {renderBillsList()}
+      </>
+    );
+  }
 
   return renderBillsList();
 }

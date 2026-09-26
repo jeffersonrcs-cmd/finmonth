@@ -37,7 +37,7 @@ writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + "\n");
 const historyPath = new URL("../src/lib/versionHistory.ts", import.meta.url);
 const historySource = readFileSync(historyPath, "utf8");
 
-if (!new RegExp(`version: "\\${nextVersion.replace(/\\./g, "\\\\.")}"`).test(historySource)) {
+if (!historySource.includes(`version: "${nextVersion}"`)) {
   const fallback = {
     patch: {
       pt: "Correções e melhorias para uma experiência mais estável.",

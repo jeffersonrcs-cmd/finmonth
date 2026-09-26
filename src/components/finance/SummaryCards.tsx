@@ -27,7 +27,7 @@ export function SummaryCards({
 
   return (
     <>
-      <section className="glass mb-4 rounded-3xl p-5">
+      <section className="glass mb-4 rounded-3xl p-5" onClick={() => setOpenInfo(null)}>
         <div className="flex items-center justify-between">
           <div className="relative flex items-center gap-1.5">
             <p className="text-xs text-mut">💵 {t("availableBalance")}</p>

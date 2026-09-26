@@ -1,11 +1,5 @@
 import { Info, Plus } from "lucide-react";
-import {
-  formatCurrency,
-  type Bill,
-  type Income,
-  type MonthTotals,
-  type Saving,
-} from "@/lib/finance";
+import { formatCurrency, type MonthTotals } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
 
@@ -16,9 +10,6 @@ export function SummaryCards({
 }: {
   monthKey: string;
   totals: MonthTotals;
-  incomes: Income[];
-  bills: Bill[];
-  savings: Saving[];
   onOpenFinAi: (entryType: "bill" | "income" | "saving") => void;
 }) {
   const { t } = useLanguage();
@@ -100,18 +91,14 @@ export function SummaryCards({
                 {formatCurrency(totals.totalIncomes, true)}
               </p>
             </div>
-            <IncomeDialog
-              monthKey={monthKey}
-              onSave={(data) => financeActions.addIncome(monthKey, data)}
-              trigger={
-                <button
-                  aria-label={t("addIncome")}
-                  className="grid size-8 place-items-center rounded-full bg-pos/10 text-pos transition-colors hover:bg-pos/20"
-                >
-                  <Plus className="size-4" />
-                </button>
-              }
-            />
+            <button
+              type="button"
+              aria-label={t("addIncome")}
+              onClick={() => onOpenFinAi("income")}
+              className="grid size-8 place-items-center rounded-full bg-pos/10 text-pos transition-colors hover:bg-pos/20"
+            >
+              <Plus className="size-4" />
+            </button>
           </div>
           <div className="flex-1" />
         </div>
@@ -129,17 +116,14 @@ export function SummaryCards({
                 {formatCurrency(totals.totalSaved, true)}
               </p>
             </div>
-            <SavingDialog
-              onSave={(data) => financeActions.addSaving(monthKey, data)}
-              trigger={
-                <button
-                  aria-label={t("addSaving")}
-                  className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
-                >
-                  <Plus className="size-4" />
-                </button>
-              }
-            />
+            <button
+              type="button"
+              aria-label={t("addSaving")}
+              onClick={() => onOpenFinAi("saving")}
+              className="grid size-8 place-items-center rounded-full bg-econ/10 text-econ transition-colors hover:bg-econ/20"
+            >
+              <Plus className="size-4" />
+            </button>
           </div>
           <div className="flex-1" />
         </div>
@@ -154,18 +138,14 @@ export function SummaryCards({
                 {formatCurrency(totals.totalBills, true)}
               </p>
             </div>
-            <BillDialog
-              monthKey={monthKey}
-              onSave={(data) => financeActions.addBill(monthKey, data)}
-              trigger={
-                <button
-                  aria-label={t("addBill")}
-                  className="grid size-8 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/20"
-                >
-                  <Plus className="size-4" />
-                </button>
-              }
-            />
+            <button
+              type="button"
+              aria-label={t("addBill")}
+              onClick={() => onOpenFinAi("bill")}
+              className="grid size-8 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/20"
+            >
+              <Plus className="size-4" />
+            </button>
           </div>
         </div>
 

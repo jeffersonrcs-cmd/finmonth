@@ -557,7 +557,7 @@ export function FinAi({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/70 px-4 py-3.5">
         <div className="flex items-center gap-2.5">
@@ -582,7 +582,7 @@ export function FinAi({
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
         {/* Intro banner */}
         <section className="glass rounded-3xl p-4">
           <p className="text-sm font-semibold">{contextualQuestion ?? t("whatWant")}</p>

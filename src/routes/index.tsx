@@ -310,7 +310,7 @@ function Dashboard() {
             style={
               finAiEntryType && finAiViewport
                 ? {
-                    top: Math.max(finAiViewport.offsetTop + 28, 28),
+                    top: Math.max(finAiViewport.offsetTop + 100, 100),
                     height: Math.min(
                       400,
                       finAiViewport.height - finAiViewport.offsetTop - 24,

@@ -106,7 +106,7 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
                 </p>
               </div>
               <span
-                className={`num font-display text-sm font-semibold ${status === "overdue" ? "text-neg" : status === "paid" ? "text-pos" : ""}`}
+                className={`num font-display text-sm font-semibold ${status === "overdue" ? "text-neg" : status === "paid" ? "text-pos" : "text-warn"}`}
               >
                 {formatCurrency(bill.amount)}
               </span>

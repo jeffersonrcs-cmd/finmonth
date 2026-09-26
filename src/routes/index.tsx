@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Home, PiggyBank, ReceiptText, Settings, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
 import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
@@ -68,8 +68,8 @@ function Dashboard() {
     id: 0,
     direction: "next" as "next" | "previous",
   });
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const touchSwipeRef = useRef(false);
+  const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const swipeActiveRef = useRef(false);
   const { t } = useLanguage();
   const financeState = useFinanceState();
   const notifications = getBillNotifications(financeState);
@@ -103,49 +103,45 @@ function Dashboard() {
     setMonthKey(nextMonthKey);
   };
 
-  const handleContentTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    const target = event.target;
-    if (target instanceof HTMLElement && target.closest("button,a,input,textarea,select,[role=\"button\"]")) {
-      touchStartRef.current = null;
-      touchSwipeRef.current = false;
-      return;
-    }
-
-    const touch = event.touches[0];
-    if (!touch) return;
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    touchSwipeRef.current = false;
+  const handleSwipeStart = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    swipeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: event.pointerId,
+    };
+    swipeActiveRef.current = false;
   };
 
-  const handleContentTouchMove = (event: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    const touch = event.touches[0];
-    if (!start || !touch) return;
+  const handleSwipeMove = (event: PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    if (!start || start.pointerId !== event.pointerId) return;
 
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) >= 18 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
-      touchSwipeRef.current = true;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) >= 16 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+      swipeActiveRef.current = true;
       event.preventDefault();
     }
   };
 
-  const handleContentTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    const wasHorizontal = touchSwipeRef.current;
-    touchStartRef.current = null;
-    touchSwipeRef.current = false;
-    if (!start) return;
+  const handleSwipeEnd = (event: PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    const wasHorizontal = swipeActiveRef.current;
+    swipeStartRef.current = null;
+    swipeActiveRef.current = false;
+    if (!start || start.pointerId !== event.pointerId) return;
 
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (!wasHorizontal && (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2)) return;
-    if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (!wasHorizontal || Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
 
     handleMonthChange(shiftMonthKey(monthKey, deltaX < 0 ? 1 : -1));
+  };
+
+  const handleSwipeCancel = () => {
+    swipeStartRef.current = null;
+    swipeActiveRef.current = false;
   };
 
   if (accountSettingsOpen) {
@@ -168,7 +164,14 @@ function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen w-full">
+    <div
+      className="relative min-h-screen w-full"
+      style={{ touchAction: "pan-y" }}
+      onPointerDown={handleSwipeStart}
+      onPointerMove={handleSwipeMove}
+      onPointerUp={handleSwipeEnd}
+      onPointerCancel={handleSwipeCancel}
+    >
       <div className="pointer-events-none fixed -left-20 -top-24 size-72 rounded-full bg-brand/25 blur-[90px]" />
       <div className="pointer-events-none fixed -right-24 top-40 size-80 rounded-full bg-accent/25 blur-[100px]" />
       <div className="pointer-events-none fixed bottom-0 left-1/3 size-72 rounded-full bg-econ/20 blur-[110px]" />
@@ -195,17 +198,7 @@ function Dashboard() {
         </div>
       )}
 
-      <div
-        className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0"
-        style={{ touchAction: "pan-y" }}
-        onTouchStart={handleContentTouchStart}
-        onTouchMove={handleContentTouchMove}
-        onTouchEnd={handleContentTouchEnd}
-        onTouchCancel={() => {
-          touchStartRef.current = null;
-          touchSwipeRef.current = false;
-        }}
-      >
+      <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0">
         <MonthNav
           monthKey={monthKey}
           onChange={handleMonthChange}

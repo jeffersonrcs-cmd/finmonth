@@ -10,6 +10,7 @@ import {
 } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BillDetailScreen } from "./BillsSection";
 import { BillDialog, ConfirmDeleteDialog, IncomeDialog, SavingDialog } from "./dialogs";
 
 function IncomeDetailScreen({ income, monthKey, onClose, onDelete }: { income: Income; monthKey: string; onClose: () => void; onDelete: () => void }) {

@@ -248,6 +248,10 @@ const translations = {
     pendingQuestion: "Quais contas estão pendentes?",
     finaiHint:
       "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico e gráficos. Quando não houver dados suficientes, vou informar isso em vez de estimar ou inventar.",
+    finaiBillPrompt: "Quanto você pagou, qual a descrição, em qual dia vence e é recorrente?",
+    finaiIncomePrompt: "Quanto você recebeu, qual a descrição e em qual dia?",
+    finaiSavingPrompt: "Quanto você guardou e qual a descrição?",
+    finaiEntryExample: "Ex.: recebi 3.500 de salário no dia 5",
     finaiSubtitle: "Sua inteligência financeira no FinMonth.",
     whatWant: "O que você quer saber?",
     askMonth:
@@ -541,6 +545,10 @@ const translations = {
     pendingQuestion: "Which bills are pending?",
     finaiHint:
       "I can analyze income, expenses, paid bills, pending bills, overdue bills, recurring bills, savings, balance, cash flow, averages, comparisons, history and charts. When there is not enough data, I will say so instead of estimating or inventing.",
+    finaiBillPrompt: "How much did you pay, what is the description, what day is it due, and is it recurring?",
+    finaiIncomePrompt: "How much did you receive, what is the description, and what day?",
+    finaiSavingPrompt: "How much did you save and what is the description?",
+    finaiEntryExample: "Example: received 3,500 salary on the 5th",
     finaiSubtitle: "Your financial intelligence in FinMonth.",
     whatWant: "What do you want to know?",
     askMonth:
@@ -834,6 +842,10 @@ const translations = {
     pendingQuestion: "¿Qué cuentas están pendientes?",
     finaiHint:
       "Puedo analizar ingresos, gastos, cuentas pagadas, pendientes, vencimientos, recurrencias, ahorro, saldo, flujo de caja, promedios, comparaciones, historial y gráficos. Cuando no haya datos suficientes, lo indicaré en lugar de estimar o inventar.",
+    finaiBillPrompt: "¿Cuánto pagaste, cuál es la descripción, qué día vence y es recurrente?",
+    finaiIncomePrompt: "¿Cuánto recibiste, cuál es la descripción y qué día?",
+    finaiSavingPrompt: "¿Cuánto guardaste y cuál es la descripción?",
+    finaiEntryExample: "Ej.: recibí 3.500 de salario el día 5",
     finaiSubtitle: "Tu inteligencia financiera en FinMonth.",
     whatWant: "¿Qué quieres saber?",
     askMonth:

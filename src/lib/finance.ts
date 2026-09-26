@@ -479,18 +479,24 @@ export const financeActions = {
     if (!prev) return 0;
     const existing = new Set(
       (state.months[monthKey]?.bills ?? []).map((b) =>
-        [b.description.trim().toLowerCase(), b.amount, b.dueDay].join("|"),
+        [
+          b.description.trim().toLowerCase(),
+          b.amount,
+          normalizeBillDueDay(b.dueDay, monthKey),
+        ].join("|"),
       ),
     );
     const copied = prev.bills
-      .filter(
-        (b) =>
-          b.recurrent &&
-          !existing.has(
-            [b.description.trim().toLowerCase(), b.amount, b.dueDay].join("|"),
-          ),
-      )
-      .map((b) => ({ ...b, id: uid(), paid: false }));
+      .filter((b) => b.recurrent)
+      .map((b) => {
+        const dueDay = normalizeBillDueDay(b.dueDay, monthKey);
+        return {
+          bill: { ...b, id: uid(), dueDay, paid: false },
+          key: [b.description.trim().toLowerCase(), b.amount, dueDay].join("|"),
+        };
+      })
+      .filter(({ key }) => !existing.has(key))
+      .map(({ bill }) => bill);
     if (copied.length === 0) return 0;
     updateMonth(monthKey, (m) => ({ ...m, bills: [...m.bills, ...copied] }));
     return copied.length;
@@ -564,6 +570,12 @@ export function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate();
 }
 
+/** Ajusta vencimentos recorrentes para o último dia quando o mês não possui o dia original. */
+export function normalizeBillDueDay(dueDay: number, monthKey: string) {
+  const { year, month } = parseMonthKey(monthKey);
+  return Math.min(Math.max(Math.trunc(dueDay) || 1, 1), daysInMonth(year, month));
+}
+
 export function currentMonthKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -599,7 +611,7 @@ export function getBillNotifications(
     const { year, month } = parseMonthKey(monthKey);
     for (const bill of data.bills) {
       if (bill.paid) continue;
-      const due = new Date(year, month - 1, Math.min(bill.dueDay, daysInMonth(year, month)));
+      const due = new Date(year, month - 1, normalizeBillDueDay(bill.dueDay, monthKey));
       due.setHours(0, 0, 0, 0);
       const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
       const lang = getCurrentLanguage();
@@ -642,7 +654,7 @@ export function billDueDateLabel(monthKey: string, dueDay: number) {
   const { year, month } = parseMonthKey(monthKey);
   const locale = getCurrentLanguage();
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(
-    new Date(year, month - 1, Math.min(dueDay, daysInMonth(year, month))),
+    new Date(year, month - 1, normalizeBillDueDay(dueDay, monthKey)),
   );
 }
 

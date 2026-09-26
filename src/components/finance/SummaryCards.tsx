@@ -12,6 +12,7 @@ import { useState } from "react";
 export function SummaryCards({
   monthKey,
   totals,
+  onOpenFinAi,
 }: {
   monthKey: string;
   totals: MonthTotals;
@@ -21,7 +22,6 @@ export function SummaryCards({
   onOpenFinAi: (entryType: "bill" | "income" | "saving") => void;
 }) {
   const { t } = useLanguage();
-  const { onOpenFinAi } = arguments[0] as { onOpenFinAi: (entryType: "bill" | "income" | "saving") => void };
   const positive = totals.availableBalance >= 0;
   const [openInfo, setOpenInfo] = useState<"available" | "future" | null>(null);
 

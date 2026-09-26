@@ -7,7 +7,7 @@ import { NotificationsPanel } from "@/components/finance/NotificationsPanel";
 import { SummaryCards } from "@/components/finance/SummaryCards";
 import { BillsSection } from "@/components/finance/BillsSection";
 import { AccountsList, IncomeList, SavingsList } from "@/components/finance/FinanceLists";
-import { FinAi } from "@/components/finance/FinAI";
+import { FinAi, type FinAiEntryType } from "@/components/finance/FinAI";
 import {
   computeTotals,
   currentMonthKey,
@@ -55,7 +55,7 @@ const navigation: {
   { id: "settings", label: "settings", Icon: Settings },
 ];
 
-function MonthContent({ monthKey, activeScreen }: { monthKey: string; activeScreen: Screen }) {
+function MonthContent({ monthKey, activeScreen, onOpenFinAi }: { monthKey: string; activeScreen: Screen; onOpenFinAi: (entryType: FinAiEntryType) => void }) {
   const { t } = useLanguage();
   const data = useMonthData(monthKey);
   const totals = computeTotals(data, monthKey);
@@ -78,6 +78,7 @@ function MonthContent({ monthKey, activeScreen }: { monthKey: string; activeScre
             incomes={data.incomes}
             bills={data.bills}
             savings={data.savings}
+            onOpenFinAi={onOpenFinAi}
           />
           <BillsSection monthKey={monthKey} bills={data.bills} />
         </>
@@ -94,6 +95,7 @@ function Dashboard() {
   const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [finAiOpen, setFinAiOpen] = useState(false);
+  const [finAiEntryType, setFinAiEntryType] = useState<FinAiEntryType | undefined>(undefined);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsSection, setAccountSettingsSection] = useState<
     "menu" | "profile" | "notifications" | "language" | "version"
@@ -114,6 +116,11 @@ function Dashboard() {
     window.addEventListener("finmonth:open-notifications", open);
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
+
+  const handleOpenFinAi = (entryType?: FinAiEntryType) => {
+    setFinAiEntryType(entryType);
+    setFinAiOpen(true);
+  };
 
   const handleMonthChange = (nextMonthKey: string) => {
     setMonthKey(nextMonthKey);
@@ -280,7 +287,15 @@ function Dashboard() {
             className="absolute inset-x-3 top-[calc(env(safe-area-inset-top)+1rem)] mx-auto flex h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <FinAi monthKey={monthKey} isFloating onClose={() => setFinAiOpen(false)} />
+            <FinAi
+              monthKey={monthKey}
+              isFloating
+              entryType={finAiEntryType}
+              onClose={() => {
+                setFinAiOpen(false);
+                setFinAiEntryType(undefined);
+              }}
+            />
           </section>
         </div>
       )}
@@ -311,13 +326,13 @@ function Dashboard() {
             }}
           >
             <div className="w-1/3 shrink-0 px-0">
-              <MonthContent monthKey={shiftMonthKey(monthKey, -1)} activeScreen={activeScreen} />
+              <MonthContent monthKey={shiftMonthKey(monthKey, -1)} activeScreen={activeScreen} onOpenFinAi={handleOpenFinAi} />
             </div>
             <div className="w-1/3 shrink-0 px-0">
-              <MonthContent monthKey={monthKey} activeScreen={activeScreen} />
+              <MonthContent monthKey={monthKey} activeScreen={activeScreen} onOpenFinAi={handleOpenFinAi} />
             </div>
             <div className="w-1/3 shrink-0 px-0">
-              <MonthContent monthKey={shiftMonthKey(monthKey, 1)} activeScreen={activeScreen} />
+              <MonthContent monthKey={shiftMonthKey(monthKey, 1)} activeScreen={activeScreen} onOpenFinAi={handleOpenFinAi} />
             </div>
           </div>
         </div>

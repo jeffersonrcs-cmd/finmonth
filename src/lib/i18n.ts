@@ -250,7 +250,7 @@ const translations = {
       "Posso analisar receitas, gastos, contas pagas, pendências, atrasos, recorrências, economia, saldo, fluxo de caixa, médias, comparações, histórico e gráficos. Quando não houver dados suficientes, vou informar isso em vez de estimar ou inventar.",
     finaiBillPrompt: "Qual conta você quer cadastrar?",
     finaiIncomePrompt: "Quanto você vai receber?",
-    finaiSavingPrompt: "Quanto você quer guardar?"
+    finaiSavingPrompt: "Quanto você quer guardar?",
     finaiEntryExample: "Digite os detalhes aqui...",
     finaiSubtitle: "Sua inteligência financeira no FinMonth.",
     whatWant: "O que você quer saber?",
@@ -842,9 +842,9 @@ const translations = {
     pendingQuestion: "¿Qué cuentas están pendientes?",
     finaiHint:
       "Puedo analizar ingresos, gastos, cuentas pagadas, pendientes, vencimientos, recurrencias, ahorro, saldo, flujo de caja, promedios, comparaciones, historial y gráficos. Cuando no haya datos suficientes, lo indicaré en lugar de estimar o inventar.",
-    finaiBillPrompt: "¿Qué cuenta quieres registrar?"
-    finaiIncomePrompt: "¿Cuánto vas a recibir?"
-    finaiSavingPrompt: "¿Cuánto quieres guardar?"
+    finaiBillPrompt: "¿Qué cuenta quieres registrar?",
+    finaiIncomePrompt: "¿Cuánto vas a recibir?",
+    finaiSavingPrompt: "¿Cuánto quieres guardar?",
     finaiEntryExample: "Escribe los detalles aquí...",
     finaiSubtitle: "Tu inteligencia financiera en FinMonth.",
     whatWant: "¿Qué quieres saber?",

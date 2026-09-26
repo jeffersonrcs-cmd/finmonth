@@ -80,6 +80,38 @@ function FormDialog({ trigger, title, children, onSubmit, open, setOpen }: Shell
 const fieldClass = "glass-soft rounded-xl border-0 h-11 text-sm";
 const labelClass = "text-[10px] uppercase tracking-widest text-mut";
 
+export function ConfirmDeleteDialog({
+  trigger,
+  onConfirm,
+}: {
+  trigger: ReactNode;
+  onConfirm: () => void;
+}) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-[340px] rounded-3xl border-border/70 bg-popover shadow-xl">
+        <DialogHeader>
+          <DialogTitle className="font-display text-base">{t("deleteConfirmTitle")}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm leading-relaxed text-mut">{t("deleteConfirmDescription")}</p>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button type="button" variant="ghost" className="text-mut text-xs uppercase tracking-widest" onClick={() => setOpen(false)}>
+            {t("cancel")}
+          </Button>
+          <Button type="button" variant="destructive" className="rounded-xl text-xs font-semibold uppercase tracking-widest" onClick={() => { onConfirm(); setOpen(false); }}>
+            {t("delete")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+const labelClass = "text-[10px] uppercase tracking-widest text-mut";
+
 export function IncomeDialog({
   trigger,
   monthKey,

@@ -106,6 +106,7 @@ function Dashboard() {
   const [swipeX, setSwipeX] = useState(0);
   const [swipePhase, setSwipePhase] = useState<"idle" | "dragging" | "settling">("idle");
   const [currentContentHeight, setCurrentContentHeight] = useState<number | null>(null);
+  const [finAiViewport, setFinAiViewport] = useState({ height: typeof window !== "undefined" ? window.innerHeight : 0, offsetTop: 0 });
   const currentContentRef = useRef<HTMLDivElement | null>(null);
   const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const swipeWidthRef = useRef(0);
@@ -128,6 +129,30 @@ function Dashboard() {
     observer.observe(element);
     return () => observer.disconnect();
   }, [monthKey, activeScreen]);
+
+  useEffect(() => {
+    if (!finAiOpen) return;
+
+    const visualViewport = window.visualViewport;
+    const syncViewport = () => {
+      setFinAiViewport({
+        height: visualViewport?.height ?? window.innerHeight,
+        offsetTop: visualViewport?.offsetTop ?? 0,
+      });
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    syncViewport();
+    visualViewport?.addEventListener("resize", syncViewport);
+    visualViewport?.addEventListener("scroll", syncViewport);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      visualViewport?.removeEventListener("resize", syncViewport);
+      visualViewport?.removeEventListener("scroll", syncViewport);
+    };
+  }, [finAiOpen]);
 
   useEffect(() => {
     const open = () => setNotificationsOpen(true);
@@ -302,13 +327,14 @@ function Dashboard() {
       {finAiOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-background/70 p-3 backdrop-blur-sm"
+            className="fixed inset-x-0 z-[90] flex items-center justify-center overflow-hidden bg-background/70 px-3 py-3 backdrop-blur-sm"
+            style={{ top: finAiViewport.offsetTop, height: finAiViewport.height }}
             onClick={() => setFinAiOpen(false)}
           >
             <section
               className={`mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
                 finAiEntryType
-                  ? "relative h-[380px] w-full max-w-[400px] shrink-0"
+                  ? "relative w-full max-w-[400px] shrink-0"
                   : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
               }`}
               onClick={(e) => e.stopPropagation()}

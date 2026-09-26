@@ -286,7 +286,7 @@ function Dashboard() {
     <div
       className="relative min-h-screen w-full"
       style={{
-        touchAction: activeScreen === "inicio" ? "pan-x" : "pan-y",
+        touchAction: "pan-y",
         overscrollBehaviorY: activeScreen === "inicio" ? "none" : "auto",
       }}
       onPointerDown={handleSwipeStart}

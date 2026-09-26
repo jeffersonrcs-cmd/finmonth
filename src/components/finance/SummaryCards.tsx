@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import {
   financeActions,
   formatCurrency,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/finance";
 import { BillDialog, IncomeDialog, SavingDialog } from "./dialogs";
 import { useLanguage } from "@/lib/i18n";
+import { useState } from "react";
 
 export function SummaryCards({
   monthKey,
@@ -22,12 +23,32 @@ export function SummaryCards({
 }) {
   const { t } = useLanguage();
   const positive = totals.availableBalance >= 0;
+  const [openInfo, setOpenInfo] = useState<"available" | "future" | null>(null);
 
   return (
     <>
       <section className="glass mb-4 rounded-3xl p-5">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-mut">💵 {t("availableBalance")}</p>
+          <div className="relative flex items-center gap-1.5">
+            <p className="text-xs text-mut">💵 {t("availableBalance")}</p>
+            <button
+              type="button"
+              aria-label={t("availableBalance")}
+              aria-expanded={openInfo === "available"}
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpenInfo((current) => (current === "available" ? null : "available"));
+              }}
+              className="grid size-4 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
+            >
+              <Info className="size-2.5" strokeWidth={2.4} />
+            </button>
+            {openInfo === "available" && (
+              <div className="absolute left-0 top-full z-20 mt-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">
+                {t("availableBalanceHint")}
+              </div>
+            )}
+          </div>
           <span
             className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${positive ? "border-pos/20 bg-pos/10 text-pos" : "border-neg/20 bg-neg/10 text-neg"}`}
           >
@@ -39,16 +60,33 @@ export function SummaryCards({
         >
           {formatCurrency(totals.availableBalance)}
         </p>
-        <p className="mt-1 text-[10px] leading-relaxed text-mut">{t("availableBalanceHint")}</p>
-        <div className="ml-auto mt-2 flex w-fit items-baseline justify-end gap-2 rounded-xl border border-border/50 bg-background/25 px-3 py-2">
-          <span className="text-[10px] text-mut">{t("futureBalance")}</span>
+        <div className="relative ml-auto mt-2 flex w-fit items-baseline justify-end gap-2 rounded-xl border border-border/50 bg-background/25 px-3 py-2">
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-mut">{t("futureBalance")}</span>
+            <button
+              type="button"
+              aria-label={t("futureBalance")}
+              aria-expanded={openInfo === "future"}
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpenInfo((current) => (current === "future" ? null : "future"));
+              }}
+              className="grid size-4 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
+            >
+              <Info className="size-2.5" strokeWidth={2.4} />
+            </button>
+            {openInfo === "future" && (
+              <div className="absolute right-0 top-full z-20 mt-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">
+                {t("futureBalanceHint")}
+              </div>
+            )}
+          </div>
           <span
             className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}
           >
             {formatCurrency(totals.futureBalance)}
           </span>
         </div>
-        <p className="mt-1 text-right text-[10px] leading-relaxed text-mut">{t("futureBalanceHint")}</p>
       </section>
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">

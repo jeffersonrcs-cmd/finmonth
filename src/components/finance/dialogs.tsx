@@ -23,10 +23,32 @@ import { formatCurrency, type Bill, type Income, type Saving } from "@/lib/finan
 import { daysInMonth } from "@/lib/finance";
 import { useLanguage } from "@/lib/i18n";
 
-function parseAmount(value: string) {
-  const normalized = value.replace(/\./g, "").replace(",", ".");
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : 0;
+function parseAmount(value: string): number | null {
+  const input = value.trim().replace(/\s/g, "");
+  if (!input) return null;
+
+  let normalized = input;
+  const lastComma = input.lastIndexOf(",");
+  const lastDot = input.lastIndexOf(".");
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    // When both separators are present, the last one is the decimal separator.
+    if (lastComma > lastDot) {
+      normalized = input.replace(/\./g, "").replace(",", ".");
+    } else {
+      normalized = input.replace(/,/g, "");
+    }
+  } else if (lastComma >= 0) {
+    normalized = input.replace(/\./g, "").replace(",", ".");
+  } else if ((input.match(/\./g) ?? []).length > 1) {
+    // Multiple dots without a comma are treated as thousands separators.
+    normalized = input.replace(/\./g, "");
+  }
+
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) return null;
+
+  const amount = Number(normalized);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
 }
 
 type Shell = {
@@ -167,10 +189,10 @@ export function IncomeDialog({
         const [year = 0, month = 1] = monthKey.split("-").map(Number);
         const maxDay = daysInMonth(year, month);
         const selectedDay = Math.min(Math.max(Number(day) || 1, 1), maxDay);
-        if (!description.trim() || parseAmount(amount) <= 0) return false;
+        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
         onSave({
           description: description.trim(),
-          amount: parseAmount(amount),
+          amount: parsedAmount,
           date: `${monthKey}-${String(selectedDay).padStart(2, "0")}`,
         });
         return true;
@@ -272,10 +294,10 @@ export function BillDialog({
       setOpen={setDialogOpen}
       onSubmit={() => {
         const day = Math.min(Math.max(Number(dueDay) || 1, 1), maxDay);
-        if (!description.trim() || parseAmount(amount) <= 0) return false;
+        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
         onSave({
           description: description.trim(),
-          amount: parseAmount(amount),
+          amount: parsedAmount,
           dueDay: day,
           paid,
           recurrent,
@@ -437,8 +459,8 @@ export function SavingDialog({
       open={dialogOpen}
       setOpen={setDialogOpen}
       onSubmit={() => {
-        if (!description.trim() || parseAmount(amount) <= 0) return false;
-        onSave({ description: description.trim(), amount: parseAmount(amount) });
+        const parsedAmount = parseAmount(amount);\n        if (!description.trim() || parsedAmount === null) return false;
+        onSave({ description: description.trim(), amount: parsedAmount });
         return true;
       }}
     >

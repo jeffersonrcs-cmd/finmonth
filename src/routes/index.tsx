@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Home, PiggyBank, ReceiptText, Settings, Sparkles, WalletCards, type LucideIcon } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { MonthNav } from "@/components/finance/MonthNav";
 import { AccountSettings } from "@/components/finance/AccountSettings";
@@ -97,7 +98,6 @@ function Dashboard() {
   const [activeScreen, setActiveScreen] = useState<Screen>("inicio");
   const [finAiOpen, setFinAiOpen] = useState(false);
   const [finAiEntryType, setFinAiEntryType] = useState<FinAiEntryType | undefined>(undefined);
-  const [finAiViewport, setFinAiViewport] = useState<{ height: number; offsetTop: number } | null>(null);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsSection, setAccountSettingsSection] = useState<
     "menu" | "profile" | "notifications" | "language" | "version"
@@ -134,30 +134,6 @@ function Dashboard() {
     window.addEventListener("finmonth:open-notifications", open);
     return () => window.removeEventListener("finmonth:open-notifications", open);
   }, []);
-
-  useEffect(() => {
-    if (!finAiOpen || !finAiEntryType || !window.visualViewport) {
-      setFinAiViewport(null);
-      return;
-    }
-
-    const viewport = window.visualViewport;
-    const syncViewport = () => {
-      setFinAiViewport({
-        height: viewport.height,
-        offsetTop: viewport.offsetTop,
-      });
-    };
-
-    syncViewport();
-    viewport.addEventListener("resize", syncViewport);
-    viewport.addEventListener("scroll", syncViewport);
-
-    return () => {
-      viewport.removeEventListener("resize", syncViewport);
-      viewport.removeEventListener("scroll", syncViewport);
-    };
-  }, [finAiOpen, finAiEntryType]);
 
   const handleOpenFinAi = (entryType?: FinAiEntryType) => {
     setFinAiEntryType(entryType);
@@ -322,50 +298,34 @@ function Dashboard() {
         />
       )}
 
-      {/* Floating FinAI Window */}
-      {finAiOpen && (
-        <div
-          className="fixed inset-0 z-[90] bg-background/70 backdrop-blur-sm"
-          onClick={() => setFinAiOpen(false)}
-        >
-          <section
-            className={`mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
-              finAiEntryType
-                ? "fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] max-w-[400px]"
-                : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
-            }`}
-            style={
-              finAiEntryType && finAiViewport
-                ? {
-                    top: Math.max(
-                      0,
-                      Math.min(
-                        100,
-                        finAiViewport.offsetTop +
-                          finAiViewport.height -
-                          400 -
-                          12,
-                      ),
-                    ),
-                    height: 400,
-                    bottom: "auto",
-                  }
-                : undefined
-            }
-            onClick={(e) => e.stopPropagation()}
+      {/* Floating FinAI Window — rendered outside the dashboard so keyboard/scroll cannot move it with the page */}
+      {finAiOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[90] bg-background/70 backdrop-blur-sm"
+            onClick={() => setFinAiOpen(false)}
           >
-            <FinAi
-              monthKey={monthKey}
-              isFloating
-              entryType={finAiEntryType}
-              onClose={() => {
-                setFinAiOpen(false);
-                setFinAiEntryType(undefined);
-              }}
-            />
-          </section>
-        </div>
-      )}
+            <section
+              className={`mx-auto flex max-w-[440px] flex-col overflow-hidden rounded-3xl border border-border bg-popover shadow-2xl ${
+                finAiEntryType
+                  ? "fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] h-[380px] max-w-[400px]"
+                  : "absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.75rem)] h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-1.5rem)]"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FinAi
+                monthKey={monthKey}
+                isFloating
+                entryType={finAiEntryType}
+                onClose={() => {
+                  setFinAiOpen(false);
+                  setFinAiEntryType(undefined);
+                }}
+              />
+            </section>
+          </div>,
+          document.body,
+        )}
 
       <div className="relative mx-auto max-w-[440px] px-4 pb-24 pt-0">
         <MonthNav

@@ -47,20 +47,6 @@ export function SummaryCards({
             {formatCurrency(totals.futureBalance)}
           </span>
         </div>
-        <div className="mt-4 flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-pos" />
-            <span className="text-mut">{t("incomes")}</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-neg" />
-            <span className="text-mut">{t("bills")}</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-econ" />
-            <span className="text-mut">{t("savings")}</span>
-          </span>
-        </div>
       </section>
 
       <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">

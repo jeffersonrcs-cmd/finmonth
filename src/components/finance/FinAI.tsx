@@ -728,7 +728,7 @@ export function FinAi({
                 )}
 
                 {/* Visual Chart if suggested */}
-                {reply.chart && (
+                {reply.chart && reply.action?.type !== "create_saving" && (
                   <FinAiChart mode={reply.chart} monthKey={monthKey} year={year} state={state} />
                 )}
               </div>

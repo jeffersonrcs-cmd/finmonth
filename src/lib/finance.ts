@@ -45,6 +45,7 @@ export type FinanceState = {
 };
 
 const STORAGE_KEY = "finmonth.v1";
+const CURRENT_SCHEMA_VERSION = 1;
 
 const emptyMonth = (): MonthData => ({ incomes: [], bills: [], savings: [] });
 
@@ -75,7 +76,10 @@ function emit() {
 
 function persist() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION }),
+    );
   } catch {
     /* ignore */
   }
@@ -117,6 +121,26 @@ function isValidSaving(value: unknown): value is Saving {
     typeof value.description === "string" &&
     Number.isFinite(value.amount)
   );
+}
+
+function migratePersistedState(value: unknown): unknown | null {
+  if (!isRecord(value)) return null;
+
+  const version = Number(value.schemaVersion ?? 0);
+  if (!Number.isInteger(version) || version < 0 || version > CURRENT_SCHEMA_VERSION) {
+    return null;
+  }
+
+  switch (version) {
+    case 0:
+      // Legacy data had no schemaVersion. Its structure is already compatible
+      // with the current schema, so only the persisted version marker is added.
+      return { ...value, schemaVersion: CURRENT_SCHEMA_VERSION };
+    case CURRENT_SCHEMA_VERSION:
+      return value;
+    default:
+      return null;
+  }
 }
 
 function sanitizeFinanceState(value: unknown): FinanceState | null {
@@ -360,9 +384,13 @@ export function hydrateStore() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      const sanitized = sanitizeFinanceState(parsed);
+      const migrated = migratePersistedState(parsed);
+      const sanitized = sanitizeFinanceState(migrated);
       if (sanitized) {
         state = sanitized;
+        // Persist the migrated shape so legacy data is upgraded once and
+        // future versions have an explicit starting point.
+        persist();
       }
     }
   } catch {

@@ -433,12 +433,14 @@ export function FinAi({
   const year = Number(monthKey.slice(0, 4));
 
   // 4 sugestões solicitadas
-  const suggestions = [
-    t("analysisSuggestion"),
-    t("registerBillSuggestion"),
-    t("registerIncomeSuggestion"),
-    t("monthQuestion"),
-  ];
+  const suggestions = entryType
+    ? []
+    : [
+        t("analysisSuggestion"),
+        t("registerBillSuggestion"),
+        t("registerIncomeSuggestion"),
+        t("monthQuestion"),
+      ];
 
   const [prompt, setPrompt] = useState("");
   const contextualQuestion =
@@ -584,7 +586,7 @@ export function FinAi({
         {/* Intro banner */}
         <section className="glass rounded-3xl p-4">
           <p className="text-sm font-semibold">{contextualQuestion ?? t("whatWant")}</p>
-          <p className="mt-1 text-xs leading-relaxed text-mut">{t("askMonth")}</p>
+          {!entryType && <p className="mt-1 text-xs leading-relaxed text-mut">{t("askMonth")}</p>}
 
           {aiLoading && (
             <div className="mt-3 flex items-center gap-2 text-[10px] text-brand">
@@ -593,8 +595,7 @@ export function FinAi({
             </div>
           )}
 
-          {/* 4 Sugestões */}
-          <div className="mt-3.5 grid grid-cols-2 gap-2">
+          {!entryType && <div className="mt-3.5 grid grid-cols-2 gap-2">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion}
@@ -605,7 +606,7 @@ export function FinAi({
                 {suggestion}
               </button>
             ))}
-          </div>
+          </div>}
         </section>
 
         {/* Reply card */}

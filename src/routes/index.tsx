@@ -125,14 +125,21 @@ function Dashboard() {
     }
 
     const viewport = window.visualViewport;
+    const syncViewport = () => {
+      setFinAiViewport({
+        height: viewport.height,
+        offsetTop: viewport.offsetTop,
+      });
+    };
 
-    // Capture the modal geometry once, before the iPhone keyboard opens.
-    // Do not react to visualViewport resize/scroll events while typing:
-    // the keyboard must not move or compress the floating FinAI window.
-    setFinAiViewport({
-      height: viewport.height,
-      offsetTop: viewport.offsetTop,
-    });
+    syncViewport();
+    viewport.addEventListener("resize", syncViewport);
+    viewport.addEventListener("scroll", syncViewport);
+
+    return () => {
+      viewport.removeEventListener("resize", syncViewport);
+      viewport.removeEventListener("scroll", syncViewport);
+    };
   }, [finAiOpen, finAiEntryType]);
 
   const handleOpenFinAi = (entryType?: FinAiEntryType) => {
@@ -278,7 +285,10 @@ function Dashboard() {
   return (
     <div
       className="relative min-h-screen w-full"
-      style={{ touchAction: "pan-y" }}
+      style={{
+        touchAction: "pan-y",
+        overscrollBehaviorY: "none",
+      }}
       onPointerDown={handleSwipeStart}
       onPointerMove={handleSwipeMove}
       onPointerUp={handleSwipeEnd}
@@ -310,11 +320,17 @@ function Dashboard() {
             style={
               finAiEntryType && finAiViewport
                 ? {
-                    top: Math.max(finAiViewport.offsetTop + 100, 100),
-                    height: Math.min(
-                      400,
-                      finAiViewport.height - finAiViewport.offsetTop - 24,
+                    top: Math.max(
+                      12,
+                      Math.min(
+                        100,
+                        finAiViewport.offsetTop +
+                          finAiViewport.height -
+                          400 -
+                          12,
+                      ),
                     ),
+                    height: 400,
                     bottom: "auto",
                   }
                 : undefined

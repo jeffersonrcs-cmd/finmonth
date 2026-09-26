@@ -253,17 +253,22 @@ export async function connectCloud(userId: string) {
   cloudReady = true;
 }
 
-export function disconnectCloud() {
+export function disconnectCloud(options: { clearLocalData?: boolean } = {}) {
   cloudReady = false;
   cloudUserId = null;
   if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
   cloudSyncTimer = undefined;
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    /* ignore */
+
+  if (options.clearLocalData) {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    state = initialState;
+    hydrated = false;
   }
-  state = initialState;
+
   emit();
 }
 

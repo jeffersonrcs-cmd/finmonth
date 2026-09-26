@@ -11,6 +11,17 @@ export type VersionHistoryEntry = {
 
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
+    version: "1.37.11",
+    changes: [
+      {
+        pt: "Atualizações e melhorias para esta versão.",
+        en: "Updates and improvements for this version.",
+        es: "Actualizaciones y mejoras para esta versión.",
+      },
+    ],
+  },
+
+  {
     version: "1.37.10",
     changes: [
       {

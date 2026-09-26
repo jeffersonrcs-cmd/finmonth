@@ -545,9 +545,9 @@ const translations = {
     pendingQuestion: "Which bills are pending?",
     finaiHint:
       "I can analyze income, expenses, paid bills, pending bills, overdue bills, recurring bills, savings, balance, cash flow, averages, comparisons, history and charts. When there is not enough data, I will say so instead of estimating or inventing.",
-    finaiBillPrompt: "Which bill do you want to register?"
-    finaiIncomePrompt: "How much are you going to receive?"
-    finaiSavingPrompt: "How much do you want to save?"
+    finaiBillPrompt: "Which bill do you want to register?",
+    finaiIncomePrompt: "How much are you going to receive?",
+    finaiSavingPrompt: "How much do you want to save?",
     finaiEntryExample: "Enter the details here...",
     finaiSubtitle: "Your financial intelligence in FinMonth.",
     whatWant: "What do you want to know?",

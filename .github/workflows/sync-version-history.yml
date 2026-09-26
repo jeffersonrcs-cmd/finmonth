@@ -1,0 +1,44 @@
+name: Sync version history
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "version-history"
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sync version history
+        run: node scripts/sync-version-history.mjs
+
+      - name: Commit version history
+        run: |
+          if git diff --quiet -- src/lib/versionHistory.ts; then
+            echo "Version history already contains the current version."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/versionHistory.ts
+          git commit -m "chore: sync version history [skip ci]"
+          git push

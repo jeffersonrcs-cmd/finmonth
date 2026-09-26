@@ -1,4 +1,4 @@
-import { CalendarDays, Check, Pencil, Trash2 } from "lucide-react";
+import { Building2, CalendarDays, Car, Check, CreditCard, Droplets, FileText, Fuel, HeartPulse, Home, Landmark, Pencil, ReceiptText, ShieldCheck, ShoppingCart, Trash2, Tv, Utensils, Wifi, Wrench, Zap } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
@@ -6,6 +6,29 @@ import { billStatus, financeActions, formatCurrency, type Bill } from "@/lib/fin
 import { BillDialog, ConfirmDeleteDialog } from "./dialogs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+
+
+function getBillIcon(description: string) {
+  const value = description.toLowerCase();
+  if (/internet|wifi|wi-fi|fibra/.test(value)) return Wifi;
+  if (/água|agua|saneamento/.test(value)) return Droplets;
+  if (/luz|energia|elétrica|eletrica/.test(value)) return Zap;
+  if (/cartão|cartao|crédito|credito/.test(value)) return CreditCard;
+  if (/aluguel|aluguel/.test(value)) return Home;
+  if (/condomínio|condominio/.test(value)) return Building2;
+  if (/iptu|imposto|tributo/.test(value)) return Landmark;
+  if (/carro|veículo|veiculo|moto|estacionamento/.test(value)) return Car;
+  if (/combustível|combustivel|gasolina|posto/.test(value)) return Fuel;
+  if (/telefone|celular|móvel|movel/.test(value)) return FileText;
+  if (/tv|televisão|televisao/.test(value)) return Tv;
+  if (/mercado|supermercado|compras/.test(value)) return ShoppingCart;
+  if (/saúde|saude|médico|medico|farmácia|farmacia/.test(value)) return HeartPulse;
+  if (/seguro/.test(value)) return ShieldCheck;
+  if (/restaurante|comida|alimentação|alimentacao/.test(value)) return Utensils;
+  if (/manutenção|manutencao|reparo|conserto/.test(value)) return Wrench;
+  if (/fatura|boleto|conta/.test(value)) return ReceiptText;
+  return ReceiptText;
+}
 
 export function BillDetailScreen({
   bill,
@@ -25,38 +48,56 @@ export function BillDetailScreen({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[340px] rounded-3xl border-border/70 bg-popover shadow-xl">
-        <DialogHeader className="pr-8">
-          <DialogTitle className="font-display text-base">{bill.description}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-mut">{t("amount")}</p>
-              <p className={"num mt-1 font-display text-3xl font-bold " + (status === "overdue" ? "text-neg" : "text-warn")}>
-                {formatCurrency(bill.amount)}
-              </p>
-            </div>
-            <span className={"rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider " + statusClass}>
-              {statusLabel}
-            </span>
-          </div>
-
-          <div className="space-y-3 border-t border-border/50 pt-4">
+      <DialogContent className="max-w-[340px] overflow-hidden rounded-[2rem] border-border/70 bg-popover p-0 shadow-2xl">
+        <div className="p-5 sm:p-6">
+          <DialogHeader className="relative pr-10">
             <div className="flex items-center gap-3">
-              <CalendarDays className="size-4 text-mut" />
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-mut">{t("dueDate")}</p>
-                <p className="mt-0.5 text-sm font-medium">{t("day")} {bill.dueDay}</p>
+              <div className={"grid size-12 shrink-0 place-items-center rounded-2xl " + (status === "overdue" ? "bg-neg/10 text-neg" : "bg-warn/10 text-warn")}>
+                {(() => { const Icon = getBillIcon(bill.description); return <Icon className="size-6" />; })()}
+              </div>
+              <DialogTitle className="min-w-0 font-display text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+                {bill.description}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-background/45 p-4">
+              <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-mut">{t("amount")}</p>
+                  <p className={"num mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl " + (status === "overdue" ? "text-neg" : "text-warn")}>
+                    {formatCurrency(bill.amount)}
+                  </p>
+                </div>
+                <span className={"shrink-0 rounded-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider " + statusClass}>
+                  {statusLabel}
+                </span>
               </div>
             </div>
-            {bill.recurrent && (
-              <div className="rounded-2xl bg-muted/30 px-3 py-2.5 text-xs font-medium">
-                {t("recurring")}
+
+            <div className="divide-y divide-border/50 rounded-2xl border border-border/60 bg-background/30">
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted/40">
+                  <CalendarDays className="size-5 text-mut" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-mut">{t("dueDate")}</p>
+                  <p className="mt-0.5 text-base font-semibold">{t("day")} {bill.dueDay}</p>
+                </div>
               </div>
-            )}
-          </div>
+              {bill.recurrent && (
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted/40 text-mut">
+                    <ReceiptText className="size-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-mut">{t("recurring")}</p>
+                    <p className="mt-0.5 text-base font-semibold">{t("recurring")}</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
           <div className="flex justify-end gap-2 border-t border-border/50 pt-4">
             <BillDialog
@@ -67,7 +108,7 @@ export function BillDetailScreen({
                 <button
                   type="button"
                   aria-label={t("edit")}
-                  className="grid size-9 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/15"
+                  className="grid size-11 place-items-center rounded-full bg-brand/10 text-brand transition-colors hover:bg-brand/15"
                 >
                   <Pencil className="size-4" />
                 </button>
@@ -79,7 +120,7 @@ export function BillDetailScreen({
                 <button
                   type="button"
                   aria-label={t("delete")}
-                  className="grid size-9 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/15"
+                  className="grid size-11 place-items-center rounded-full bg-neg/10 text-neg transition-colors hover:bg-neg/15"
                 >
                   <Trash2 className="size-4" />
                 </button>

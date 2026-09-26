@@ -109,7 +109,7 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
         bill={selectedBill}
         monthKey={monthKey}
         onBack={() => setSelectedBillId(null)}
-        onDelete={() => setSelectedBillId(null)}
+        onDelete={() => {\n          financeActions.removeBill(monthKey, selectedBill.id);\n          setSelectedBillId(null);\n        }}
       />
     );
   }
@@ -295,14 +295,18 @@ export function IncomeList({ monthKey, incomes }: { monthKey: string; incomes: I
                 </button>
               }
             />
-            <button
-              type="button"
-              aria-label={`${t("delete")} ${t("incomes").toLowerCase()}`}
-              onClick={() => financeActions.removeIncome(monthKey, income.id)}
-              className="grid size-7 place-items-center rounded-full text-mut hover:text-neg"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            <ConfirmDeleteDialog
+              onConfirm={() => financeActions.removeIncome(monthKey, income.id)}
+              trigger={
+                <button
+                  type="button"
+                  aria-label={`${t("delete")} ${t("incomes").toLowerCase()}`}
+                  className="grid size-7 shrink-0 place-items-center rounded-full text-mut hover:text-neg"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              }
+            />
           </div>
         ))}
       </div>
@@ -361,14 +365,18 @@ export function SavingsList({ monthKey, savings }: { monthKey: string; savings: 
                 </button>
               }
             />
-            <button
-              type="button"
-              aria-label={`${t("delete")} ${t("savings").toLowerCase()}`}
-              onClick={() => financeActions.removeSaving(monthKey, saving.id)}
-              className="grid size-7 place-items-center rounded-full text-mut hover:text-neg"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            <ConfirmDeleteDialog
+              onConfirm={() => financeActions.removeSaving(monthKey, saving.id)}
+              trigger={
+                <button
+                  type="button"
+                  aria-label={`${t("delete")} ${t("savings").toLowerCase()}`}
+                  className="grid size-7 shrink-0 place-items-center rounded-full text-mut hover:text-neg"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              }
+            />
           </div>
         ))}
       </div>

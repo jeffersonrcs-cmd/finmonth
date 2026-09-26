@@ -43,8 +43,14 @@ export function BillDetailScreen({
 }) {
   const { t } = useLanguage();
   const status = billStatus(bill, monthKey);
-  const statusClass = status === "overdue" ? "text-neg bg-neg/10" : "text-warn bg-warn/10";
-  const statusLabel = status === "overdue" ? t("overdue") : t("pending");
+  const statusClass =
+    status === "paid"
+      ? "text-pos bg-pos/10"
+      : status === "overdue"
+        ? "text-neg bg-neg/10"
+        : "text-warn bg-warn/10";
+  const statusLabel =
+    status === "paid" ? t("paid") : status === "overdue" ? t("overdue") : t("pending");
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

@@ -27,7 +27,7 @@ export function SummaryCards({
 
   return (
     <>
-      <section className="glass mb-4 rounded-3xl p-5" onClick={() => setOpenInfo(null)}>
+      <section className="glass relative z-30 mb-4 rounded-3xl p-5" onClick={() => setOpenInfo(null)}>
         <div className="flex items-center justify-between">
           <div className="relative flex items-center gap-1.5">
             <p className="text-xs text-mut">💵 {t("availableBalance")}</p>
@@ -39,9 +39,9 @@ export function SummaryCards({
                 event.stopPropagation();
                 setOpenInfo((current) => (current === "available" ? null : "available"));
               }}
-              className="grid size-4 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
+              className="relative -top-0.5 grid size-3 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
             >
-              <Info className="size-2.5" strokeWidth={2.4} />
+              <Info className="size-2" strokeWidth={2.5} />
             </button>
             {openInfo === "available" && (
               <div className="absolute left-0 top-full z-20 mt-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">
@@ -71,7 +71,7 @@ export function SummaryCards({
                 event.stopPropagation();
                 setOpenInfo((current) => (current === "future" ? null : "future"));
               }}
-              className="grid size-4 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
+              className="relative -top-0.5 grid size-3 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
             >
               <Info className="size-2.5" strokeWidth={2.4} />
             </button>
@@ -89,7 +89,7 @@ export function SummaryCards({
         </div>
       </section>
 
-      <section className="mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">
+      <section className="relative z-10 mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">
         <div id="receitas" className="glass scroll-mt-4 rounded-2xl p-3.5">
           <div className="flex items-start justify-between">
             <div>

@@ -415,14 +415,18 @@ function FinAiChart({
   );
 }
 
+export type FinAiEntryType = "bill" | "income" | "saving";
+
 export function FinAi({
   monthKey,
   onClose,
   isFloating = false,
+  entryType,
 }: {
   monthKey: string;
   onClose?: () => void;
   isFloating?: boolean;
+  entryType?: FinAiEntryType;
 }) {
   const { language, t } = useLanguage();
   const state = useFinanceState();
@@ -437,6 +441,14 @@ export function FinAi({
   ];
 
   const [prompt, setPrompt] = useState("");
+  const contextualQuestion =
+    entryType === "bill"
+      ? t("finaiBillPrompt")
+      : entryType === "income"
+        ? t("finaiIncomePrompt")
+        : entryType === "saving"
+          ? t("finaiSavingPrompt")
+          : null;
   const [reply, setReply] = useState<AiReply | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [actionDone, setActionDone] = useState(false);
@@ -567,7 +579,7 @@ export function FinAi({
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {/* Intro banner */}
         <section className="glass rounded-3xl p-4">
-          <p className="text-sm font-semibold">{t("whatWant")}</p>
+          <p className="text-sm font-semibold">{contextualQuestion ?? t("whatWant")}</p>
           <p className="mt-1 text-xs leading-relaxed text-mut">{t("askMonth")}</p>
 
           {aiLoading && (
@@ -726,7 +738,7 @@ export function FinAi({
           <input
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder={t("enterQuestion")}
+            placeholder={entryType ? t("finaiEntryExample") : t("enterQuestion")}
             className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-mut/70"
             aria-label={t("askFinAi")}
           />

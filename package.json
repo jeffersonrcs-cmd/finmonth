@@ -15,7 +15,9 @@
     "version:minor": "node scripts/bump-version.mjs minor",
     "version:major": "node scripts/bump-version.mjs major",
     "prebuild": "node scripts/generate-icons.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "preview:cloudflare": "wrangler preview"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -94,6 +96,7 @@
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
     "sharp": "^0.34.1",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.141.0"
   }
 }

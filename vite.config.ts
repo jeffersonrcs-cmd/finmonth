@@ -13,7 +13,9 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
   vite: {
-    base: process.env["CF_PAGES"] ? "/" : (process.env["VITE_BASE_PATH"] ?? "/finmonth/"),
+    base: process.env["CF_PAGES"]
+      ? "/"
+      : (process.env["VITE_BASE_PATH"] ?? "/finmonth/"),
     define: {
       __FINMONTH_VERSION__: JSON.stringify(packageJson.version),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),

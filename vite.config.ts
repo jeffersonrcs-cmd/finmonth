@@ -13,7 +13,7 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
   vite: {
-    base: process.env["CF_PAGES"]
+    base: process.env["CF_PAGES"] || process.env["WORKERS_CI"]
       ? "/"
       : (process.env["VITE_BASE_PATH"] ?? "/finmonth/"),
     define: {

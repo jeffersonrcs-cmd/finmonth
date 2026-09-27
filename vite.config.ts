@@ -21,7 +21,7 @@ export default defineConfig({
   },
   tanstackStart: {
     spa: {
-      enabled: !process.env["CF_PAGES"],
+      enabled: true,
       prerender: {
         outputPath: "/index.html",
         crawlLinks: false,

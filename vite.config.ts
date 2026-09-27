@@ -19,11 +19,19 @@ export default defineConfig({
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
     },
   },
+  nitro: {
+    preset: "node-server",
+    output: {
+      dir: "dist",
+      serverDir: "dist/server",
+      publicDir: "dist",
+    },
+  },
   tanstackStart: {
     spa: {
       enabled: true,
       prerender: {
-        outputPath: "/index.html",
+        outputPath: "/_shell.html",
         crawlLinks: false,
       },
     },

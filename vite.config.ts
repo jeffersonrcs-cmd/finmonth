@@ -5,7 +5,6 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { readFileSync } from "node:fs";
-import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const packageJson = JSON.parse(
@@ -14,10 +13,7 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
   vite: {
-    plugins: [cloudflare({ viteEnvironment: { name: "ssr" } })],
-    base: process.env["CF_PAGES"] || process.env["WORKERS_CI"]
-      ? "/"
-      : (process.env["VITE_BASE_PATH"] ?? "/finmonth/"),
+    base: process.env["CF_PAGES"] ? "/" : (process.env["VITE_BASE_PATH"] ?? "/finmonth/"),
     define: {
       __FINMONTH_VERSION__: JSON.stringify(packageJson.version),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
@@ -25,7 +21,7 @@ export default defineConfig({
   },
   tanstackStart: {
     spa: {
-      enabled: true,
+      enabled: !process.env["CF_PAGES"],
       prerender: {
         outputPath: "/index.html",
         crawlLinks: false,

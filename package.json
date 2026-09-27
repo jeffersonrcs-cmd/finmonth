@@ -97,6 +97,7 @@
     "vite": "8.1.5",
     "sharp": "^0.34.1",
     "vitest": "^5.0.0",
-    "wrangler": "^4.141.0"
+    "wrangler": "^4.141.0",
+    "@cloudflare/vite-plugin": "^1.16.1"
   }
 }

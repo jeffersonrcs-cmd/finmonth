@@ -100,7 +100,7 @@ function Dashboard() {
   const [finAiEntryType, setFinAiEntryType] = useState<FinAiEntryType | undefined>(undefined);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [accountSettingsSection, setAccountSettingsSection] = useState<
-    "menu" | "profile" | "notifications" | "language" | "version"
+    "menu" | "profile" | "notifications" | "language" | "version" | "admin"
   >("menu");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [swipeX, setSwipeX] = useState(0);

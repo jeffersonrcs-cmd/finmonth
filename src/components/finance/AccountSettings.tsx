@@ -8,6 +8,7 @@ import {
   Info,
   History,
   Languages,
+  ShieldCheck,
   LogOut,
   Moon,
   RefreshCw,
@@ -55,8 +56,8 @@ export function AccountSettings({
   onSignOut,
 }: {
   onBack: () => void;
-  section?: "menu" | "profile" | "notifications" | "language" | "version";
-  onOpenSection?: (section: "profile" | "notifications" | "language" | "version") => void;
+  section?: "menu" | "profile" | "notifications" | "language" | "version" | "admin";
+  onOpenSection?: (section: "profile" | "notifications" | "language" | "version" | "admin") => void;
   onSignOut?: () => void;
 }) {
   const { userName, notificationPreferences, theme } = useFinanceState();
@@ -76,6 +77,7 @@ export function AccountSettings({
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -96,6 +98,23 @@ export function AccountSettings({
     let active = true;
     void supabase.auth.getUser().then(({ data }) => {
       if (active) setEmail(data.user?.email ?? "");
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getUser().then(async ({ data }) => {
+      const userId = data.user?.id;
+      if (!userId) return;
+      const { data: adminRecord, error: adminError } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (active && !adminError) setIsAdmin(Boolean(adminRecord));
     });
     return () => {
       active = false;
@@ -193,7 +212,9 @@ export function AccountSettings({
                   ? t("language")
                   : section === "version"
                     ? t("version")
-                    : t("profile")}
+                    : section === "admin"
+                      ? "Administração"
+                      : t("profile")}
           </h1>
           <p className="mt-1 text-xs text-mut">
             {section === "menu"
@@ -202,7 +223,9 @@ export function AccountSettings({
                 ? t("notificationsDescription")
                 : section === "version"
                   ? t("versionInfo")
-                  : t("profile")}
+                  : section === "admin"
+                    ? "Acesso administrativo"
+                    : t("profile")}
           </p>
         </div>
       </div>
@@ -245,6 +268,16 @@ export function AccountSettings({
             )}
             {theme === "dark" ? t("themeLight") : t("themeDark")}
           </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => onOpenSection?.("admin")}
+              className="flex w-full items-center gap-3 rounded-2xl border border-brand/15 bg-brand/5 px-3 py-3 text-left text-xs font-medium text-brand transition-colors hover:bg-brand/10"
+            >
+              <ShieldCheck className="size-4" />
+              Administração
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onOpenSection?.("version")}
@@ -261,6 +294,28 @@ export function AccountSettings({
             <LogOut className="size-4" />
             {t("signOut")}
           </button>
+        </section>
+      )}
+
+      {section === "admin" && isAdmin && (
+        <section className="glass space-y-4 rounded-3xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
+              <ShieldCheck className="size-4" />
+            </div>
+            <div>
+              <h2 className="font-display text-sm font-semibold">Painel administrativo</h2>
+              <p className="mt-1 text-xs leading-relaxed text-mut">
+                Acesso reservado para administradores do FinMonth.
+              </p>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3">
+            <p className="text-xs font-semibold">Solicitações de cadastro</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-mut">
+              O painel de solicitações será conectado na próxima etapa.
+            </p>
+          </div>
         </section>
       )}
 

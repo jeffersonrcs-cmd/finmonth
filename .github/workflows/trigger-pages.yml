@@ -1,0 +1,22 @@
+name: Disparar deploy do GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar deploy no repositório do GitHub Pages
+        env:
+          GH_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+        run: |
+          gh api repos/finmonth/finmonth.github.io/dispatches \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -f event_type=deploy-finmonth

@@ -52,6 +52,14 @@ jobs:
             exit 0
           fi
 
+          # A merge from the version automation branch already contains the
+          # intended version. Tag it instead of generating another version PR.
+          if printf '%s\\n' "${{ github.event.head_commit.message }}" | grep -q 'automation/version-bump'; then
+            echo "type=none" >> "$GITHUB_OUTPUT"
+            echo "use_current_version=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ -n "$last_tag" ] && [ "$last_tag" != "v$current_version" ]; then
             echo "type=none" >> "$GITHUB_OUTPUT"
             echo "use_current_version=true" >> "$GITHUB_OUTPUT"
@@ -116,5 +124,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git tag "v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          tag="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "A tag $tag já existe."
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "$tag"

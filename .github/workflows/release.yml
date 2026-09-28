@@ -18,6 +18,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: "release-version"
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -29,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configurar Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -69,23 +74,47 @@ jobs:
 
           echo "use_current_version=false" >> "$GITHUB_OUTPUT"
 
-      - name: Atualizar versão
+      - name: Atualizar versão e histórico
         if: ${{ steps.bump.outputs.use_current_version != 'true' }}
-        run: npm run version:${{ steps.bump.outputs.type }}
+        run: |
+          npm run version:${{ steps.bump.outputs.type }}
+          node scripts/sync-version-history.mjs
 
       - name: Ler versão
         id: version
         run: echo "version=$(node --input-type=module -e "import { readFileSync } from 'node:fs'; console.log(JSON.parse(readFileSync('package.json', 'utf8')).version)")" >> "$GITHUB_OUTPUT"
 
-      - name: Commit da versão
+      - name: Criar PR de versão
         if: ${{ steps.bump.outputs.use_current_version != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
+          branch="automation/version-bump"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json
+
+          if git diff --quiet -- package.json src/lib/versionHistory.ts; then
+            echo "Nenhuma alteração de versão ou histórico para publicar."
+            exit 0
+          fi
+
+          git switch -C "$branch"
+          git add package.json src/lib/versionHistory.ts
           git commit -m "chore: publica v${{ steps.version.outputs.version }} [skip ci]"
+          git push --force origin "$branch"
+
+          pr_number="$(gh pr list --repo "${{ github.repository }}" --head "$branch" --base main --state open --json number --jq '.[0].number')"
+          if [ -z "$pr_number" ]; then
+            gh pr create               --repo "${{ github.repository }}"               --base main               --head "$branch"               --title "chore: publica v${{ steps.version.outputs.version }}"               --body "Atualiza a versão do FinMonth e sincroniza o histórico de versões."
+          else
+            echo "PR #$pr_number já está aberta; branch atualizada."
+          fi
 
       - name: Criar tag da versão
+        if: ${{ steps.bump.outputs.use_current_version == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git tag "v${{ steps.version.outputs.version }}"
-          git push origin main --follow-tags
+          git push origin "v${{ steps.version.outputs.version }}"

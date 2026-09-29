@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       return json({ message: "Solicitação rejeitada." });
     }
     const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
-      data: { full_name: request.name }, redirectTo: "https://finmonth.lovable.app/",
+      data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/redefinir-senha",
     });
     if (inviteError) return json({ error: inviteError.message }, 400);
     const { error: updateError } = await service.from("signup_requests").update({

@@ -1,5 +1,4 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import { useLanguage } from "@/lib/i18n";
 
 export function AuthScreen() {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

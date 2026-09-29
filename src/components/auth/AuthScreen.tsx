@@ -24,11 +24,6 @@ export function AuthScreen() {
     setError("");
 
     try {
-      const appOrigin =
-        typeof window !== "undefined" && window.location.origin
-          ? window.location.origin
-          : "https://finmonth.lovable.app";
-
       if (mode === "signup") {
         const { error: requestError } = await supabase.functions.invoke("signup-request", {
           body: {

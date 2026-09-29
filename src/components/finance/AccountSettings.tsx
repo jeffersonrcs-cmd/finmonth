@@ -49,6 +49,97 @@ import {
 import { supabase } from "@/lib/supabase";
 import { getVersionHistory } from "@/lib/versionHistory";
 
+type SignupRequest = {
+  id: string;
+  name: string;
+  email: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+};
+
+function SignupRequestsPanel() {
+  const [requests, setRequests] = useState<SignupRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const loadRequests = async () => {
+    setLoading(true);
+    setError("");
+    const { data, error: functionError } = await supabase.functions.invoke(
+      "admin-signup-requests",
+      { body: { action: "list" } },
+    );
+    if (functionError) setError(functionError.message);
+    else setRequests((data?.requests ?? []) as SignupRequest[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    void loadRequests();
+  }, []);
+
+  const processRequest = async (id: string, action: "approve" | "reject") => {
+    setBusyId(id);
+    setError("");
+    setMessage("");
+    const { data, error: functionError } = await supabase.functions.invoke(
+      "admin-signup-requests",
+      { body: { action, requestId: id } },
+    );
+    if (functionError) setError(functionError.message);
+    else {
+      setMessage(data?.message ?? "Solicitação atualizada.");
+      await loadRequests();
+    }
+    setBusyId(null);
+  };
+
+  return (
+    <div className="space-y-3">
+      {message && <p className="rounded-xl bg-brand/10 px-3 py-2 text-xs leading-relaxed text-brand">{message}</p>}
+      {error && <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">{error}</p>}
+      {loading ? (
+        <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
+          Carregando solicitações...
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
+          Nenhuma solicitação pendente.
+        </div>
+      ) : (
+        requests.map((request) => (
+          <article key={request.id} className="rounded-2xl border border-border/60 bg-muted/20 p-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold">{request.name}</p>
+                <p className="mt-1 break-all text-[11px] text-mut">{request.email}</p>
+                <p className="mt-1 text-[10px] text-mut">
+                  {new Date(request.created_at).toLocaleString("pt-BR")}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-warn/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-warn">
+                Pendente
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "reject")}
+                className="h-9 rounded-xl border border-neg/20 bg-neg/5 px-3 text-[10px] font-semibold uppercase tracking-wider text-neg disabled:opacity-50">
+                {busyId === request.id ? "Aguarde..." : "Rejeitar"}
+              </button>
+              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "approve")}
+                className="h-9 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
+                {busyId === request.id ? "Aguarde..." : "Aprovar e convidar"}
+              </button>
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  );
+}
+
 export function AccountSettings({
   onBack,
   section = "menu",
@@ -310,12 +401,7 @@ export function AccountSettings({
               </p>
             </div>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3">
-            <p className="text-xs font-semibold">Solicitações de cadastro</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-mut">
-              O painel de solicitações será conectado na próxima etapa.
-            </p>
-          </div>
+          <SignupRequestsPanel />
         </section>
       )}
 

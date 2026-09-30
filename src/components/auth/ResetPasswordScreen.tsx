@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Check, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ export function ResetPasswordScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("type") === "invite" && params.get("token_hash")) {
+      const inviteUrl = new URL("/confirmar-email", window.location.origin);
+      inviteUrl.search = window.location.search;
+      window.location.replace(inviteUrl.toString());
+    }
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

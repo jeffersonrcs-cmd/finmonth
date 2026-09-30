@@ -21,7 +21,7 @@ export function ResetPasswordScreen() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("type") === "invite" && params.get("token_hash")) {
-      const inviteUrl = new URL("/confirmar-email", window.location.origin);
+      const inviteUrl = new URL("/criar-senha", window.location.origin);
       inviteUrl.search = window.location.search;
       window.location.replace(inviteUrl.toString());
     }

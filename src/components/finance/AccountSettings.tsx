@@ -141,7 +141,7 @@ function SignupRequestsPanel() {
                 <RefreshCw className="size-3.5" />
                 {busyId === request.id ? "Enviando..." : "Reenviar link para criar senha"}
               </button>
-            ) : null
+            ) : null}
           </article>
         ))
       )}

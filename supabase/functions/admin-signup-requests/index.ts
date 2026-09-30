@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       }
       const { error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
         data: { full_name: request.name },
-        redirectTo: "https://finmonth.github.io/confirmar-email",
+        redirectTo: "https://finmonth.github.io/criar-senha",
       });
       if (inviteError) return json({ error: `Não foi possível reenviar o convite: ${inviteError.message}` }, 400);
       return json({ message: "Novo link para criar senha enviado por e-mail." });
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       return json({ message: "Solicitação rejeitada." });
     }
     const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
-      data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/confirmar-email",
+      data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/criar-senha",
     });
     if (inviteError) {
       if (invited?.user?.id) {

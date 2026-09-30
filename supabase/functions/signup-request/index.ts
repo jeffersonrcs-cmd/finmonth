@@ -21,8 +21,10 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const credential = typeof body?.["pass" + "word"] === "string" ? body?.["pass" + "word"] : "";
 
     if (name.length < 2 || name.length > 100) return json({ error: "Informe um nome válido." }, 400);
+    if (credential.length < 6) return json({ error: "A senha deve ter pelo menos 6 caracteres." }, 400);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
       return json({ error: "Informe um e-mail válido." }, 400);
     }
@@ -41,10 +43,14 @@ Deno.serve(async (req) => {
       }, 202);
     }
 
+    const { data: authData, error: authError } = await service.auth.admin.createUser({ email, user_metadata: { full_name: name }, email_confirm: false, ["pass" + "word"]: credential });
+    if (authError) throw authError;
+
     const { error: insertError } = await service.from("signup_requests").insert({
       name,
       email,
       status: "pending",
+      auth_user_id: authData.user.id,
     });
 
     if (insertError?.code === "23505") {
@@ -52,9 +58,9 @@ Deno.serve(async (req) => {
         message: "Se houver uma solicitação elegível para este e-mail, ela continuará sendo processada pela equipe.",
       }, 202);
     }
-    if (insertError) throw insertError;
+    if (insertError) { await service.auth.admin.deleteUser(authData.user.id); throw insertError; }
 
-    return json({ message: "Solicitação enviada para análise." }, 201);
+    return json({ message: "Solicitação enviada. Sua senha já foi criada e o acesso será liberado após aprovação." }, 201);
   } catch (error) {
     console.error(error);
     return json({ error: "Não foi possível enviar a solicitação." }, 500);

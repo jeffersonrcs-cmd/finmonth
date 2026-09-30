@@ -81,7 +81,7 @@ function SignupRequestsPanel() {
     void loadRequests();
   }, []);
 
-  const processRequest = async (id: string, action: "approve" | "reject" | "resend") => {
+  const processRequest = async (id: string, action: "approve" | "reject") => {
     setBusyId(id);
     setError("");
     setMessage("");
@@ -107,7 +107,7 @@ function SignupRequestsPanel() {
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
-          Nenhuma solicitação pendente ou convite aguardando resposta.
+          Nenhuma solicitação pendente ou aguardando aprovação.
         </div>
       ) : (
         requests.map((request) => (
@@ -121,7 +121,7 @@ function SignupRequestsPanel() {
                 </p>
               </div>
               <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${request.status === "approved" ? "bg-brand/10 text-brand" : "bg-warn/10 text-warn"}`}>
-                {request.status === "approved" ? (request.email_confirmed ? "Cadastro concluído" : "Aguardando criação da senha") : "Pendente"}
+                {request.status === "approved" ? "Cadastro aprovado" : "Pendente"}
               </span>
             </div>
             {request.status === "pending" ? (
@@ -132,16 +132,10 @@ function SignupRequestsPanel() {
                 </button>
                 <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "approve")}
                   className="h-9 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
-                  {busyId === request.id ? "Aguarde..." : "Aprovar e convidar"}
+                  {busyId === request.id ? "Aguarde..." : "Aprovar e liberar acesso"}
                 </button>
               </div>
-            ) : !request.email_confirmed ? (
-              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "resend")}
-                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
-                <RefreshCw className="size-3.5" />
-                {busyId === request.id ? "Enviando..." : "Reenviar link para criar senha"}
-              </button>
-            ) : null}
+            ) : null
           </article>
         ))
       )}

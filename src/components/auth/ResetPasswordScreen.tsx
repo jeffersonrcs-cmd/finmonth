@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Check, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,42 @@ export function ResetPasswordScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [inviteTokenHash, setInviteTokenHash] = useState<string | null>(null);
+  const [inviteConfirmed, setInviteConfirmed] = useState(false);
+  const [inviteBusy, setInviteBusy] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get("token_hash");
+    const type = params.get("type");
+    if (type === "invite" && tokenHash) {
+      setInviteTokenHash(tokenHash);
+      return;
+    }
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (hashParams.get("error_code") === "otp_expired") {
+      setError("Este link de convite já foi utilizado ou expirou. Solicite um novo convite ao administrador.");
+    } else if (hashParams.get("error_description")) {
+      setError(hashParams.get("error_description")!.replace(/\\+/g, " "));
+    }
+  }, []);
+
+  async function handleInviteContinue() {
+    if (!inviteTokenHash) return;
+    setInviteBusy(true);
+    setError("");
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: inviteTokenHash, type: "invite" });
+      if (verifyError) throw verifyError;
+      setInviteConfirmed(true);
+      setInviteTokenHash(null);
+      window.history.replaceState({}, document.title, "/redefinir-senha");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível confirmar o convite. Solicite um novo convite ao administrador.");
+    } finally {
+      setInviteBusy(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +82,34 @@ export function ResetPasswordScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (inviteTokenHash && !inviteConfirmed) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-brand/25 blur-[100px]" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-80 rounded-full bg-accent/20 blur-[100px]" />
+        <section className="relative w-full max-w-[390px]">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
+              <KeyRound className="size-6" />
+            </div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
+            <h1 className="mt-2 font-display text-2xl font-semibold">Convite aprovado</h1>
+            <p className="mt-2 text-sm text-mut">Seu convite está pronto. Confirme abaixo para criar sua senha.</p>
+          </div>
+          <section className="glass space-y-4 rounded-3xl p-5 shadow-xl">
+            {error && <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">{error}</p>}
+            <Button type="button" onClick={() => void handleInviteContinue()} disabled={inviteBusy} className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90">
+              {inviteBusy ? "Confirmando..." : "Continuar para criar senha"}
+            </Button>
+            <button type="button" onClick={() => void navigate({ to: "/" })} disabled={inviteBusy} className="w-full text-center text-xs text-mut transition-colors hover:text-brand disabled:opacity-60">
+              {t("backToLogin")}
+            </button>
+          </section>
+        </section>
+      </main>
+    );
   }
 
   return (

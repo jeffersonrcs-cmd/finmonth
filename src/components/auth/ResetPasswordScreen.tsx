@@ -17,9 +17,6 @@ export function ResetPasswordScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [inviteTokenHash, setInviteTokenHash] = useState<string | null>(null);
-  const [inviteConfirmed, setInviteConfirmed] = useState(false);
-  const [inviteBusy, setInviteBusy] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

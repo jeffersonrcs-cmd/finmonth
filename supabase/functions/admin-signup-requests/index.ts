@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const APP_ORIGIN = (Deno.env.get("FINMONTH_APP_ORIGIN") ?? "https://finmonth.github.io").replace(/\/$/, "");
-const INVITE_REDIRECT = `${APP_ORIGIN}/confirmar-email`;
+const APPROVAL_EMAIL_FROM = Deno.env.get("FINMONTH_EMAIL_FROM") ?? "";
 
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -21,6 +21,24 @@ const createInvite = async (
     data: { full_name: name },
     redirectTo: INVITE_REDIRECT,
   });
+
+const sendApprovalEmail = async (name: string, email: string) => {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey || !APPROVAL_EMAIL_FROM) throw new Error("E-mail transacional não configurado.");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: APPROVAL_EMAIL_FROM,
+      to: [email],
+      subject: "Seu cadastro no FinMonth foi aprovado",
+      html: `<p>Olá, ${name}!</p><p>Seu cadastro no FinMonth foi aprovado.</p><p>Você já pode acessar o sistema usando o e-mail cadastrado e a senha que criou durante a solicitação.</p><p>Abra o FinMonth e faça seu login.</p>`,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Falha no envio do e-mail de aprovação: HTTP ${response.status}`);
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -76,41 +94,9 @@ Deno.serve(async (req) => {
     }
 
     const { data: request, error: requestError } = await service.from("signup_requests")
-      .select("id,name,email,status").eq("id", requestId).maybeSingle();
+      .select("id,name,email,status,auth_user_id").eq("id", requestId).maybeSingle();
     if (requestError) throw requestError;
     if (!request) return json({ error: "Solicitação não encontrada." }, 404);
-
-    if (action === "resend") {
-      if (request.status !== "approved") return json({ error: "A solicitação ainda não foi aprovada." }, 409);
-
-      const { data: usersData, error: usersError } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      if (usersError) throw usersError;
-      const authUser = (usersData.users ?? []).find(
-        (user) => (user.email ?? "").toLowerCase() === request.email.toLowerCase(),
-      );
-
-      if (authUser?.email_confirmed_at || authUser?.confirmed_at) {
-        return json({ error: "Este usuário já confirmou o cadastro e não precisa de novo convite." }, 409);
-      }
-
-      if (authUser?.id) {
-        const { error: deleteError } = await service.auth.admin.deleteUser(authUser.id);
-        if (deleteError) throw deleteError;
-      }
-
-      const { error: inviteError } = await createInvite(service, request.email, request.name);
-      if (inviteError) {
-        const { data: restored, error: restoreError } = await createInvite(service, request.email, request.name);
-        if (restoreError) console.error("Falha ao restaurar o convite após erro de reenvio:", restoreError);
-        if (!restored?.user?.id) console.error("Não foi possível restaurar o usuário convidado após falha no reenvio.");
-        return json({ error: `Não foi possível reenviar o convite: ${inviteError.message}` }, 400);
-      }
-
-      return json({
-        message: "Novo link para confirmar o e-mail e criar sua senha enviado por e-mail.",
-        redirect_to: INVITE_REDIRECT,
-      });
-    }
 
     if (request.status !== "pending") return json({ error: "Solicitação já processada." }, 409);
 
@@ -123,27 +109,43 @@ Deno.serve(async (req) => {
     }
 
     const processedAt = new Date().toISOString();
-    const { data: reserved, error: reserveError } = await service.from("signup_requests")
-      .update({ status: "approved", processed_at: processedAt, processed_by: userData.user.id })
-      .eq("id", requestId).eq("status", "pending").select("id").maybeSingle();
 
-    if (reserveError) throw reserveError;
-    if (!reserved) return json({ error: "Esta solicitação acabou de ser processada por outro administrador." }, 409);
+    if (action === "reject") {
+      const { error } = await service.from("signup_requests").update({
+        status: "rejected", processed_at: processedAt, processed_by: userData.user.id,
+      }).eq("id", requestId).eq("status", "pending");
+      if (error) throw error;
 
-    const { data: invited, error: inviteError } = await createInvite(service, request.email, request.name);
-    if (inviteError) {
-      if (invited?.user?.id) await service.auth.admin.deleteUser(invited.user.id);
-      const { error: rollbackError } = await service.from("signup_requests").update({
-        status: "pending", processed_at: null, processed_by: null,
-      }).eq("id", requestId).eq("status", "approved");
-      if (rollbackError) console.error("Falha ao reverter solicitação após erro de convite:", rollbackError);
-      return json({ error: `Não foi possível enviar o convite por e-mail: ${inviteError.message}` }, 400);
+      if (request.auth_user_id) {
+        const { error: deleteError } = await service.auth.admin.deleteUser(request.auth_user_id);
+        if (deleteError) console.error("Falha ao remover usuário rejeitado:", deleteError);
+      }
+      return json({ message: "Solicitação rejeitada." });
     }
 
-    return json({
-      message: "Solicitação aprovada. O convite para confirmar o e-mail e criar a senha foi enviado.",
-      redirect_to: INVITE_REDIRECT,
-    });
+    if (!request.auth_user_id) return json({ error: "Solicitação sem usuário de autenticação associado." }, 409);
+
+    const { data: approvedUser, error: confirmError } = await service.auth.admin.updateUserById(
+      request.auth_user_id,
+      { email_confirm: true },
+    );
+    if (confirmError || !approvedUser.user) throw confirmError ?? new Error("Usuário não encontrado.");
+
+    try {
+      await sendApprovalEmail(request.name, request.email);
+    } catch (emailError) {
+      await service.auth.admin.updateUserById(request.auth_user_id, { email_confirm: false });
+      throw emailError;
+    }
+
+    const { data: reserved, error: updateError } = await service.from("signup_requests").update({
+      status: "approved", processed_at: processedAt, processed_by: userData.user.id,
+    }).eq("id", requestId).eq("status", "pending").select("id").maybeSingle();
+
+    if (updateError) throw updateError;
+    if (!reserved) return json({ error: "Esta solicitação acabou de ser processada por outro administrador." }, 409);
+
+    return json({ message: "Cadastro aprovado. O usuário foi liberado e recebeu o e-mail de aprovação." });
   } catch (error) {
     console.error(error);
     return json({ error: "Não foi possível processar a solicitação." }, 500);

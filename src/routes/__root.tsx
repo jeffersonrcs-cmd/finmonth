@@ -208,7 +208,24 @@ function RootComponent() {
       }
     };
 
-    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
+    const initializeSession = async () => {
+      const timeoutMarker = Symbol("session-timeout");
+      const sessionResult = supabase.auth.getSession().then(({ data }) => data.session);
+      const timeoutResult = new Promise<typeof timeoutMarker>((resolve) => {
+        window.setTimeout(() => resolve(timeoutMarker), 10_000);
+      });
+
+      const result = await Promise.race([sessionResult, timeoutResult]);
+      if (result === timeoutMarker) {
+        console.warn("A inicialização da sessão demorou mais de 10 segundos; seguindo para a tela de autenticação.");
+        await applySession(null);
+        return;
+      }
+
+      await applySession(result);
+    };
+
+    void initializeSession();
 
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;

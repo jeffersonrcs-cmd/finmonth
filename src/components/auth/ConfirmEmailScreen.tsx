@@ -22,9 +22,10 @@ export function ConfirmEmailScreen() {
     let active = true;
     const initialize = async () => {
       try {
-        const params = new URLSearchParams(window.location.search);
-        const tokenHash = params.get("token_hash");
-        const type = params.get("type");
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const tokenHash = searchParams.get("token_hash") ?? hashParams.get("token_hash");
+        const type = searchParams.get("type") ?? hashParams.get("type");
         if (type === "invite" && tokenHash) {
           const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "invite" });
           if (verifyError) throw verifyError;

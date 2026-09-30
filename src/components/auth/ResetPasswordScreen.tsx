@@ -48,34 +48,6 @@ export function ResetPasswordScreen() {
     }
   }
 
-  if (inviteTokenHash && !inviteConfirmed) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
-        <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-brand/25 blur-[100px]" />
-        <div className="pointer-events-none absolute -bottom-24 -right-24 size-80 rounded-full bg-accent/20 blur-[100px]" />
-        <section className="relative w-full max-w-[390px]">
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-brand/10 text-brand">
-              <KeyRound className="size-6" />
-            </div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-brand">FinMonth</p>
-            <h1 className="mt-2 font-display text-2xl font-semibold">Convite aprovado</h1>
-            <p className="mt-2 text-sm text-mut">Seu convite está pronto. Confirme abaixo para criar sua senha.</p>
-          </div>
-          <section className="glass space-y-4 rounded-3xl p-5 shadow-xl">
-            {error && <p className="rounded-xl bg-neg/10 px-3 py-2 text-xs leading-relaxed text-neg">{error}</p>}
-            <Button type="button" onClick={() => void handleInviteContinue()} disabled={inviteBusy} className="h-11 w-full rounded-xl bg-brand text-background text-xs font-semibold uppercase tracking-widest hover:bg-brand/90">
-              {inviteBusy ? "Confirmando..." : "Continuar para criar senha"}
-            </Button>
-            <button type="button" onClick={() => void navigate({ to: "/" })} disabled={inviteBusy} className="w-full text-center text-xs text-mut transition-colors hover:text-brand disabled:opacity-60">
-              {t("backToLogin")}
-            </button>
-          </section>
-        </section>
-      </main>
-    );
-  }
-
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
       <div className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-brand/25 blur-[100px]" />

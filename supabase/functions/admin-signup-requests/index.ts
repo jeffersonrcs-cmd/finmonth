@@ -52,7 +52,13 @@ Deno.serve(async (req) => {
     const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
       data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/redefinir-senha",
     });
-    if (inviteError) return json({ error: inviteError.message }, 400);
+    if (inviteError) {
+      if (invited?.user?.id) {
+        const { error: cleanupError } = await service.auth.admin.deleteUser(invited.user.id);
+        if (cleanupError) console.error("Falha ao limpar usuário criado pelo convite:", cleanupError);
+      }
+      return json({ error: `Não foi possível enviar o convite por e-mail: ${inviteError.message}` }, 400);
+    }
     const { error: updateError } = await service.from("signup_requests").update({
       status: "approved", processed_at: new Date().toISOString(), processed_by: userData.user.id,
     }).eq("id", requestId).eq("status", "pending");

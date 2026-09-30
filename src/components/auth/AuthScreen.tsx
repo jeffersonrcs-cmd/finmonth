@@ -47,6 +47,23 @@ export function AuthScreen() {
         if (signInError) throw signInError;
       }
     } catch (err) {
+      const context = err && typeof err === "object" && "context" in err
+        ? (err as { context?: Response }).context
+        : undefined;
+
+      if (context) {
+        try {
+          const payload = await context.clone().json() as { error?: string; message?: string };
+          const backendMessage = payload.error || payload.message;
+          if (backendMessage) {
+            setError(backendMessage);
+            return;
+          }
+        } catch {
+          // Fall back to the client error below when the response is not JSON.
+        }
+      }
+
       setError(err instanceof Error ? err.message : t("operationFailed"));
     } finally {
       setBusy(false);

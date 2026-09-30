@@ -19,12 +19,61 @@ export function ResetPasswordScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("type") === "invite" && params.get("token_hash")) {
-      const inviteUrl = new URL("/confirmar-email", window.location.origin);
-      inviteUrl.search = window.location.search;
-      window.location.replace(inviteUrl.toString());
-    }
+    let active = true;
+
+    const initialize = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get("type");
+        const tokenHash = params.get("token_hash");
+
+        if (type === "invite" && tokenHash) {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: "invite",
+          });
+          if (verifyError) throw verifyError;
+        } else {
+          const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+          const accessToken = hash.get("access_token");
+          const refreshToken = hash.get("refresh_token");
+          const hashType = hash.get("type");
+
+          if (hashType === "invite" && accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (sessionError) throw sessionError;
+          }
+        }
+
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (!data.session && active) {
+          setError(
+            type === "invite"
+              ? "Este convite é inválido ou expirou. Solicite um novo link ao administrador."
+              : "Seu link de recuperação é inválido ou expirou.",
+          );
+        }
+      } catch (err) {
+        if (active) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Não foi possível validar o link.",
+          );
+        }
+      }
+    };
+
+    void initialize();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -71,7 +120,11 @@ export function ResetPasswordScreen() {
             FinMonth
           </p>
           <h1 className="mt-2 font-display text-2xl font-semibold">{t("newPassword")}</h1>
-          <p className="mt-2 text-sm text-mut">{t("passwordRecovery")}</p>
+          <p className="mt-2 text-sm text-mut">
+            {new URLSearchParams(window.location.search).get("type") === "invite"
+              ? "Seu cadastro foi aprovado. Confirme seu e-mail e crie sua senha para acessar o FinMonth."
+              : t("passwordRecovery")}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5 shadow-xl">

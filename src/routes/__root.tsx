@@ -150,7 +150,10 @@ function RootComponent() {
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const publicAuthRoutes = ["/confirmar-email", "/redefinir-senha"] as const;
-  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+  const currentPath =
+    typeof window !== "undefined"
+      ? window.location.pathname.replace(/\/+$/, "") || "/"
+      : "";
   const isPublicAuthRoute = publicAuthRoutes.includes(
     currentPath as (typeof publicAuthRoutes)[number],
   );

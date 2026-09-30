@@ -149,7 +149,7 @@ function RootComponent() {
   const { language, t } = useLanguage();
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const publicAuthRoutes = ["/confirmar-email", "/redefinir-senha"] as const;
+  const publicAuthRoutes = ["/criar-senha", "/confirmar-email", "/redefinir-senha"] as const;
   const currentPath =
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/+$/, "") || "/"

@@ -106,7 +106,7 @@ function SignupRequestsPanel() {
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
-          Nenhuma solicitação pendente.
+          Nenhuma solicitação pendente ou convite aguardando resposta.
         </div>
       ) : (
         requests.map((request) => (

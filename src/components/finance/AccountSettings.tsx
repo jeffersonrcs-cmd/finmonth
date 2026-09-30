@@ -55,6 +55,7 @@ type SignupRequest = {
   email: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  email_confirmed?: boolean;
 };
 
 function SignupRequestsPanel() {
@@ -80,7 +81,7 @@ function SignupRequestsPanel() {
     void loadRequests();
   }, []);
 
-  const processRequest = async (id: string, action: "approve" | "reject") => {
+  const processRequest = async (id: string, action: "approve" | "reject" | "resend") => {
     setBusyId(id);
     setError("");
     setMessage("");
@@ -106,7 +107,7 @@ function SignupRequestsPanel() {
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
-          Nenhuma solicitação pendente.
+          Nenhuma solicitação pendente ou convite aguardando resposta.
         </div>
       ) : (
         requests.map((request) => (
@@ -119,20 +120,28 @@ function SignupRequestsPanel() {
                   {new Date(request.created_at).toLocaleString("pt-BR")}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-warn/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-warn">
-                Pendente
+              <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${request.status === "approved" ? "bg-brand/10 text-brand" : "bg-warn/10 text-warn"}`}>
+                {request.status === "approved" ? (request.email_confirmed ? "Cadastro concluído" : "Aguardando criação da senha") : "Pendente"}
               </span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "reject")}
-                className="h-9 rounded-xl border border-neg/20 bg-neg/5 px-3 text-[10px] font-semibold uppercase tracking-wider text-neg disabled:opacity-50">
-                {busyId === request.id ? "Aguarde..." : "Rejeitar"}
+            {request.status === "pending" ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "reject")}
+                  className="h-9 rounded-xl border border-neg/20 bg-neg/5 px-3 text-[10px] font-semibold uppercase tracking-wider text-neg disabled:opacity-50">
+                  {busyId === request.id ? "Aguarde..." : "Rejeitar"}
+                </button>
+                <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "approve")}
+                  className="h-9 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
+                  {busyId === request.id ? "Aguarde..." : "Aprovar e convidar"}
+                </button>
+              </div>
+            ) : !request.email_confirmed ? (
+              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "resend")}
+                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
+                <RefreshCw className="size-3.5" />
+                {busyId === request.id ? "Enviando..." : "Reenviar link para criar senha"}
               </button>
-              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "approve")}
-                className="h-9 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
-                {busyId === request.id ? "Aguarde..." : "Aprovar e convidar"}
-              </button>
-            </div>
+            ) : null
           </article>
         ))
       )}

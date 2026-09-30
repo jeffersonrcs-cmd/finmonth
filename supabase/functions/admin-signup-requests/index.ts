@@ -29,18 +29,53 @@ Deno.serve(async (req) => {
     if (!admin) return json({ error: "Acesso administrativo necessário." }, 403);
     const body = await req.json();
     if (body?.action === "list") {
-      const { data, error } = await service.from("signup_requests")
-        .select("id,name,email,status,created_at").eq("status", "pending").order("created_at", { ascending: true });
+      const { data: requests, error } = await service.from("signup_requests")
+        .select("id,name,email,status,created_at").in("status", ["pending", "approved"]).order("created_at", { ascending: true });
       if (error) throw error;
-      return json({ requests: data ?? [] });
+      const { data: usersData, error: usersError } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (usersError) throw usersError;
+      const usersByEmail = new Map(
+        (usersData.users ?? []).map((user) => [
+          (user.email ?? "").toLowerCase(),
+          Boolean(user.email_confirmed_at || user.confirmed_at),
+        ]),
+      );
+      return json({
+        requests: (requests ?? []).map((request) => ({
+          ...request,
+          email_confirmed: usersByEmail.get(request.email.toLowerCase()) ?? false,
+        })),
+      });
     }
     const requestId = typeof body?.requestId === "string" ? body.requestId : "";
     const action = body?.action;
-    if (!requestId || !["approve", "reject"].includes(action)) return json({ error: "Ação inválida." }, 400);
+    if (!requestId || !["approve", "reject", "resend"].includes(action)) return json({ error: "Ação inválida." }, 400);
     const { data: request, error: requestError } = await service.from("signup_requests")
       .select("id,name,email,status").eq("id", requestId).maybeSingle();
     if (requestError) throw requestError;
     if (!request) return json({ error: "Solicitação não encontrada." }, 404);
+    if (action === "resend") {
+      if (request.status !== "approved") return json({ error: "A solicitação ainda não foi aprovada." }, 409);
+      const { data: usersData, error: usersError } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (usersError) throw usersError;
+      const authUser = (usersData.users ?? []).find(
+        (user) => (user.email ?? "").toLowerCase() === request.email.toLowerCase(),
+      );
+      if (authUser?.email_confirmed_at || authUser?.confirmed_at) {
+        return json({ error: "Este usuário já confirmou o cadastro e não precisa de novo convite." }, 409);
+      }
+      if (authUser?.id) {
+        const { error: deleteError } = await service.auth.admin.deleteUser(authUser.id);
+        if (deleteError) throw deleteError;
+      }
+      const { error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
+        data: { full_name: request.name },
+        redirectTo: "https://finmonth.github.io/confirmar-email",
+      });
+      if (inviteError) return json({ error: `Não foi possível reenviar o convite: ${inviteError.message}` }, 400);
+      return json({ message: "Novo link para criar senha enviado por e-mail." });
+    }
+
     if (request.status !== "pending") return json({ error: "Solicitação já processada." }, 409);
     if (action === "reject") {
       const { error } = await service.from("signup_requests").update({
@@ -50,7 +85,7 @@ Deno.serve(async (req) => {
       return json({ message: "Solicitação rejeitada." });
     }
     const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(request.email, {
-      data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/redefinir-senha",
+      data: { full_name: request.name }, redirectTo: "https://finmonth.github.io/confirmar-email",
     });
     if (inviteError) {
       if (invited?.user?.id) {

@@ -18,39 +18,6 @@ export function ResetPasswordScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenHash = params.get("token_hash");
-    const type = params.get("type");
-    if (type === "invite" && tokenHash) {
-      setInviteTokenHash(tokenHash);
-      return;
-    }
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    if (hashParams.get("error_code") === "otp_expired") {
-      setError("Este link de convite já foi utilizado ou expirou. Solicite um novo convite ao administrador.");
-    } else if (hashParams.get("error_description")) {
-      setError(hashParams.get("error_description")!.replace(/\\+/g, " "));
-    }
-  }, []);
-
-  async function handleInviteContinue() {
-    if (!inviteTokenHash) return;
-    setInviteBusy(true);
-    setError("");
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: inviteTokenHash, type: "invite" });
-      if (verifyError) throw verifyError;
-      setInviteConfirmed(true);
-      setInviteTokenHash(null);
-      window.history.replaceState({}, document.title, "/redefinir-senha");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível confirmar o convite. Solicite um novo convite ao administrador.");
-    } finally {
-      setInviteBusy(false);
-    }
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");

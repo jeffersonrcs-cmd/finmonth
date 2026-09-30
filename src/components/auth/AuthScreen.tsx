@@ -29,6 +29,7 @@ export function AuthScreen() {
           body: {
             name: name.trim(),
             email: email.trim(),
+            password,
           },
         });
 
@@ -115,7 +116,7 @@ export function AuthScreen() {
           <h1 className="mt-2 font-display text-2xl font-semibold">
             {mode === "login" ? t("enterAccount") : "Solicitar cadastro"}
           </h1>
-          <p className="mt-2 text-sm text-mut">{mode === "login" ? t("financialDataSaved") : "Seu acesso será liberado somente após aprovação de um administrador."}</p>
+          <p className="mt-2 text-sm text-mut">{mode === "login" ? t("financialDataSaved") : "Crie sua senha agora. Seu acesso será liberado somente após aprovação de um administrador."}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass space-y-4 rounded-3xl p-5 shadow-xl">
@@ -145,6 +146,27 @@ export function AuthScreen() {
               required
             />
           </div>
+
+          {mode === "signup" && (
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-widest text-mut">{t("password")}</Label>
+              <div className="relative">
+                <Input
+                  className="glass-soft h-11 rounded-xl border-0 pr-11 text-base"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={t("minPassword")}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+                <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? t("hidePassword") : t("showPassword")} className="absolute inset-y-0 right-0 grid w-11 place-items-center text-mut">
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {mode === "login" && (
             <div className="space-y-1.5">

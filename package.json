@@ -18,7 +18,8 @@
     "test": "vitest run"
   },
   "overrides": {
-    "rolldown": "1.2.1"
+    "rolldown": "1.2.1",
+    "electron-to-chromium": "1.5.439"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

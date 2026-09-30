@@ -208,24 +208,7 @@ function RootComponent() {
       }
     };
 
-    const initializeSession = async () => {
-      const timeoutMarker = Symbol("session-timeout");
-      const sessionResult = supabase.auth.getSession().then(({ data }) => data.session);
-      const timeoutResult = new Promise<typeof timeoutMarker>((resolve) => {
-        window.setTimeout(() => resolve(timeoutMarker), 10_000);
-      });
-
-      const result = await Promise.race([sessionResult, timeoutResult]);
-      if (result === timeoutMarker) {
-        console.warn("A inicialização da sessão demorou mais de 10 segundos; seguindo para a tela de autenticação.");
-        await applySession(null);
-        return;
-      }
-
-      await applySession(result);
-    };
-
-    void initializeSession();
+    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;
@@ -412,11 +395,18 @@ function RootComponent() {
           </div>
         </div>
       )}
-      {!authReady ? (
+      {isPublicAuthRoute ? (
+        <>
+          {/* Public auth routes must not wait for dashboard session hydration.
+              Recovery/invite links arrive with auth data in the URL hash. */}
+          <Outlet />
+          <Toaster position="top-center" />
+        </>
+      ) : !authReady ? (
         <div className="flex min-h-screen items-center justify-center bg-background text-xs text-mut">
           {t("loadingData")}
         </div>
-      ) : authenticated || isPublicAuthRoute ? (
+      ) : authenticated ? (
         <>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />

@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       }, 202);
     }
 
-    const { data: authData, error: authError } = await service.auth.admin.createUser({ email, user_metadata: { full_name: name }, email_confirm: false, ["pass" + "word"]: credential });
+    const { data: authData, error: authError } = await service.auth.admin.createUser({ email, user_metadata: { full_name: name }, email_confirm: false, password: credential });
     if (authError) throw authError;
 
     const { error: insertError } = await service.from("signup_requests").insert({
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     });
 
     if (insertError?.code === "23505") {
+      await service.auth.admin.deleteUser(authData.user.id);
       return json({
         message: "Se houver uma solicitação elegível para este e-mail, ela continuará sendo processada pela equipe.",
       }, 202);

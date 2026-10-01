@@ -29,14 +29,20 @@ Deno.serve(async (req) => {
       return json({ error: "Informe um e-mail válido." }, 400);
     }
 
-    const { data: existing, error: lookupError } = await service
+    const { data: existingRequests, error: lookupError } = await service
       .from("signup_requests")
-      .select("id,status")
+      .select("id,status,auth_user_id")
       .eq("email", email)
       .in("status", ["pending", "approved"])
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(10);
 
     if (lookupError) throw lookupError;
+
+    const existing = (existingRequests ?? []).find(
+      (request) => request.status === "pending" || (request.status === "approved" && request.auth_user_id),
+    );
+
     if (existing) {
       return json({
         message: "Se houver uma solicitação elegível para este e-mail, ela continuará sendo processada pela equipe.",

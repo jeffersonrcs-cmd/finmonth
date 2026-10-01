@@ -6,21 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const APP_ORIGIN = (Deno.env.get("FINMONTH_APP_ORIGIN") ?? "https://finmonth.github.io").replace(/\/$/, "");
 const APPROVAL_EMAIL_FROM = Deno.env.get("FINMONTH_EMAIL_FROM") ?? "";
 
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-const createInvite = async (
-  service: ReturnType<typeof createClient>,
-  email: string,
-  name: string,
-) =>
-  service.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: name },
-    redirectTo: INVITE_REDIRECT,
-  });
 
 const sendApprovalEmail = async (name: string, email: string) => {
   const apiKey = Deno.env.get("RESEND_API_KEY");
@@ -99,14 +88,6 @@ Deno.serve(async (req) => {
     if (!request) return json({ error: "Solicitação não encontrada." }, 404);
 
     if (request.status !== "pending") return json({ error: "Solicitação já processada." }, 409);
-
-    if (action === "reject") {
-      const { error } = await service.from("signup_requests").update({
-        status: "rejected", processed_at: new Date().toISOString(), processed_by: userData.user.id,
-      }).eq("id", requestId).eq("status", "pending");
-      if (error) throw error;
-      return json({ message: "Solicitação rejeitada." });
-    }
 
     const processedAt = new Date().toISOString();
 

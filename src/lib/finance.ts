@@ -311,37 +311,9 @@ export async function connectCloud(userId: string) {
   if (monthsError) throw monthsError;
   if (profileError) throw profileError;
 
-  const hasCloudData = (rows?.length ?? 0) > 0;
-  if (
-    !hasCloudData &&
-    (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")
-  ) {
-    if (profile) {
-      state = {
-        ...state,
-        userName: profile.full_name ?? state.userName,
-        theme: profile.theme === "light" ? "light" : state.theme,
-        notificationPreferences: {
-          enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled,
-          leadDays: Math.min(
-            Math.max(
-              Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays),
-              0,
-            ),
-            7,
-          ),
-          dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday,
-          overdue: profile.notify_overdue ?? state.notificationPreferences.overdue,
-        },
-      };
-    }
-    persist();
-    emit();
-    cloudReady = true;
-    await syncCloudNow();
-    return;
-  }
-
+  // Cloud data is the source of truth once a user is authenticated.
+  // Never seed a new user's account from the browser's shared localStorage:
+  // that storage may contain data from a different account used on this device.
   state = {
     months: Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data as MonthData])),
     theme: profile?.theme === "light" ? "light" : "dark",

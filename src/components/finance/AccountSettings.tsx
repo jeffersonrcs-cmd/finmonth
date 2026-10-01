@@ -278,9 +278,7 @@ export function AccountSettings({
   }
 
   const reloadLatestVersion = () => {
-    const updateUrl = new URL(window.location.href);
-    updateUrl.searchParams.set("finmonth-update", Date.now().toString());
-    window.location.replace(updateUrl.toString());
+    window.location.reload();
   };
 
   return (

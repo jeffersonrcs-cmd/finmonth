@@ -68,6 +68,7 @@ let hydrated = false;
 let cloudUserId: string | null = null;
 let cloudReady = false;
 let cloudSyncTimer: ReturnType<typeof setTimeout> | undefined;
+let persistedUserId: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -78,7 +79,7 @@ function persist() {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION }),
+      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION, ownerUserId: cloudUserId }),
     );
   } catch {
     /* ignore */
@@ -261,6 +262,12 @@ export async function connectCloud(userId: string) {
   cloudUserId = userId;
   cloudReady = false;
 
+  if (persistedUserId !== userId) {
+    state = initialState;
+    persist();
+    emit();
+  }
+
   const fetchCloudData = async () => {
     return await Promise.all([
       supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
@@ -311,37 +318,9 @@ export async function connectCloud(userId: string) {
   if (monthsError) throw monthsError;
   if (profileError) throw profileError;
 
-  const hasCloudData = (rows?.length ?? 0) > 0;
-  if (
-    !hasCloudData &&
-    (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")
-  ) {
-    if (profile) {
-      state = {
-        ...state,
-        userName: profile.full_name ?? state.userName,
-        theme: profile.theme === "light" ? "light" : state.theme,
-        notificationPreferences: {
-          enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled,
-          leadDays: Math.min(
-            Math.max(
-              Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays),
-              0,
-            ),
-            7,
-          ),
-          dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday,
-          overdue: profile.notify_overdue ?? state.notificationPreferences.overdue,
-        },
-      };
-    }
-    persist();
-    emit();
-    cloudReady = true;
-    await syncCloudNow();
-    return;
-  }
-
+  // Cloud data is the source of truth once a user is authenticated.
+  // Never seed a new user's account from the browser's shared localStorage:
+  // that storage may contain data from a different account used on this device.
   state = {
     months: Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data as MonthData])),
     theme: profile?.theme === "light" ? "light" : "dark",
@@ -387,6 +366,8 @@ export function hydrateStore() {
       const migrated = migratePersistedState(parsed);
       const sanitized = sanitizeFinanceState(migrated);
       if (sanitized) {
+        const storedOwner = typeof parsed.ownerUserId === "string" ? parsed.ownerUserId : null;
+        persistedUserId = storedOwner;
         state = sanitized;
         // Persist the migrated shape so legacy data is upgraded once and
         // future versions have an explicit starting point.

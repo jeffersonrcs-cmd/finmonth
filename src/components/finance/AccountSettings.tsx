@@ -79,7 +79,7 @@ function SignupRequestsPanel() {
     void loadRequests();
   }, []);
 
-  const processRequest = async (id: string, action: "approve" | "reject" | "resend") => {
+  const processRequest = async (id: string, action: "approve" | "reject") => {
     setBusyId(id);
     setError("");
     setMessage("");
@@ -133,11 +133,6 @@ function SignupRequestsPanel() {
                   {busyId === request.id ? "Aguarde..." : "Aprovar e liberar acesso"}
                 </button>
               </div>
-            ) : request.status === "approved" ? (
-              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "resend")}
-                className="mt-3 h-9 w-full rounded-xl border border-border/60 bg-background/30 px-3 text-[10px] font-semibold uppercase tracking-wider text-mut transition-colors hover:text-brand disabled:opacity-50">
-                {busyId === request.id ? "Aguarde..." : "Reenviar e-mail de aprovação"}
-              </button>
             ) : null
           </article>
         ))

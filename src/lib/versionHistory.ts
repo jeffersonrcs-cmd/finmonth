@@ -11,6 +11,17 @@ export type VersionHistoryEntry = {
 
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
+    version: "1.38.0",
+    changes: [
+      {
+        pt: "Novos recursos e melhorias para facilitar o uso do FinMonth.",
+        en: "New features and improvements to make FinMonth easier to use.",
+        es: "Nuevas funciones y mejoras para facilitar el uso de FinMonth.",
+      },
+    ],
+  },
+
+  {
     version: "1.37.26",
     changes: [
       {

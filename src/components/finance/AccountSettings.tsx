@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   LogOut,
   Moon,
-  RefreshCw,
   Settings,
   Sun,
   Trash2,
@@ -55,7 +54,6 @@ type SignupRequest = {
   email: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
-  email_confirmed?: boolean;
 };
 
 function SignupRequestsPanel() {

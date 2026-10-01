@@ -68,6 +68,7 @@ let hydrated = false;
 let cloudUserId: string | null = null;
 let cloudReady = false;
 let cloudSyncTimer: ReturnType<typeof setTimeout> | undefined;
+let persistedUserId: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -78,7 +79,7 @@ function persist() {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION }),
+      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION, ownerUserId: cloudUserId }),
     );
   } catch {
     /* ignore */
@@ -261,6 +262,12 @@ export async function connectCloud(userId: string) {
   cloudUserId = userId;
   cloudReady = false;
 
+  if (persistedUserId !== userId) {
+    state = initialState;
+    persist();
+    emit();
+  }
+
   const fetchCloudData = async () => {
     return await Promise.all([
       supabase.from("finance_months").select("month_key,data").eq("user_id", userId),
@@ -359,6 +366,8 @@ export function hydrateStore() {
       const migrated = migratePersistedState(parsed);
       const sanitized = sanitizeFinanceState(migrated);
       if (sanitized) {
+        const storedOwner = typeof parsed.ownerUserId === "string" ? parsed.ownerUserId : null;
+        persistedUserId = storedOwner;
         state = sanitized;
         // Persist the migrated shape so legacy data is upgraded once and
         // future versions have an explicit starting point.

@@ -142,15 +142,36 @@ export function BillDetailScreen({
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const { t } = useLanguage();
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
-  const selectedBill = selectedBillId ? bills.find((bill) => bill.id === selectedBillId) : undefined;
+  const [animatingPaidIds, setAnimatingPaidIds] = useState<Set<string>>(() => new Set());
+  const selectedBill = selectedBillId
+    ? bills.find((bill) => bill.id === selectedBillId)
+    : undefined;
 
-  const sorted = bills.filter((bill) => billStatus(bill, monthKey) !== "paid").sort((a, b) => {
-    const aPending = billStatus(a, monthKey) !== "paid";
-    const bPending = billStatus(b, monthKey) !== "paid";
+  const handleTogglePaid = (event: React.MouseEvent, billId: string) => {
+    event.stopPropagation();
+    if (animatingPaidIds.has(billId)) return;
 
-    if (aPending !== bPending) return aPending ? -1 : 1;
-    return a.dueDay - b.dueDay;
-  });
+    setAnimatingPaidIds((prev) => new Set(prev).add(billId));
+
+    window.setTimeout(() => {
+      financeActions.toggleBillPaid(monthKey, billId);
+      setAnimatingPaidIds((prev) => {
+        const next = new Set(prev);
+        next.delete(billId);
+        return next;
+      });
+    }, 380);
+  };
+
+  const sorted = bills
+    .filter((bill) => billStatus(bill, monthKey) !== "paid")
+    .sort((a, b) => {
+      const aPending = billStatus(a, monthKey) !== "paid";
+      const bPending = billStatus(b, monthKey) !== "paid";
+
+      if (aPending !== bPending) return aPending ? -1 : 1;
+      return a.dueDay - b.dueDay;
+    });
 
   const renderBillsList = () => (
     <section className="mb-8">
@@ -172,31 +193,40 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
         )}
         {sorted.map((bill) => {
           const status = billStatus(bill, monthKey);
+          const isCompleting = animatingPaidIds.has(bill.id);
+          const isPaidVisual = status === "paid" || isCompleting;
+
           return (
             <div
               key={bill.id}
               role="button"
               tabIndex={0}
-              onClick={() => setSelectedBillId(bill.id)}
+              onClick={() => {
+                if (!isCompleting) setSelectedBillId(bill.id);
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  setSelectedBillId(bill.id);
+                  if (!isCompleting) setSelectedBillId(bill.id);
                 }
               }}
-              className={`flex cursor-pointer items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-3.5 shadow-sm backdrop-blur-md ${
-                status === "overdue" ? "border-neg/25" : status === "pending" ? "border-warn/30 bg-warn/5" : ""
+              className={`flex cursor-pointer items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-3.5 shadow-sm backdrop-blur-md transition-all duration-300 ${
+                isCompleting
+                  ? "bill-complete-exit border-pos/40 bg-pos/10 shadow-pos/10"
+                  : status === "overdue"
+                    ? "border-neg/25"
+                    : status === "pending"
+                      ? "border-warn/30 bg-warn/5"
+                      : ""
               }`}
             >
               <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  financeActions.toggleBillPaid(monthKey, bill.id);
-                }}
-                aria-label={bill.paid ? t("markPending") : t("markPaid")}
-                className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors ${
-                  status === "paid"
-                    ? "border-pos/40 bg-pos/20 text-pos"
+                type="button"
+                onClick={(event) => handleTogglePaid(event, bill.id)}
+                aria-label={isPaidVisual ? t("markPending") : t("markPaid")}
+                className={`relative grid size-6 shrink-0 place-items-center rounded-full border transition-all duration-200 active:scale-90 ${
+                  isPaidVisual
+                    ? "check-pop border-pos bg-pos text-background shadow-sm shadow-pos/40"
                     : status === "overdue"
                       ? "border-neg/30 bg-neg/5 hover:border-pos/50 hover:bg-pos/10"
                       : status === "pending"
@@ -204,12 +234,28 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                         : "border-border hover:border-pos/50 hover:bg-pos/10"
                 }`}
               >
-                {status === "paid" && <Check className="size-3" />}
+                {isPaidVisual && <Check className="size-3.5 check-icon-in stroke-[2.5]" />}
               </button>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{bill.description}</p>
-                <p className={`text-[11px] ${status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : "text-mut"}`}>
-                  {status === "paid"
+                <p
+                  className={`truncate text-sm font-medium transition-colors ${
+                    isCompleting ? "text-pos line-through" : ""
+                  }`}
+                >
+                  {bill.description}
+                </p>
+                <p
+                  className={`text-[11px] transition-colors ${
+                    isCompleting
+                      ? "text-pos"
+                      : status === "overdue"
+                        ? "text-neg"
+                        : status === "pending"
+                          ? "text-warn"
+                          : "text-mut"
+                  }`}
+                >
+                  {isPaidVisual
                     ? `${t("paid")} · ${t("day")} ${bill.dueDay}`
                     : status === "overdue"
                       ? `${t("overdue")} ${t("day")} ${bill.dueDay}`
@@ -218,8 +264,16 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                 </p>
               </div>
               <span
-                className={`num font-display text-sm font-semibold ${
-                  status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : status === "paid" ? "text-pos" : ""
+                className={`num font-display text-sm font-semibold transition-colors ${
+                  isCompleting
+                    ? "text-pos"
+                    : status === "overdue"
+                      ? "text-neg"
+                      : status === "pending"
+                        ? "text-warn"
+                        : status === "paid"
+                          ? "text-pos"
+                          : ""
                 }`}
               >
                 {formatCurrency(bill.amount)}
@@ -231,22 +285,20 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
     </section>
   );
 
-  if (selectedBill) {
-    return (
-      <>
+  return (
+    <>
+      {renderBillsList()}
+      {selectedBill && (
         <BillDetailScreen
           bill={selectedBill}
           monthKey={monthKey}
           onClose={() => setSelectedBillId(null)}
           onDelete={() => {
-            financeActions.removeBill(monthKey, selectedBill.id);
+            financeActions.deleteBill(monthKey, selectedBill.id);
             setSelectedBillId(null);
           }}
         />
-        {renderBillsList()}
-      </>
-    );
-  }
-
-  return renderBillsList();
+      )}
+    </>
+  );
 }

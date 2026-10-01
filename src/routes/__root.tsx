@@ -215,8 +215,6 @@ function RootComponent() {
       }
     };
 
-    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
-
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;
 
@@ -271,6 +269,8 @@ function RootComponent() {
         setTimeout(() => void applySession(session), 0);
       }
     });
+
+    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible") void recoverSession();

@@ -133,7 +133,7 @@ function SignupRequestsPanel() {
                   {busyId === request.id ? "Aguarde..." : "Aprovar e liberar acesso"}
                 </button>
               </div>
-            ) : null
+            ) : null}
           </article>
         ))
       )}

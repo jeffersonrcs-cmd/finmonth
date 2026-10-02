@@ -1,7 +1,7 @@
 {
   "name": "tanstack_start_ts",
-  "version": "1.38.1",
-  "revision": 3,
+  "version": "1.38.2",
+  "revision": 1,
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -19,7 +19,9 @@
     "prebuild": "node scripts/generate-icons.mjs",
     "test": "vitest run"
   },
-  "overrides": { "rolldown": "1.2.1" },
+  "overrides": {
+    "rolldown": "1.2.1"
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",

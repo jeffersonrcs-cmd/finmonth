@@ -13,6 +13,18 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.2",
+    revision: 3,
+    changes: [
+      {
+        pt: "Corrigido o build da tela de resumo após a mudança da projeção do mês.",
+        en: "Fixed the summary screen build after moving the month projection.",
+        es: "Se corrigió el build de la pantalla de resumen después de mover la proyección del mes.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.2",
     revision: 2,
     changes: [
       {

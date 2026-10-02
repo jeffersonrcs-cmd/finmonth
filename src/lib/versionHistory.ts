@@ -13,6 +13,18 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.2",
+    revision: 2,
+    changes: [
+      {
+        pt: "A projeção do mês agora ocupa o card de saldo do mês e fica separada do saldo disponível.",
+        en: "The month projection now occupies the month balance card and is separated from the available balance.",
+        es: "La proyección del mes ahora ocupa la tarjeta de saldo del mes y queda separada del saldo disponible.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.2",
         changes: [
       {
         pt: "Correções e melhorias para uma experiência mais estável.",

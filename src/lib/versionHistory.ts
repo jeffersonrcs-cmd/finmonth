@@ -14,9 +14,9 @@ export const VERSION_HISTORY: VersionHistoryEntry[] = [
     version: "1.37.27",
     changes: [
       {
-        pt: "Correções e melhorias para uma experiência mais estável.",
-        en: "Fixes and improvements for a more stable experience.",
-        es: "Correcciones y mejoras para una experiencia más estable.",
+        pt: "Animação suave ao quitar contas pendentes e melhorias na FinAI.",
+        en: "Smooth animation when paying pending bills and FinAI enhancements.",
+        es: "Animación suave al pagar facturas pendientes y mejoras en FinAI.",
       },
     ],
   },

@@ -193,6 +193,9 @@ function hasFinanceData(value: FinanceState) {
   );
 }
 
+const dirtyMonths = new Set<string>();
+let dirtyProfile = false;
+
 async function syncCloudNow() {
   if (!cloudUserId || !cloudReady || typeof window === "undefined") return;
 
@@ -203,33 +206,49 @@ async function syncCloudNow() {
   }
 
   const userId = cloudUserId;
-  const months = Object.entries(state.months).map(([monthKey, data]) => ({
-    user_id: userId,
-    month_key: monthKey,
-    data,
-  }));
+  const syncMonths =
+    dirtyMonths.size > 0
+      ? Array.from(dirtyMonths).map((key) => ({
+          user_id: userId,
+          month_key: key,
+          data: state.months[key] ?? emptyMonth(),
+        }))
+      : [];
+
+  const shouldSyncProfile = dirtyProfile;
+  if (syncMonths.length === 0 && !shouldSyncProfile) return;
 
   try {
-    const [{ error: profileError }, { error: monthsError }] = await Promise.all([
-      supabase.from("profiles").upsert({
-        id: userId,
-        full_name: state.userName,
-        theme: state.theme,
-        notifications_enabled: state.notificationPreferences.enabled,
-        notification_lead_days: state.notificationPreferences.leadDays,
-        notify_due_today: state.notificationPreferences.dueToday,
-        notify_overdue: state.notificationPreferences.overdue,
-      }),
-      months.length > 0
-        ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
-        : Promise.resolve({ error: null }),
-    ]);
+    const promises: Promise<{ error: unknown }>[] = [];
+    if (shouldSyncProfile) {
+      promises.push(
+        supabase.from("profiles").upsert({
+          id: userId,
+          full_name: state.userName,
+          theme: state.theme,
+          notifications_enabled: state.notificationPreferences.enabled,
+          notification_lead_days: state.notificationPreferences.leadDays,
+          notify_due_today: state.notificationPreferences.dueToday,
+          notify_overdue: state.notificationPreferences.overdue,
+        }),
+      );
+    }
+    if (syncMonths.length > 0) {
+      promises.push(
+        supabase.from("finance_months").upsert(syncMonths, { onConflict: "user_id,month_key" }),
+      );
+    }
 
-    if (profileError || monthsError) {
-      console.error("Falha ao salvar dados financeiros no Supabase.", profileError ?? monthsError);
+    const results = await Promise.all(promises);
+    const syncError = results.find((result) => result.error)?.error;
+
+    if (syncError) {
+      console.error("Falha ao salvar dados financeiros no Supabase.", syncError);
       hasPendingOfflineSync = true;
     } else {
-      hasPendingOfflineSync = false;
+      if (shouldSyncProfile) dirtyProfile = false;
+      for (const month of syncMonths) dirtyMonths.delete(month.month_key);
+      hasPendingOfflineSync = dirtyMonths.size > 0 || dirtyProfile;
     }
   } catch (err) {
     console.warn(
@@ -388,6 +407,7 @@ function setState(next: FinanceState) {
 }
 
 function updateMonth(monthKey: string, fn: (m: MonthData) => MonthData) {
+  dirtyMonths.add(monthKey);
   const current = state.months[monthKey] ?? emptyMonth();
   setState({
     ...state,
@@ -404,12 +424,15 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 
 export const financeActions = {
   setTheme(theme: "dark" | "light") {
+    dirtyProfile = true;
     setState({ ...state, theme });
   },
   setUserName(userName: string) {
+    dirtyProfile = true;
     setState({ ...state, userName });
   },
   setNotificationPreferences(notificationPreferences: NotificationPreferences) {
+    dirtyProfile = true;
     setState({ ...state, notificationPreferences });
   },
   addIncome(monthKey: string, data: Omit<Income, "id">) {

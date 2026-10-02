@@ -158,20 +158,10 @@ function RootComponent() {
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const isRecoveryFlow = hashParams.get("type") === "recovery";
-    const isLocalHost =
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-    if (isRecoveryFlow && !isLocalHost && window.location.pathname !== "/redefinir-senha") {
-      const productionRecoveryUrl = new URL("/redefinir-senha", window.location.origin);
-      productionRecoveryUrl.hash = window.location.hash.replace(/^#/, "");
-      window.location.replace(productionRecoveryUrl.toString());
-      return;
-    }
-
-    if (isRecoveryFlow && isLocalHost) {
-      const productionRecoveryUrl = new URL("https://finmonth.github.io/redefinir-senha");
-      productionRecoveryUrl.hash = window.location.hash.replace(/^#/, "");
-      window.location.replace(productionRecoveryUrl.toString());
+    if (isRecoveryFlow && window.location.pathname !== "/redefinir-senha") {
+      const recoveryUrl = new URL("/redefinir-senha", window.location.origin);
+      recoveryUrl.hash = window.location.hash.replace(/^#/, "");
+      window.location.replace(recoveryUrl.toString());
       return;
     }
 

@@ -62,3 +62,25 @@ describe("bill status", () => {
     expect(billStatus(bill, "2026-09")).toBe("paid");
   });
 });
+
+
+describe("FinAI fallback and registration intent parser", () => {
+  it("extracts bill creation action from natural Portuguese text", async () => {
+    const { buildFallbackReply } = await import("../components/finance/FinAI");
+    const mockState = { months: {} } as ReturnType<typeof import("./finance").useFinanceState>;
+    const mockT = (key: string) => key;
+
+    const res = buildFallbackReply(
+      "cadastrar conta de luz 150 reais dia 10",
+      "2026-10",
+      2026,
+      mockState,
+      mockT,
+    );
+
+    expect(res.action).not.toBeNull();
+    expect(res.action?.type).toBe("create_bill");
+    expect(res.action?.data.amount).toBe(150);
+    expect(res.action?.data.dueDay).toBe(10);
+  });
+});

@@ -13,6 +13,18 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.1",
+    revision: 3,
+    changes: [
+      {
+        pt: "Ajuste de build e dependências preservado sem alterar o funcionamento da aplicação.",
+        en: "Build and dependency adjustment preserved without changing application behavior.",
+        es: "Ajuste de build y dependencias preservado sin cambiar el funcionamiento de la aplicación.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.1",
         changes: [
       {
         pt: "Correções e melhorias para uma experiência mais estável.",

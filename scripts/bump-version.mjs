@@ -49,7 +49,7 @@ writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + "\n");
 const historyPath = new URL("../src/lib/versionHistory.ts", import.meta.url);
 const historySource = readFileSync(historyPath, "utf8");
 
-if (bumpType !== "rev" && !historySource.includes(`version: "${nextVersion}"`)) {
+if (bumpType === "rev" || !historySource.includes(`version: "${nextVersion}"`)) {
   const fallback = {
     patch: {
       pt: "Correções e melhorias para uma experiência mais estável.",
@@ -66,17 +66,17 @@ if (bumpType !== "rev" && !historySource.includes(`version: "${nextVersion}"`)) 
       en: "A new FinMonth milestone with important changes and improvements.",
       es: "Una nueva etapa de FinMonth, con cambios y mejoras importantes.",
     },
-  }[bumpType];
+  }[bumpType === "rev" ? "patch" : bumpType];
 
   const change = {
-    pt: process.env.FINMONTH_RELEASE_PT || fallback.pt,
-    en: process.env.FINMONTH_RELEASE_EN || fallback.en,
-    es: process.env.FINMONTH_RELEASE_ES || fallback.es,
+    pt: process.env[bumpType === "rev" ? "FINMONTH_REV_PT" : "FINMONTH_RELEASE_PT"] || fallback.pt,
+    en: process.env[bumpType === "rev" ? "FINMONTH_REV_EN" : "FINMONTH_RELEASE_EN"] || fallback.en,
+    es: process.env[bumpType === "rev" ? "FINMONTH_REV_ES" : "FINMONTH_RELEASE_ES"] || fallback.es,
   };
 
   const entry = `  {
     version: "${nextVersion}",
-    changes: [
+    ${bumpType === "rev" ? `revision: ${nextRevision},\n` : ""}    changes: [
       {
         pt: ${JSON.stringify(change.pt)},
         en: ${JSON.stringify(change.en)},

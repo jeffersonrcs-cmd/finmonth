@@ -16,6 +16,7 @@ export default defineConfig({
     base: "/",
     define: {
       __FINMONTH_VERSION__: JSON.stringify(packageJson.version),
+      __FINMONTH_REVISION__: JSON.stringify(packageJson.revision ?? 0),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
     },
   },

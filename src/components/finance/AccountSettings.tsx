@@ -497,7 +497,7 @@ export function AccountSettings({
               <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
                 {t("version")}
               </p>
-              <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__}</p>
+              <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__} · Rev. {__FINMONTH_REVISION__}</p>
             </div>
             <div className="glass-soft rounded-2xl p-3">
               <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
@@ -544,7 +544,7 @@ export function AccountSettings({
             <div className="space-y-2.5 rounded-2xl border border-border/60 bg-muted/20 p-3.5">
               {getVersionHistory(language).map((entry) => (
                 <article key={entry.version} className="rounded-2xl border border-border/50 bg-background/30 px-3 py-3">
-                  <p className="font-display text-sm font-semibold">v{entry.version}</p>
+                  <p className="font-display text-sm font-semibold">v{entry.version}{entry.revision && entry.revision > 0 ? ` · Rev. ${entry.revision}` : ""}</p>
                   <ul className="mt-1.5 space-y-1.5">
                     {entry.changes.map((change) => (
                       <li key={change} className="flex gap-2 text-[11px] leading-relaxed text-foreground/90">

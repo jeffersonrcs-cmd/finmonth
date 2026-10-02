@@ -13,12 +13,12 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.1",
-    revision: 2,
+    revision: 3,
     changes: [
       {
-        pt: "Receitas futuras agora entram no saldo disponível somente na data programada, mantendo a projeção do mês completa.",
-        en: "Future income now enters the available balance only on its scheduled date, while the full month projection remains intact.",
-        es: "Los ingresos futuros ahora entran en el saldo disponible solo en la fecha programada, manteniendo completa la proyección del mes.",
+        pt: "Ajuste de build e dependências preservado sem alterar o funcionamento da aplicação.",
+        en: "Build and dependency adjustment preserved without changing application behavior.",
+        es: "Ajuste de build y dependencias preservado sin cambiar el funcionamiento de la aplicación.",
       },
     ],
   },

@@ -13,6 +13,18 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.1",
+    revision: 2,
+    changes: [
+      {
+        pt: "Receitas futuras agora entram no saldo disponível somente na data programada, mantendo a projeção do mês completa.",
+        en: "Future income now enters the available balance only on its scheduled date, while the full month projection remains intact.",
+        es: "Los ingresos futuros ahora entran en el saldo disponible solo en la fecha programada, manteniendo completa la proyección del mes.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.1",
         changes: [
       {
         pt: "Correções e melhorias para uma experiência mais estável.",

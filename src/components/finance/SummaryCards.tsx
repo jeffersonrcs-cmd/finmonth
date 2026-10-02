@@ -51,7 +51,6 @@ export function SummaryCards({
         >
           {formatCurrency(totals.availableBalance)}
         </p>
-        </div>
       </section>
 
       <section className="relative z-10 mb-5 grid grid-cols-2 gap-2.5 auto-rows-[70px]">
@@ -130,7 +129,7 @@ export function SummaryCards({
           <p
             className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}
           >
-            {formatCurrency(totals.monthBalance, true)}
+            {formatCurrency(totals.futureBalance, true)}
           </p>
         </div>
       </section>

@@ -2,14 +2,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const bumpType = process.argv[2];
 
-if (!["patch", "minor", "major"].includes(bumpType)) {
-  console.error("Uso: node scripts/bump-version.mjs <patch|minor|major>");
+if (!["patch", "minor", "major", "rev"].includes(bumpType)) {
+  console.error("Uso: node scripts/bump-version.mjs <patch|minor|major|rev>");
   process.exit(1);
 }
 
 const packagePath = new URL("../package.json", import.meta.url);
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const current = String(packageJson.version ?? "");
+const currentRevision = Number(packageJson.revision ?? 0);
 const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(current);
 
 if (!match) {
@@ -18,26 +19,37 @@ if (!match) {
 }
 
 let [, major, minor, patch] = match.map(Number);
+let nextRevision = currentRevision;
 
-if (bumpType === "major") {
+if (bumpType === "rev") {
+  if (!Number.isInteger(currentRevision) || currentRevision < 0) {
+    console.error(`Revisão inválida no package.json: ${currentRevision}`);
+    process.exit(1);
+  }
+  nextRevision += 1;
+} else if (bumpType === "major") {
   major += 1;
   minor = 0;
   patch = 0;
+  nextRevision = 1;
 } else if (bumpType === "minor") {
   minor += 1;
   patch = 0;
+  nextRevision = 1;
 } else {
   patch += 1;
+  nextRevision = 1;
 }
 
 const nextVersion = `${major}.${minor}.${patch}`;
 packageJson.version = nextVersion;
+packageJson.revision = nextRevision;
 writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + "\n");
 
 const historyPath = new URL("../src/lib/versionHistory.ts", import.meta.url);
 const historySource = readFileSync(historyPath, "utf8");
 
-if (!historySource.includes(`version: "${nextVersion}"`)) {
+if (bumpType === "rev" || !historySource.includes(`version: "${nextVersion}"`)) {
   const fallback = {
     patch: {
       pt: "Correções e melhorias para uma experiência mais estável.",
@@ -54,17 +66,17 @@ if (!historySource.includes(`version: "${nextVersion}"`)) {
       en: "A new FinMonth milestone with important changes and improvements.",
       es: "Una nueva etapa de FinMonth, con cambios y mejoras importantes.",
     },
-  }[bumpType];
+  }[bumpType === "rev" ? "patch" : bumpType];
 
   const change = {
-    pt: process.env.FINMONTH_RELEASE_PT || fallback.pt,
-    en: process.env.FINMONTH_RELEASE_EN || fallback.en,
-    es: process.env.FINMONTH_RELEASE_ES || fallback.es,
+    pt: process.env[bumpType === "rev" ? "FINMONTH_REV_PT" : "FINMONTH_RELEASE_PT"] || fallback.pt,
+    en: process.env[bumpType === "rev" ? "FINMONTH_REV_EN" : "FINMONTH_RELEASE_EN"] || fallback.en,
+    es: process.env[bumpType === "rev" ? "FINMONTH_REV_ES" : "FINMONTH_RELEASE_ES"] || fallback.es,
   };
 
   const entry = `  {
     version: "${nextVersion}",
-    changes: [
+    ${bumpType === "rev" ? `revision: ${nextRevision},\n` : ""}    changes: [
       {
         pt: ${JSON.stringify(change.pt)},
         en: ${JSON.stringify(change.en)},
@@ -85,4 +97,4 @@ if (!historySource.includes(`version: "${nextVersion}"`)) {
   writeFileSync(historyPath, updatedHistory);
 }
 
-console.log(nextVersion);
+console.log(bumpType === "rev" ? `${nextVersion} Rev.${nextRevision}` : nextVersion);

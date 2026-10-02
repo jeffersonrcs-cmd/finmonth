@@ -6,12 +6,14 @@ export type VersionHistoryChange = {
 
 export type VersionHistoryEntry = {
   version: string;
+  revision?: number;
   changes: VersionHistoryChange[];
 };
 
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.0",
+    revision: 1,
     changes: [
       {
         pt: "Novos recursos e melhorias para facilitar o uso do FinMonth.",
@@ -23,6 +25,7 @@ export const VERSION_HISTORY: VersionHistoryEntry[] = [
 
   {
     version: "1.37.27",
+    revision: 0,
     changes: [
       {
         pt: "Animação suave ao quitar contas pendentes e melhorias na FinAI.",

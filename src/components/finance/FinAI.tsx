@@ -503,11 +503,34 @@ export function FinAi({
 
       if (result.error) throw new Error(result.error);
 
+      let resolvedAction = result.action ?? null;
+      let resolvedTitle = result.title?.trim() || "FinAI";
+      let resolvedText = result.text?.trim() || t("financialDataInsufficient");
+
+      const isRefusal =
+        /não possuo permissão|assistente de análise|não posso cadastrar|incluir essa conta manualmente|não realizo cadastros|não tenho permissão/i.test(
+          resolvedText,
+        );
+      const isRegisterIntent =
+        Boolean(entryType) ||
+        /cadastr|adicion|lanç|inser|registra|guardar|salvar|add|bill|income|expense/i.test(
+          contextualValue,
+        );
+
+      if ((!resolvedAction && isRegisterIntent) || isRefusal) {
+        const fallback = buildFallbackReply(contextualValue, monthKey, year, state, t);
+        if (fallback.action) {
+          resolvedAction = fallback.action;
+          resolvedTitle = fallback.title;
+          resolvedText = fallback.text;
+        }
+      }
+
       setReply({
-        title: result.title?.trim() || "FinAI",
-        text: result.text?.trim() || t("financialDataInsufficient"),
+        title: resolvedTitle,
+        text: resolvedText,
         chart: result.chartMode ?? null,
-        action: result.action ?? null,
+        action: resolvedAction,
       });
       setPrompt("");
     } catch {

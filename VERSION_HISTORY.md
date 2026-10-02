@@ -1,3 +1,10 @@
+## v1.37.27 — animação ao quitar contas e aprimoramento da FinAI
+
+- adicionada animação tátil elástica `check-pop` ao quitar contas;
+- adicionada saída fluida `bill-complete-exit` para contas quitadas;
+- aprimorada a FinAI com interceptação de recusas e preenchimento automático ao criar contas, receitas e valores guardados;
+- otimizado o consumo da cota diária na Edge Function do Supabase e a sincronização incremental do banco.
+
 ## v1.13.0 — PWA completo, sincronização offline com fila e notificações nativas
 
 - adicionado suporte completo a Progressive Web App (PWA) com `manifest.json`, ícones de alta resolução e Service Worker (`sw.js`);

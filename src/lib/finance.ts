@@ -585,6 +585,10 @@ export function currentMonthKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export function shiftMonthKey(key: string, delta: number) {
   const { year, month } = parseMonthKey(key);
   const d = new Date(year, month - 1 + delta, 1);
@@ -715,8 +719,11 @@ export type MonthTotals = {
   futureBalance: number;
 };
 
-export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
+export function computeTotals(data: MonthData, monthKey: string, now = new Date()): MonthTotals {
   const totalIncomes = data.incomes.reduce((s, i) => s + i.amount, 0);
+  const receivedIncomes = data.incomes
+    .filter((income) => income.date <= toDateKey(now))
+    .reduce((s, i) => s + i.amount, 0);
   const totalBills = data.bills.reduce((s, b) => s + b.amount, 0);
   const totalSaved = data.savings.reduce((s, v) => s + v.amount, 0);
   let paidCount = 0;
@@ -746,8 +753,8 @@ export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
     overdueCount,
     totalSaved,
     monthBalance,
-    // Available balance only reflects bills that have already been paid.
-    availableBalance: totalIncomes - paidTotal - totalSaved,
+    // Available balance only includes income whose scheduled date has arrived.
+    availableBalance: receivedIncomes - paidTotal - totalSaved,
     // Future balance projects the full month, including pending bills.
     futureBalance: totalIncomes - totalBills - totalSaved,
   };

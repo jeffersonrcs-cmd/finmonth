@@ -51,32 +51,6 @@ export function SummaryCards({
         >
           {formatCurrency(totals.availableBalance)}
         </p>
-        <div className="relative ml-auto mt-2 flex w-fit items-baseline justify-end gap-2 rounded-xl border border-border/50 bg-background/25 px-3 py-2">
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-mut">{t("futureBalance")}</span>
-            <button
-              type="button"
-              aria-label={t("futureBalance")}
-              aria-expanded={openInfo === "future"}
-              onClick={(event) => {
-                event.stopPropagation();
-                setOpenInfo((current) => (current === "future" ? null : "future"));
-              }}
-              className="relative -top-0.5 grid size-3 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"
-            >
-              <Info className="size-2" strokeWidth={2.5} />
-            </button>
-            {openInfo === "future" && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">
-                {t("futureBalanceHint")}
-              </div>
-            )}
-          </div>
-          <span
-            className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}
-          >
-            {formatCurrency(totals.futureBalance)}
-          </span>
         </div>
       </section>
 
@@ -151,10 +125,10 @@ export function SummaryCards({
 
         <div className="glass rounded-2xl p-3">
           <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-mut">
-            📈 {t("monthBalance")}
+            📈 {t("futureBalance")}
           </p>
           <p
-            className={`num font-display text-sm font-semibold ${totals.monthBalance >= 0 ? "text-pos" : "text-neg"}`}
+            className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}
           >
             {formatCurrency(totals.monthBalance, true)}
           </p>

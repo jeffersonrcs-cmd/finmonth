@@ -16,7 +16,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
         run: |
-          gh api repos/finmonth/finmonth.github.io/dispatches \
+          gh api repos/JSLynk/FinMonth/dispatches \
             --method POST \
             -H "Accept: application/vnd.github+json" \
             -f event_type=deploy-finmonth

@@ -1,6 +1,7 @@
 {
   "name": "tanstack_start_ts",
-  "version": "1.37.25",
+  "version": "1.38.2",
+  "revision": 3,
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -14,12 +15,12 @@
     "version:patch": "node scripts/bump-version.mjs patch",
     "version:minor": "node scripts/bump-version.mjs minor",
     "version:major": "node scripts/bump-version.mjs major",
+    "version:rev": "node scripts/bump-version.mjs rev",
     "prebuild": "node scripts/generate-icons.mjs",
     "test": "vitest run"
   },
   "overrides": {
-    "rolldown": "1.2.1",
-    "electron-to-chromium": "1.5.439"
+    "rolldown": "1.2.1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

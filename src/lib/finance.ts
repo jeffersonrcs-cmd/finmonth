@@ -68,6 +68,7 @@ let hydrated = false;
 let cloudUserId: string | null = null;
 let cloudReady = false;
 let cloudSyncTimer: ReturnType<typeof setTimeout> | undefined;
+let persistedUserId: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -78,7 +79,7 @@ function persist() {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION }),
+      JSON.stringify({ ...state, schemaVersion: CURRENT_SCHEMA_VERSION, ownerUserId: cloudUserId }),
     );
   } catch {
     /* ignore */
@@ -192,6 +193,9 @@ function hasFinanceData(value: FinanceState) {
   );
 }
 
+const dirtyMonths = new Set<string>();
+let dirtyProfile = false;
+
 async function syncCloudNow() {
   if (!cloudUserId || !cloudReady || typeof window === "undefined") return;
 
@@ -202,33 +206,49 @@ async function syncCloudNow() {
   }
 
   const userId = cloudUserId;
-  const months = Object.entries(state.months).map(([monthKey, data]) => ({
-    user_id: userId,
-    month_key: monthKey,
-    data,
-  }));
+  const syncMonths =
+    dirtyMonths.size > 0
+      ? Array.from(dirtyMonths).map((key) => ({
+          user_id: userId,
+          month_key: key,
+          data: state.months[key] ?? emptyMonth(),
+        }))
+      : [];
+
+  const shouldSyncProfile = dirtyProfile;
+  if (syncMonths.length === 0 && !shouldSyncProfile) return;
 
   try {
-    const [{ error: profileError }, { error: monthsError }] = await Promise.all([
-      supabase.from("profiles").upsert({
-        id: userId,
-        full_name: state.userName,
-        theme: state.theme,
-        notifications_enabled: state.notificationPreferences.enabled,
-        notification_lead_days: state.notificationPreferences.leadDays,
-        notify_due_today: state.notificationPreferences.dueToday,
-        notify_overdue: state.notificationPreferences.overdue,
-      }),
-      months.length > 0
-        ? supabase.from("finance_months").upsert(months, { onConflict: "user_id,month_key" })
-        : Promise.resolve({ error: null }),
-    ]);
+    const promises: Promise<{ error: unknown }>[] = [];
+    if (shouldSyncProfile) {
+      promises.push(
+        supabase.from("profiles").upsert({
+          id: userId,
+          full_name: state.userName,
+          theme: state.theme,
+          notifications_enabled: state.notificationPreferences.enabled,
+          notification_lead_days: state.notificationPreferences.leadDays,
+          notify_due_today: state.notificationPreferences.dueToday,
+          notify_overdue: state.notificationPreferences.overdue,
+        }),
+      );
+    }
+    if (syncMonths.length > 0) {
+      promises.push(
+        supabase.from("finance_months").upsert(syncMonths, { onConflict: "user_id,month_key" }),
+      );
+    }
 
-    if (profileError || monthsError) {
-      console.error("Falha ao salvar dados financeiros no Supabase.", profileError ?? monthsError);
+    const results = await Promise.all(promises);
+    const syncError = results.find((result) => result.error)?.error;
+
+    if (syncError) {
+      console.error("Falha ao salvar dados financeiros no Supabase.", syncError);
       hasPendingOfflineSync = true;
     } else {
-      hasPendingOfflineSync = false;
+      if (shouldSyncProfile) dirtyProfile = false;
+      for (const month of syncMonths) dirtyMonths.delete(month.month_key);
+      hasPendingOfflineSync = dirtyMonths.size > 0 || dirtyProfile;
     }
   } catch (err) {
     console.warn(
@@ -260,6 +280,12 @@ function scheduleCloudSync() {
 export async function connectCloud(userId: string) {
   cloudUserId = userId;
   cloudReady = false;
+
+  if (persistedUserId !== userId) {
+    state = initialState;
+    persist();
+    emit();
+  }
 
   const fetchCloudData = async () => {
     return await Promise.all([
@@ -311,37 +337,9 @@ export async function connectCloud(userId: string) {
   if (monthsError) throw monthsError;
   if (profileError) throw profileError;
 
-  const hasCloudData = (rows?.length ?? 0) > 0;
-  if (
-    !hasCloudData &&
-    (hasFinanceData(state) || state.userName.trim() !== "" || state.theme === "light")
-  ) {
-    if (profile) {
-      state = {
-        ...state,
-        userName: profile.full_name ?? state.userName,
-        theme: profile.theme === "light" ? "light" : state.theme,
-        notificationPreferences: {
-          enabled: profile.notifications_enabled ?? state.notificationPreferences.enabled,
-          leadDays: Math.min(
-            Math.max(
-              Number(profile.notification_lead_days ?? state.notificationPreferences.leadDays),
-              0,
-            ),
-            7,
-          ),
-          dueToday: profile.notify_due_today ?? state.notificationPreferences.dueToday,
-          overdue: profile.notify_overdue ?? state.notificationPreferences.overdue,
-        },
-      };
-    }
-    persist();
-    emit();
-    cloudReady = true;
-    await syncCloudNow();
-    return;
-  }
-
+  // Cloud data is the source of truth once a user is authenticated.
+  // Never seed a new user's account from the browser's shared localStorage:
+  // that storage may contain data from a different account used on this device.
   state = {
     months: Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data as MonthData])),
     theme: profile?.theme === "light" ? "light" : "dark",
@@ -387,6 +385,8 @@ export function hydrateStore() {
       const migrated = migratePersistedState(parsed);
       const sanitized = sanitizeFinanceState(migrated);
       if (sanitized) {
+        const storedOwner = typeof parsed.ownerUserId === "string" ? parsed.ownerUserId : null;
+        persistedUserId = storedOwner;
         state = sanitized;
         // Persist the migrated shape so legacy data is upgraded once and
         // future versions have an explicit starting point.
@@ -407,6 +407,7 @@ function setState(next: FinanceState) {
 }
 
 function updateMonth(monthKey: string, fn: (m: MonthData) => MonthData) {
+  dirtyMonths.add(monthKey);
   const current = state.months[monthKey] ?? emptyMonth();
   setState({
     ...state,
@@ -423,12 +424,15 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 
 export const financeActions = {
   setTheme(theme: "dark" | "light") {
+    dirtyProfile = true;
     setState({ ...state, theme });
   },
   setUserName(userName: string) {
+    dirtyProfile = true;
     setState({ ...state, userName });
   },
   setNotificationPreferences(notificationPreferences: NotificationPreferences) {
+    dirtyProfile = true;
     setState({ ...state, notificationPreferences });
   },
   addIncome(monthKey: string, data: Omit<Income, "id">) {
@@ -581,6 +585,10 @@ export function currentMonthKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export function shiftMonthKey(key: string, delta: number) {
   const { year, month } = parseMonthKey(key);
   const d = new Date(year, month - 1 + delta, 1);
@@ -711,8 +719,11 @@ export type MonthTotals = {
   futureBalance: number;
 };
 
-export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
+export function computeTotals(data: MonthData, monthKey: string, now = new Date()): MonthTotals {
   const totalIncomes = data.incomes.reduce((s, i) => s + i.amount, 0);
+  const receivedIncomes = data.incomes
+    .filter((income) => income.date <= toDateKey(now))
+    .reduce((s, i) => s + i.amount, 0);
   const totalBills = data.bills.reduce((s, b) => s + b.amount, 0);
   const totalSaved = data.savings.reduce((s, v) => s + v.amount, 0);
   let paidCount = 0;
@@ -742,8 +753,8 @@ export function computeTotals(data: MonthData, monthKey: string): MonthTotals {
     overdueCount,
     totalSaved,
     monthBalance,
-    // Available balance only reflects bills that have already been paid.
-    availableBalance: totalIncomes - paidTotal - totalSaved,
+    // Available balance only includes income whose scheduled date has arrived.
+    availableBalance: receivedIncomes - paidTotal - totalSaved,
     // Future balance projects the full month, including pending bills.
     futureBalance: totalIncomes - totalBills - totalSaved,
   };

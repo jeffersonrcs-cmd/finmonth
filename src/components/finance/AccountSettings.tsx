@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   LogOut,
   Moon,
-  RefreshCw,
   Settings,
   Sun,
   Trash2,
@@ -19,6 +18,7 @@ import {
   Send,
   Download,
   WifiOff,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +55,6 @@ type SignupRequest = {
   email: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
-  email_confirmed?: boolean;
 };
 
 function SignupRequestsPanel() {
@@ -81,7 +80,7 @@ function SignupRequestsPanel() {
     void loadRequests();
   }, []);
 
-  const processRequest = async (id: string, action: "approve" | "reject" | "resend") => {
+  const processRequest = async (id: string, action: "approve" | "reject") => {
     setBusyId(id);
     setError("");
     setMessage("");
@@ -107,7 +106,7 @@ function SignupRequestsPanel() {
         </div>
       ) : requests.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-4 text-xs text-mut">
-          Nenhuma solicitação pendente ou convite aguardando resposta.
+          Nenhuma solicitação pendente ou aguardando aprovação.
         </div>
       ) : (
         requests.map((request) => (
@@ -121,7 +120,7 @@ function SignupRequestsPanel() {
                 </p>
               </div>
               <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${request.status === "approved" ? "bg-brand/10 text-brand" : "bg-warn/10 text-warn"}`}>
-                {request.status === "approved" ? (request.email_confirmed ? "Cadastro concluído" : "Aguardando criação da senha") : "Pendente"}
+                {request.status === "approved" ? "Cadastro aprovado" : "Pendente"}
               </span>
             </div>
             {request.status === "pending" ? (
@@ -132,15 +131,9 @@ function SignupRequestsPanel() {
                 </button>
                 <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "approve")}
                   className="h-9 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
-                  {busyId === request.id ? "Aguarde..." : "Aprovar e convidar"}
+                  {busyId === request.id ? "Aguarde..." : "Aprovar e liberar acesso"}
                 </button>
               </div>
-            ) : !request.email_confirmed ? (
-              <button type="button" disabled={busyId === request.id} onClick={() => void processRequest(request.id, "resend")}
-                className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 text-[10px] font-semibold uppercase tracking-wider text-background disabled:opacity-50">
-                <RefreshCw className="size-3.5" />
-                {busyId === request.id ? "Enviando..." : "Reenviar link para criar senha"}
-              </button>
             ) : null}
           </article>
         ))
@@ -286,9 +279,7 @@ export function AccountSettings({
   }
 
   const reloadLatestVersion = () => {
-    const updateUrl = new URL(window.location.href);
-    updateUrl.searchParams.set("finmonth-update", Date.now().toString());
-    window.location.replace(updateUrl.toString());
+    window.location.reload();
   };
 
   return (
@@ -506,7 +497,7 @@ export function AccountSettings({
               <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
                 {t("version")}
               </p>
-              <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__}</p>
+              <p className="mt-1 font-display text-lg font-semibold">v{__FINMONTH_VERSION__} · Rev. {__FINMONTH_REVISION__}</p>
             </div>
             <div className="glass-soft rounded-2xl p-3">
               <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
@@ -553,7 +544,7 @@ export function AccountSettings({
             <div className="space-y-2.5 rounded-2xl border border-border/60 bg-muted/20 p-3.5">
               {getVersionHistory(language).map((entry) => (
                 <article key={entry.version} className="rounded-2xl border border-border/50 bg-background/30 px-3 py-3">
-                  <p className="font-display text-sm font-semibold">v{entry.version}</p>
+                  <p className="font-display text-sm font-semibold">v{entry.version}{entry.revision && entry.revision > 0 ? ` · Rev. ${entry.revision}` : ""}</p>
                   <ul className="mt-1.5 space-y-1.5">
                     {entry.changes.map((change) => (
                       <li key={change} className="flex gap-2 text-[11px] leading-relaxed text-foreground/90">
@@ -566,26 +557,6 @@ export function AccountSettings({
               ))}
             </div>
           )}
-
-          <div className="rounded-2xl border border-border/60 bg-muted/20 px-3.5 py-3">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-mut">
-              {t("recentUpdates")}
-            </p>
-            <div className="mt-2.5 space-y-2.5">
-              <div className="flex gap-2.5">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
-                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateSwipe")}</p>
-              </div>
-              <div className="flex gap-2.5">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
-                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateFinAi")}</p>
-              </div>
-              <div className="flex gap-2.5">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
-                <p className="text-[11px] leading-relaxed text-foreground/90">{t("recentUpdateSettings")}</p>
-              </div>
-            </div>
-          </div>
 
           <button
             type="button"
@@ -614,10 +585,6 @@ export function AccountSettings({
               {t("installApp")}
             </button>
           )}
-
-          <div className="rounded-2xl border border-pos/20 bg-pos/5 px-3.5 py-3">
-            <p className="text-[11px] leading-relaxed text-pos/90">✓ {t("offlineReadyNotice")}</p>
-          </div>
 
           <p className="text-center text-[10px] leading-relaxed text-mut">{t("autoUpdateInfo")}</p>
         </section>

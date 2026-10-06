@@ -184,7 +184,7 @@ function Dashboard() {
   };
 
   const handleSwipeStart = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.pointerType === "mouse") return;
 
     if (swipeResetTimerRef.current !== null) {
       window.clearTimeout(swipeResetTimerRef.current);

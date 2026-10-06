@@ -6,10 +6,104 @@ export type VersionHistoryChange = {
 
 export type VersionHistoryEntry = {
   version: string;
+  revision?: number;
   changes: VersionHistoryChange[];
 };
 
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
+  {
+    version: "1.38.2",
+    revision: 3,
+    changes: [
+      {
+        pt: "Corrigido o build da tela de resumo após a mudança da projeção do mês.",
+        en: "Fixed the summary screen build after moving the month projection.",
+        es: "Se corrigió el build de la pantalla de resumen después de mover la proyección del mes.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.2",
+    revision: 2,
+    changes: [
+      {
+        pt: "A projeção do mês agora ocupa o card de saldo do mês e fica separada do saldo disponível.",
+        en: "The month projection now occupies the month balance card and is separated from the available balance.",
+        es: "La proyección del mes ahora ocupa la tarjeta de saldo del mes y queda separada del saldo disponible.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.2",
+        changes: [
+      {
+        pt: "Correções e melhorias para uma experiência mais estável.",
+        en: "Fixes and improvements for a more stable experience.",
+        es: "Correcciones y mejoras para una experiencia más estable.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.1",
+    revision: 3,
+    changes: [
+      {
+        pt: "Ajuste de build e dependências preservado sem alterar o funcionamento da aplicação.",
+        en: "Build and dependency adjustment preserved without changing application behavior.",
+        es: "Ajuste de build y dependencias preservado sin cambiar el funcionamiento de la aplicación.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.1",
+        changes: [
+      {
+        pt: "Correções e melhorias para uma experiência mais estável.",
+        en: "Fixes and improvements for a more stable experience.",
+        es: "Correcciones y mejoras para una experiencia más estable.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.0",
+    revision: 1,
+    changes: [
+      {
+        pt: "Novos recursos e melhorias para facilitar o uso do FinMonth.",
+        en: "New features and improvements to make FinMonth easier to use.",
+        es: "Nuevas funciones y mejoras para facilitar el uso de FinMonth.",
+      },
+    ],
+  },
+
+  {
+    version: "1.37.27",
+    revision: 0,
+    changes: [
+      {
+        pt: "Animação suave ao quitar contas pendentes e melhorias na FinAI.",
+        en: "Smooth animation when paying pending bills and FinAI enhancements.",
+        es: "Animación suave al pagar facturas pendientes y mejoras en FinAI.",
+      },
+    ],
+  },
+
+  {
+    version: "1.37.26",
+    changes: [
+      {
+        pt: "Correções e melhorias para uma experiência mais estável.",
+        en: "Fixes and improvements for a more stable experience.",
+        es: "Correcciones y mejoras para una experiencia más estable.",
+      },
+    ],
+  },
+
   {
     version: "1.37.25",
     changes: [

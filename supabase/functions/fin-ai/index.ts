@@ -166,6 +166,18 @@ Deno.serve(async (req) => {
     body.language === "en-US" ? "en-US" : body.language === "es-ES" ? "es-ES" : "pt-BR";
   const languageName =
     language === "en-US" ? "English" : language === "es-ES" ? "Spanish" : "Portuguese (Brazil)";
+  // Consumir quota diária do usuário (máximo 20 perguntas/dia)
+  const { data: quota, error: quotaError } = await supabase.rpc("consume_fin_ai_quota");
+  if (!quotaError && quota && quota.allowed === false) {
+    const quotaExceededMsg =
+      language === "en-US"
+        ? "Daily limit reached for FinAI (20 questions/day). Please try again tomorrow!"
+        : language === "es-ES"
+          ? "Has alcanzado el límite diario de FinAI (20 preguntas al día). ¡Vuelve a intentarlo mañana!"
+          : "Você atingiu o limite diário de uso da FinAI (20 perguntas por dia). Tente novamente amanhã!";
+    return jsonResponse({ error: quotaExceededMsg }, 429);
+  }
+
   const localized = {
     invalidQuestion:
       language === "en-US"
@@ -225,7 +237,9 @@ Deno.serve(async (req) => {
 
   if (financeError) return jsonResponse({ error: localized.financeError }, 500);
 
-  const financeData = Object.fromEntries((rows ?? []).map((row) => [row.month_key, row.data]));
+  // Otimização: prioriza os últimos 6 meses para respostas mais rápidas e econômicas
+  const relevantRows = (rows ?? []).slice(-6);
+  const financeData = Object.fromEntries(relevantRows.map((row) => [row.month_key, row.data]));
 
   const input = [
     `Idioma obrigatório da resposta: ${languageName}`,

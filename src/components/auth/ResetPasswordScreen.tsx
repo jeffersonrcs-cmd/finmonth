@@ -19,15 +19,10 @@ export function ResetPasswordScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const inviteType =
-      searchParams.get("type") === "invite" || hashParams.get("type") === "invite";
-
-    if (inviteType) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("type") === "invite" && params.get("token_hash")) {
       const inviteUrl = new URL("/confirmar-email", window.location.origin);
       inviteUrl.search = window.location.search;
-      inviteUrl.hash = window.location.hash;
       window.location.replace(inviteUrl.toString());
     }
   }, []);

@@ -38,6 +38,25 @@ describe("finance calculations", () => {
     savings: [{ id: "s1", description: "Reserve", amount: 500 }],
   };
 
+  it("keeps future income out of available balance until its date", () => {
+    const data: MonthData = {
+      incomes: [
+        { id: "i1", description: "Salary 1", amount: 3000, date: "2026-10-01" },
+        { id: "i2", description: "Salary 2", amount: 3000, date: "2026-10-15" },
+      ],
+      bills: [],
+      savings: [],
+    };
+
+    const beforePayday = computeTotals(data, "2026-10", new Date(2026, 9, 14, 12));
+    const onPayday = computeTotals(data, "2026-10", new Date(2026, 9, 15, 12));
+
+    expect(beforePayday.availableBalance).toBe(3000);
+    expect(beforePayday.futureBalance).toBe(6000);
+    expect(onPayday.availableBalance).toBe(6000);
+    expect(onPayday.futureBalance).toBe(6000);
+  });
+
   it("separates available and future balance", () => {
     const totals = computeTotals(data, "2026-09");
 
@@ -60,5 +79,27 @@ describe("bill status", () => {
     };
 
     expect(billStatus(bill, "2026-09")).toBe("paid");
+  });
+});
+
+
+describe("FinAI fallback and registration intent parser", () => {
+  it("extracts bill creation action from natural Portuguese text", async () => {
+    const { buildFallbackReply } = await import("../components/finance/FinAI");
+    const mockState = { months: {} } as ReturnType<typeof import("./finance").useFinanceState>;
+    const mockT = (key: string) => key;
+
+    const res = buildFallbackReply(
+      "cadastrar conta de luz 150 reais dia 10",
+      "2026-10",
+      2026,
+      mockState,
+      mockT,
+    );
+
+    expect(res.action).not.toBeNull();
+    expect(res.action?.type).toBe("create_bill");
+    expect(res.action?.data.amount).toBe(150);
+    expect(res.action?.data.dueDay).toBe(10);
   });
 });

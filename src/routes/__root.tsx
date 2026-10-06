@@ -150,10 +150,7 @@ function RootComponent() {
   const [authReady, setAuthReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const publicAuthRoutes = ["/confirmar-email", "/redefinir-senha"] as const;
-  const currentPath =
-    typeof window !== "undefined"
-      ? window.location.pathname.replace(/\/+$/, "") || "/"
-      : "";
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
   const isPublicAuthRoute = publicAuthRoutes.includes(
     currentPath as (typeof publicAuthRoutes)[number],
   );
@@ -161,13 +158,10 @@ function RootComponent() {
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const isRecoveryFlow = hashParams.get("type") === "recovery";
-    const isLocalHost =
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-    if (isRecoveryFlow && isLocalHost) {
-      const productionRecoveryUrl = new URL("https://finmonth.github.io/redefinir-senha");
-      productionRecoveryUrl.hash = window.location.hash.replace(/^#/, "");
-      window.location.replace(productionRecoveryUrl.toString());
+    if (isRecoveryFlow && window.location.pathname !== "/redefinir-senha") {
+      const recoveryUrl = new URL("/redefinir-senha", window.location.origin);
+      recoveryUrl.hash = window.location.hash.replace(/^#/, "");
+      window.location.replace(recoveryUrl.toString());
       return;
     }
 
@@ -211,8 +205,6 @@ function RootComponent() {
       }
     };
 
-    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
-
     let lastSessionRecovery = 0;
     let recoveryInFlight = false;
 
@@ -252,10 +244,23 @@ function RootComponent() {
         return;
       }
 
+      if (event === "PASSWORD_RECOVERY") {
+        if (window.location.pathname !== "/redefinir-senha") {
+          const recoveryUrl = new URL("/redefinir-senha", window.location.origin);
+          recoveryUrl.hash = window.location.hash.replace(/^#/, "");
+          window.location.replace(recoveryUrl.toString());
+          return;
+        }
+        setTimeout(() => void applySession(session), 0);
+        return;
+      }
+
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         setTimeout(() => void applySession(session), 0);
       }
     });
+
+    void supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible") void recoverSession();

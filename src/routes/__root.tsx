@@ -10,7 +10,8 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 const BUILD_ID = __FINMONTH_BUILD_ID__;
-const APP_VERSION = __FINMONTH_VERSION__;\nconst BASE_PATH = import.meta.env.BASE_URL;
+const APP_VERSION = __FINMONTH_VERSION__;
+const BASE_PATH = import.meta.env.BASE_URL;
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
@@ -345,7 +346,7 @@ function RootComponent() {
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register(`${BASE_PATH}sw.js`)
         .then((reg) => {
           // Check for service worker updates
           reg.onupdatefound = () => {

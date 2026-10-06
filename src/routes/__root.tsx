@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 const BUILD_ID = __FINMONTH_BUILD_ID__;
 const APP_VERSION = __FINMONTH_VERSION__;
+const BASE_PATH = import.meta.env.BASE_URL;
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
@@ -111,10 +112,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "manifest", href: "/manifest.json" },
-      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
-      { rel: "icon", href: "/icon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon-finmonth-v3.png", sizes: "180x180" },
+      { rel: "manifest", href: `${BASE_PATH}manifest.json` },
+      { rel: "icon", href: `${BASE_PATH}icon-192.png`, type: "image/png", sizes: "192x192" },
+      { rel: "icon", href: `${BASE_PATH}icon.svg`, type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: `${BASE_PATH}apple-touch-icon-finmonth-v3.png`, sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -345,7 +346,7 @@ function RootComponent() {
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register(`${BASE_PATH}sw.js`)
         .then((reg) => {
           // Check for service worker updates
           reg.onupdatefound = () => {

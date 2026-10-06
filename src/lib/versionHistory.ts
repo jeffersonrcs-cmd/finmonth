@@ -13,6 +13,18 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.2",
+    revision: 4,
+    changes: [
+      {
+        pt: "Corrigida a instalação do FinMonth como app no iPhone/GitHub Pages.",
+        en: "Fixed FinMonth app installation on iPhone/GitHub Pages.",
+        es: "Se corrigió la instalación de FinMonth como app en iPhone/GitHub Pages.",
+      },
+    ],
+  },
+
+  {
+    version: "1.38.2",
     revision: 3,
     changes: [
       {

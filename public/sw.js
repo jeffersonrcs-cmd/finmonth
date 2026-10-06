@@ -1,13 +1,14 @@
 // FinMonth Service Worker - Offline Cache & Push Notifications
 const CACHE_NAME = "finmonth-cache-v5";
+const BASE_PATH = new URL("./", self.location.href).pathname;
 const OFFLINE_URLS = [
-  "/",
-  "/manifest.json",
-  "/icon.svg",
-  "/favicon.ico",
-  "/apple-touch-icon-finmonth-v3.png",
-  "/apple-touch-icon.png",
-  "/icon-192.png",
+  BASE_PATH,
+  `${BASE_PATH}manifest.json`,
+  `${BASE_PATH}icon.svg`,
+  `${BASE_PATH}favicon.ico`,
+  `${BASE_PATH}apple-touch-icon-finmonth-v3.png`,
+  `${BASE_PATH}apple-touch-icon.png`,
+  `${BASE_PATH}icon-192.png`,
 ];
 
 self.addEventListener("install", (event) => {
@@ -56,7 +57,7 @@ self.addEventListener("fetch", (event) => {
         const cachedResponse = await caches.match(request);
         if (cachedResponse) return cachedResponse;
         if (request.mode === "navigate") {
-          const fallback = await caches.match("/");
+          const fallback = await caches.match(BASE_PATH);
           if (fallback) return fallback;
         }
         return new Response("Offline", { status: 503, statusText: "Offline" });
@@ -71,9 +72,9 @@ self.addEventListener("push", (event) => {
     const title = data.title || "FinMonth";
     const options = {
       body: data.body || "Lembrete financeiro",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      data: data.url || "/",
+      icon: `${BASE_PATH}icon-192.png`,
+      badge: `${BASE_PATH}icon-192.png`,
+      data: data.url || BASE_PATH,
       vibrate: [100, 50, 100],
     };
     event.waitUntil(self.registration.showNotification(title, options));
@@ -82,7 +83,7 @@ self.addEventListener("push", (event) => {
     event.waitUntil(
       self.registration.showNotification("FinMonth", {
         body: text,
-        icon: "/icon-192.png",
+        icon: `${BASE_PATH}icon-192.png`,
       }),
     );
   }
@@ -90,7 +91,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data || "/";
+  const targetUrl = event.notification.data || BASE_PATH;
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {

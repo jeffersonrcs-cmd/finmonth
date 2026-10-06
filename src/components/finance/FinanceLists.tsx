@@ -27,6 +27,7 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
   const { t } = useLanguage();
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [poppingBillId, setPoppingBillId] = useState<string | null>(null);
   const sorted = [...bills].sort((a, b) => {
     const ap = billStatus(a, monthKey) !== "paid";
     const bp = billStatus(b, monthKey) !== "paid";
@@ -88,9 +89,14 @@ export function AccountsList({ monthKey, bills }: { monthKey: string; bills: Bil
             >
               <button
                 type="button"
-                onClick={(event) => { event.stopPropagation(); financeActions.toggleBillPaid(monthKey, bill.id); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setPoppingBillId(bill.id);
+                  financeActions.toggleBillPaid(monthKey, bill.id);
+                  window.setTimeout(() => setPoppingBillId(null), 300);
+                }}
                 aria-label={bill.paid ? t("markPending") : t("markPaid")}
-                className={`grid size-7 shrink-0 place-items-center rounded-full border ${status === "paid" ? "border-pos/40 bg-pos/20 text-pos" : "border-border hover:border-pos/50 hover:bg-pos/10"}`}
+                className={`grid size-7 shrink-0 place-items-center rounded-full border ${status === "paid" ? "border-pos/40 bg-pos/20 text-pos" : "border-border hover:border-pos/50 hover:bg-pos/10"} ${poppingBillId === bill.id ? "check-pop" : ""}`}
               >
                 {status === "paid" && <Check className="size-3" />}
               </button>

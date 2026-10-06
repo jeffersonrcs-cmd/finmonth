@@ -142,15 +142,24 @@ export function BillDetailScreen({
 export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bill[] }) {
   const { t } = useLanguage();
   const [selectedBillId, setSelectedBillId] = useState<string | null>(null);
+  const [animatingPaidIds, setAnimatingPaidIds] = useState<Set<string>>(new Set());
   const selectedBill = selectedBillId ? bills.find((bill) => bill.id === selectedBillId) : undefined;
 
-  const sorted = bills.filter((bill) => billStatus(bill, monthKey) !== "paid").sort((a, b) => {
-    const aPending = billStatus(a, monthKey) !== "paid";
-    const bPending = billStatus(b, monthKey) !== "paid";
+  const handleTogglePaid = (billId: string) => {
+    setAnimatingPaidIds((current) => new Set(current).add(billId));
+    window.setTimeout(() => {
+      financeActions.toggleBillPaid(monthKey, billId);
+      setAnimatingPaidIds((current) => {
+        const next = new Set(current);
+        next.delete(billId);
+        return next;
+      });
+    }, 380);
+  };
 
-    if (aPending !== bPending) return aPending ? -1 : 1;
-    return a.dueDay - b.dueDay;
-  });
+  const sorted = bills
+    .filter((bill) => billStatus(bill, monthKey) !== "paid" || animatingPaidIds.has(bill.id))
+    .sort((a, b) => a.dueDay - b.dueDay);
 
   const renderBillsList = () => (
     <section className="mb-8">
@@ -172,6 +181,7 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
         )}
         {sorted.map((bill) => {
           const status = billStatus(bill, monthKey);
+          const isAnimating = animatingPaidIds.has(bill.id);
           return (
             <div
               key={bill.id}
@@ -185,13 +195,16 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                 }
               }}
               className={`flex cursor-pointer items-center gap-3 rounded-2xl border border-border/60 bg-background/80 p-3.5 shadow-sm backdrop-blur-md ${
+                isAnimating ? "bill-complete-exit" : ""
+              } ${
                 status === "overdue" ? "border-neg/25" : status === "pending" ? "border-warn/30 bg-warn/5" : ""
               }`}
             >
               <button
+                type="button"
                 onClick={(event) => {
                   event.stopPropagation();
-                  financeActions.toggleBillPaid(monthKey, bill.id);
+                  if (!bill.paid && !isAnimating) handleTogglePaid(bill.id);
                 }}
                 aria-label={bill.paid ? t("markPending") : t("markPaid")}
                 className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors ${
@@ -202,13 +215,17 @@ export function BillsSection({ monthKey, bills }: { monthKey: string; bills: Bil
                       : status === "pending"
                         ? "border-warn/40 bg-warn/10 text-warn hover:border-pos/50 hover:bg-pos/10"
                         : "border-border hover:border-pos/50 hover:bg-pos/10"
-                }`}
+                } ${isAnimating ? "check-pop" : ""}`}
               >
-                {status === "paid" && <Check className="size-3" />}
+                {(status === "paid" || isAnimating) && (
+                  <Check className={isAnimating ? "check-icon-in size-3" : "size-3"} />
+                )}
               </button>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{bill.description}</p>
-                <p className={`text-[11px] ${status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : "text-mut"}`}>
+                <p className={`text-[11px] ${
+                  status === "overdue" ? "text-neg" : status === "pending" ? "text-warn" : "text-mut"
+                }`}>
                   {status === "paid"
                     ? `${t("paid")} · ${t("day")} ${bill.dueDay}`
                     : status === "overdue"

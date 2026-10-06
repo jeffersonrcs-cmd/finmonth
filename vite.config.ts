@@ -11,13 +11,12 @@ const packageJson = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string };
 
-const basePath = process.env.VITE_BASE_PATH || "/";
-
 export default defineConfig({
   vite: {
-    base: basePath,
+    base: "/",
     define: {
       __FINMONTH_VERSION__: JSON.stringify(packageJson.version),
+      __FINMONTH_REVISION__: JSON.stringify(packageJson.revision ?? 0),
       __FINMONTH_BUILD_ID__: JSON.stringify(new Date().toISOString()),
     },
   },

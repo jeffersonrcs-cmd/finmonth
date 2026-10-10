@@ -22,6 +22,7 @@ export type Saving = {
   id: string;
   description: string;
   amount: number;
+  date?: string; // yyyy-mm-dd; registros antigos sem data continuam válidos
 };
 
 export type MonthData = {
@@ -726,6 +727,7 @@ export function computeTotals(data: MonthData, monthKey: string, now = new Date(
     .reduce((s, i) => s + i.amount, 0);
   const totalBills = data.bills.reduce((s, b) => s + b.amount, 0);
   const totalSaved = data.savings.reduce((s, v) => s + v.amount, 0);
+  const savedByToday = data.savings.filter((saving) => !saving.date || saving.date <= toDateKey(now)).reduce((sum, saving) => sum + saving.amount, 0);
   let paidCount = 0;
   let paidTotal = 0;
   let pendingCount = 0;
@@ -754,7 +756,7 @@ export function computeTotals(data: MonthData, monthKey: string, now = new Date(
     totalSaved,
     monthBalance,
     // Available balance only includes income whose scheduled date has arrived.
-    availableBalance: receivedIncomes - paidTotal - totalSaved,
+    availableBalance: receivedIncomes - paidTotal - savedByToday,
     // Future balance projects the full month, including pending bills.
     futureBalance: totalIncomes - totalBills - totalSaved,
   };

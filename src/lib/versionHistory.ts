@@ -12,6 +12,17 @@ export type VersionHistoryEntry = {
 
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
+    version: "1.39.0",
+        changes: [
+      {
+        pt: "Novos recursos e melhorias para facilitar o uso do FinMonth.",
+        en: "New features and improvements to make FinMonth easier to use.",
+        es: "Nuevas funciones y mejoras para facilitar el uso de FinMonth.",
+      },
+    ],
+  },
+
+  {
     version: "1.38.2",
     revision: 5,
     changes: [{ pt: "Guardados agora têm data; valores futuros afetam apenas a projeção até a data indicada. Ícone de informação da projeção restaurado.", en: "Savings now have dates; future amounts affect only the projection until their date. Restored the projection information icon.", es: "Los guardados ahora tienen fecha; los importes futuros solo afectan la proyección hasta esa fecha. Se restauró el icono de información de la proyección." }],

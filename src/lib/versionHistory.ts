@@ -13,6 +13,11 @@ export type VersionHistoryEntry = {
 export const VERSION_HISTORY: VersionHistoryEntry[] = [
   {
     version: "1.38.2",
+    revision: 5,
+    changes: [{ pt: "Guardados agora têm data; valores futuros afetam apenas a projeção até a data indicada. Ícone de informação da projeção restaurado.", en: "Savings now have dates; future amounts affect only the projection until their date. Restored the projection information icon.", es: "Los guardados ahora tienen fecha; los importes futuros solo afectan la proyección hasta esa fecha. Se restauró el icono de información de la proyección." }],
+  },
+  {
+    version: "1.38.2",
     revision: 4,
     changes: [
       {

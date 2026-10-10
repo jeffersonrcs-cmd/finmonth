@@ -122,10 +122,12 @@ export function SummaryCards({
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-3">
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-mut">
-            📈 {t("futureBalance")}
-          </p>
+        <div className="glass relative rounded-2xl p-3">
+          <div className="mb-1 flex items-center gap-1">
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-mut">📈 {t("futureBalance")}</p>
+            <button type="button" aria-label={t("futureBalance")} aria-expanded={openInfo === "future"} onClick={(event) => { event.stopPropagation(); setOpenInfo((current) => current === "future" ? null : "future"); }} className="grid size-3 shrink-0 place-items-center rounded-full border border-mut/40 text-mut transition-colors hover:border-brand/60 hover:text-brand"><Info className="size-2" strokeWidth={2.5} /></button>
+          </div>
+          {openInfo === "future" && <div className="absolute bottom-full left-0 z-30 mb-2 w-[220px] rounded-xl border border-border/70 bg-popover px-3 py-2 text-[10px] leading-relaxed text-popover-foreground shadow-lg">{t("futureBalanceHint")}</div>}
           <p
             className={`num font-display text-sm font-semibold ${totals.futureBalance >= 0 ? "text-pos" : "text-neg"}`}
           >

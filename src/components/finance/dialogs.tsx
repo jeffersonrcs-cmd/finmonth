@@ -447,11 +447,13 @@ export function SavingDialog({
   const setDialogOpen = onOpenChange ?? setInternalOpen;
   const [description, setDescription] = useState(initial?.description ?? "");
   const [amount, setAmount] = useState(initial ? String(initial.amount).replace(".", ",") : "");
+  const [date, setDate] = useState(initial?.date ?? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
 
   useEffect(() => {
     if (!dialogOpen) return;
     setDescription(initial?.description ?? "");
     setAmount(initial ? String(initial.amount).replace(".", ",") : "");
+    setDate(initial?.date ?? new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
   }, [dialogOpen, initial]);
 
   return (
@@ -463,7 +465,7 @@ export function SavingDialog({
       onSubmit={() => {
         const parsedAmount = parseAmount(amount);
         if (!description.trim() || parsedAmount === null) return false;
-        onSave({ description: description.trim(), amount: parsedAmount });
+        onSave({ description: description.trim(), amount: parsedAmount, date });
         return true;
       }}
     >
@@ -485,6 +487,11 @@ export function SavingDialog({
           onChange={(e) => setAmount(e.target.value)}
           placeholder="500,00"
         />
+      </div>
+      <div className="space-y-1.5">
+        <Label className={labelClass}>{t("date")}</Label>
+        <Input className={fieldClass} type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        <p className="text-[10px] text-mut">{t("savingDateHint")}</p>
       </div>
     </FormDialog>
   );

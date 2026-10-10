@@ -230,7 +230,7 @@ export function SavingsList({ monthKey, savings }: { monthKey: string; savings: 
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{saving.description}</p>
-              <p className="text-[11px] text-mut">{t("savedInMonth")}</p>
+              <p className="text-[11px] text-mut">{saving.date ? new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${saving.date}T12:00:00`)) : t("savedInMonth")}</p>
             </div>
             <span className="num font-display text-sm font-semibold text-econ">
               {formatCurrency(saving.amount)}

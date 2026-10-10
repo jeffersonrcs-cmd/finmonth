@@ -57,6 +57,15 @@ describe("finance calculations", () => {
     expect(onPayday.futureBalance).toBe(6000);
   });
 
+  it("does not subtract future savings from available balance before their date", () => {
+    const futureSavingData: MonthData = { incomes: [{ id: "i1", description: "Salary", amount: 3000, date: "2026-10-01" }], bills: [], savings: [{ id: "s1", description: "Future reserve", amount: 500, date: "2026-10-15" }] };
+    const beforeDate = computeTotals(futureSavingData, "2026-10", new Date(2026, 9, 10, 12));
+    const onDate = computeTotals(futureSavingData, "2026-10", new Date(2026, 9, 15, 12));
+    expect(beforeDate.availableBalance).toBe(3000);
+    expect(beforeDate.futureBalance).toBe(2500);
+    expect(onDate.availableBalance).toBe(2500);
+  });
+
   it("separates available and future balance", () => {
     const totals = computeTotals(data, "2026-09");
 
